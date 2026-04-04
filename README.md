@@ -1,6 +1,22 @@
-# #MilletNeDer
+<p align="center">
+  <img src=".github/logo.png" alt="#MilletNeDer" width="200">
+</p>
 
-Türkiye'nin 81 ilini kapsayan, aylık turlarda çalışan açık kaynaklı online seçim anketi platformu.
+<p align="center">
+  <img src=".github/cover.png" alt="Türkiye Seçim Haritası" width="100%">
+</p>
+
+<p align="center">
+  Türkiye'nin 81 ilini kapsayan, aylık turlarda çalışan açık kaynaklı online seçim anketi platformu.
+</p>
+
+<p align="center">
+  <a href="https://milletneder.com">milletneder.com</a> &middot;
+  <a href="https://github.com/milletneder/milletneder/blob/main/LICENSE">AGPL-3.0</a> &middot;
+  <a href="https://github.com/milletneder/milletneder/blob/main/CONTRIBUTING.md">Katkıda Bulun</a>
+</p>
+
+---
 
 **Temel Prensip:** Şeffaflık. Tüm metodolojiler, parametreler ve hesaplama yöntemleri açık şekilde yayınlanır.
 
