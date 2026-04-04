@@ -22,5 +22,23 @@ jobs:
             cd /opt/milletneder-staging
             git pull origin staging
             npm install --production=false
+
+            # STAGING_BASIC_AUTH env var ekle (yoksa)
+            if ! grep -q 'STAGING_BASIC_AUTH' .env.local 2>/dev/null; then
+              echo 'STAGING_BASIC_AUTH=${{ secrets.STAGING_BASIC_AUTH }}' >> .env.local
+              echo ">> Added STAGING_BASIC_AUTH to .env.local"
+            fi
+
             npm run build
             pm2 reload milletneder-staging
+
+            # nginx Basic Auth'u devre dışı bırak (Next.js middleware hallediyor artık)
+            NGINX_CONF="/etc/nginx/sites-enabled/staging.milletneder.com"
+            if grep -q '^\s*auth_basic ' "$NGINX_CONF" 2>/dev/null; then
+              echo ">> Disabling nginx auth_basic (handled by Next.js middleware now)..."
+              sed -i 's/^\(\s*\)auth_basic /\1#auth_basic /' "$NGINX_CONF"
+              sed -i 's/^\(\s*\)auth_basic_user_file /\1#auth_basic_user_file /' "$NGINX_CONF"
+              nginx -t && nginx -s reload && echo ">> nginx reloaded successfully" || echo ">> nginx config test FAILED, not reloading"
+            else
+              echo ">> nginx auth_basic already disabled, skipping"
+            fi
