@@ -160,7 +160,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
           <h2 className="text-lg font-bold text-black">
-            {step === 'explain' ? 'Oy Şifreleme' : step === 'codes' ? 'Kurtarma Kodlarınız' : 'Onay'}
+            {step === 'explain' ? 'Oy Koruma' : step === 'codes' ? 'Kurtarma Kodlarınız' : 'Onay'}
           </h2>
           <button onClick={onClose} className="text-neutral-400 hover:text-black text-xl leading-none">&times;</button>
         </div>
@@ -193,8 +193,8 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
             <div className="px-6 py-4">
               {/* Giriş özeti */}
               <p className="text-sm text-neutral-600 leading-relaxed mb-5">
-                Oy tercihinizi uçtan uca şifreleyerek kimliğinizden ayırıyoruz.
-                Şifreleme sonrası veritabanında yalnızca okunamaz veri kalır.
+                Oy tercihinizi uçtan uca koruma altına alarak kimliğinizden ayırıyoruz.
+                Koruma sonrası veritabanında yalnızca okunamaz veri kalır.
                 Bu işlem geri alınamaz; şifrenizi unutursanız aşağıdaki kurtarma kodları tek erişim yolunuzdur.
               </p>
 
@@ -202,10 +202,10 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 <div className="flex gap-3">
                   <div className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
                   <div>
-                    <h4 className="text-sm font-bold text-black mb-1">Neden şifreleme?</h4>
+                    <h4 className="text-sm font-bold text-black mb-1">Neden koruma?</h4>
                     <p className="text-sm text-neutral-600 leading-relaxed">
-                      Oy tercihiniz şifrelendiğinde biz dahil kimse hangi partiye oy verdiğinizi göremez.
-                      Veritabanında sadece şifreli veri kalır.
+                      Oy tercihiniz koruma altına alındığında biz dahil kimse hangi partiye oy verdiğinizi göremez.
+                      Veritabanında sadece okunamaz veri kalır.
                     </p>
                   </div>
                 </div>
@@ -224,11 +224,11 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 <div className="flex gap-3">
                   <div className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
                   <div>
-                    <h4 className="text-sm font-bold text-black mb-1">Şifrelemezsem ne olur?</h4>
+                    <h4 className="text-sm font-bold text-black mb-1">Korumazsam ne olur?</h4>
                     <p className="text-sm text-neutral-600 leading-relaxed">
-                      Şifreleme isteğe bağlıdır. Şifrelemezseniz oy tercihiniz veritabanında açık metin olarak kalır.
+                      Oy koruma isteğe bağlıdır. Korumazsanız oy tercihiniz veritabanında açık metin olarak kalır.
                       Bu durumda veritabanına erişimi olan bir kişi teknik olarak oy tercihinizi kimliğinizle eşleştirebilir.
-                      Şifreleme bu ihtimali tamamen ortadan kaldırır.
+                      Koruma bu ihtimali tamamen ortadan kaldırır.
                     </p>
                   </div>
                 </div>
@@ -351,7 +351,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
               <div className="bg-neutral-50 border border-neutral-200 p-5 mb-5">
                 <h4 className="text-sm font-bold text-black mb-2">Son adım</h4>
                 <p className="text-sm text-neutral-600 leading-relaxed">
-                  Onayladığınızda oy tercihiniz kalıcı olarak şifrelenir. Bundan sonra oyunuzu sadece siz görebilirsiniz.
+                  Onayladığınızda oy tercihiniz kalıcı olarak koruma altına alınır. Bundan sonra oyunuzu sadece siz görebilirsiniz.
                   Şifrenizi unutursanız yalnızca kurtarma kodlarıyla erişebilirsiniz.
                 </p>
               </div>
@@ -364,7 +364,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                   className="mt-0.5 accent-black w-4 h-4"
                 />
                 <span className="text-sm text-neutral-700 leading-relaxed">
-                  Kurtarma kodlarımı güvenli bir yere kaydettim. Kodlarımı onayladığımda oy tercihimin şifrelenmesini ve kimliğimle eşleştirilemez hale gelmesini kabul ediyorum.
+                  Kurtarma kodlarımı güvenli bir yere kaydettim. Kodlarımı onayladığımda oy tercihimin koruma altına alınmasını ve kimliğimle eşleştirilemez hale gelmesini kabul ediyorum.
                 </span>
               </label>
             </div>
@@ -381,7 +381,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 disabled={!checked}
                 className="flex-[2] bg-black text-white py-3 text-sm font-bold hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Oyumu Şifrele
+                Oyumu Korumaya Al
               </button>
             </div>
           </>
