@@ -10,6 +10,18 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
+// Client-side hataları sunucuya raporla (fire-and-forget)
+function logClientError(errorCode: string, errorMessage: string, step: string, phone?: string, context?: string) {
+  try {
+    const raw = phone?.replace(/\s/g, '') || '';
+    fetch('/api/auth/log-client-error', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ errorCode, errorMessage: errorMessage?.substring(0, 500), step, phone: raw, context }),
+    }).catch(() => {}); // Sessizce yut
+  } catch { /* ignore */ }
+}
+
 type AuthMethod = 'email' | 'phone';
 type EmailStep = 'email' | 'login' | 'verify-code' | 'set-password';
 type PhoneStep = 'input' | 'otp' | 'set-credentials';
@@ -148,7 +160,8 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               setShowRecaptchaFallback(false);
             } catch (retryErr) {
               console.error('Visible reCAPTCHA SMS error:', retryErr);
-              const fbErr = retryErr as { code?: string };
+              const fbErr = retryErr as { code?: string; message?: string };
+              logClientError(fbErr.code || 'visible_recaptcha_sms_fail', fbErr.message || '', 'send_otp_visible', raw);
               if (fbErr.code === 'auth/too-many-requests') {
                 setError('Çok fazla deneme yapıldı. Birkaç dakika bekleyip sayfayı yenileyin.');
               } else if (fbErr.code === 'auth/quota-exceeded') {
@@ -487,6 +500,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     try {
       setupRecaptcha();
       if (!recaptchaVerifierRef.current) {
+        logClientError('recaptcha_init_fail', 'RecaptchaVerifier oluşturulamadı', 'recaptcha_setup', phone);
         setError('reCAPTCHA başlatılamadı. Sayfayı yenileyip tekrar deneyin.');
         return;
       }
@@ -505,6 +519,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
 
       if (isRecaptchaError && !showRecaptchaFallback) {
         // Invisible reCAPTCHA başarısız → visible checkbox'a geç
+        logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'send_otp_recaptcha_fallback', phone);
         if (recaptchaVerifierRef.current) {
           try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
           recaptchaVerifierRef.current = null;
@@ -514,6 +529,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         setLoading(false);
         return;
       }
+
+      // Tüm SMS hatalarını logla
+      logClientError(fbErr.code || 'sms_send_fail', fbErr.message || '', 'send_otp', phone, showRecaptchaFallback ? 'visible_recaptcha' : 'invisible_recaptcha');
 
       if (fbErr.code === 'auth/too-many-requests') {
         setError('Çok fazla deneme yapıldı. 5-10 dakika bekleyip tekrar deneyin.');
@@ -562,7 +580,8 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         (window as unknown as Record<string, string>).__tempFirebaseToken = idToken;
       }
     } catch (err: unknown) {
-      const fbErr = err as { code?: string };
+      const fbErr = err as { code?: string; message?: string };
+      logClientError(fbErr.code || 'otp_verify_fail', fbErr.message || '', 'verify_otp', phone);
       if (fbErr.code === 'auth/invalid-verification-code') {
         setError('Girdiğiniz kod hatalı');
       } else if (fbErr.code === 'auth/code-expired') {
@@ -582,7 +601,11 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     }
     setError('');
     const idToken = (window as unknown as Record<string, string>).__tempFirebaseToken;
-    if (!idToken) return;
+    if (!idToken) {
+      logClientError('token_lost', 'Firebase token window objesinde bulunamadı', 'set_credentials', phone);
+      setError('Oturum bilgisi kayboldu. Sayfayı yenileyip tekrar deneyin.');
+      return;
+    }
     delete (window as unknown as Record<string, string>).__tempFirebaseToken;
 
     if (loginOnly) {
@@ -691,6 +714,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     try {
       setupRecaptcha();
       if (!recaptchaVerifierRef.current) {
+        logClientError('recaptcha_init_fail', 'RecaptchaVerifier oluşturulamadı', 'recaptcha_setup', phone);
         setError('reCAPTCHA başlatılamadı. Sayfayı yenileyip tekrar deneyin.');
         setLoading(false);
         return;
@@ -706,6 +730,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         fbErr.code?.includes('-39') || fbErr.message?.includes('-39');
 
       if (isRecaptchaError && !showRecaptchaFallback) {
+        logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'forgot_send_otp_recaptcha_fallback', phone);
         if (recaptchaVerifierRef.current) {
           try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
           recaptchaVerifierRef.current = null;
@@ -716,6 +741,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
 
+      logClientError(fbErr.code || 'forgot_sms_fail', fbErr.message || '', 'forgot_send_otp', phone);
       if (fbErr.code === 'auth/too-many-requests') {
         setError('Çok fazla deneme yapıldı. 5-10 dakika bekleyip tekrar deneyin.');
       } else {

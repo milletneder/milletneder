@@ -10,7 +10,8 @@ export type AuthEventType =
   | 'register_incomplete' // Firebase'de oluştu ama DB'de tamamlanmadı
   | 'register_blocked'    // Fingerprint/IP limiti ile engellendi
   | 'password_reset'      // Şifre sıfırlama
-  | 'password_change';    // Şifre değiştirme
+  | 'password_change'     // Şifre değiştirme
+  | 'client_error';       // Client-side hata (reCAPTCHA, SMS, vs.)
 
 interface LogAuthEventParams {
   eventType: AuthEventType;
