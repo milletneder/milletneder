@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const cityFilter = request.nextUrl.searchParams.get('city');
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const body = await request.json();
   const { id, voter_count, type } = body;
@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const body = await request.json();
   const { city, voter_count, source, year } = body;

@@ -9,6 +9,14 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Twilio settings
+  const [twilioSid, setTwilioSid] = useState('');
+  const [twilioToken, setTwilioToken] = useState('');
+  const [twilioPhone, setTwilioPhone] = useState('');
+  const [twilioTestMode, setTwilioTestMode] = useState(false);
+  const [twilioSaving, setTwilioSaving] = useState(false);
+  const [twilioMessage, setTwilioMessage] = useState('');
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -26,6 +34,12 @@ export default function AdminSettingsPage() {
         const method = data.settings?.auth_method?.value;
         if (method === 'email' || method === 'phone') setAuthMethod(method);
         setHasFirebaseServiceAccount(data.hasFirebaseServiceAccount);
+
+        // Twilio
+        if (data.settings?.twilio_account_sid?.value) setTwilioSid(data.settings.twilio_account_sid.value);
+        if (data.settings?.twilio_auth_token?.value) setTwilioToken(data.settings.twilio_auth_token.value);
+        if (data.settings?.twilio_phone_number?.value) setTwilioPhone(data.settings.twilio_phone_number.value);
+        setTwilioTestMode(data.settings?.twilio_test_mode?.value === 'true');
       }
     } catch {
       // ignore
@@ -62,6 +76,34 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleSaveTwilioSetting = async (key: string, value: string) => {
+    setTwilioSaving(true);
+    setTwilioMessage('');
+
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ key, value }),
+      });
+
+      if (res.ok) {
+        setTwilioMessage('Kaydedildi');
+        setTimeout(() => setTwilioMessage(''), 2000);
+      } else {
+        const data = await res.json();
+        setTwilioMessage(data.error || 'Hata oluştu');
+      }
+    } catch {
+      setTwilioMessage('Bağlantı hatası');
+    } finally {
+      setTwilioSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -74,7 +116,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-xl font-bold text-black mb-1">Ayarlar</h1>
-      <p className="text-neutral-500 text-sm mb-6">Firebase Authentication ve güvenlik ayarları</p>
+      <p className="text-neutral-500 text-sm mb-6">Kimlik doğrulama ve SMS ayarları</p>
 
       {message && (
         <div className="bg-neutral-50 border border-neutral-200 p-3 mb-4 text-sm text-black">
@@ -88,7 +130,6 @@ export default function AdminSettingsPage() {
           <h2 className="text-sm font-bold text-black mb-3">Kullanıcı Doğrulama Yöntemi</h2>
           <p className="text-xs text-neutral-500 mb-4">
             Kullanıcıların giriş ve kayıt olurken kullanacağı doğrulama yöntemi.
-            Firebase Authentication üzerinden çalışır.
           </p>
 
           <div className="flex gap-3">
@@ -121,15 +162,114 @@ export default function AdminSettingsPage() {
               </div>
             </button>
           </div>
+        </div>
 
-          {authMethod === 'phone' && (
-            <div className="mt-3 bg-yellow-50 border border-yellow-200 p-3">
-              <p className="text-xs text-yellow-800">
-                SMS doğrulaması Firebase Phone Verification onayına bağlı.
-                Google&apos;dan onay geldikten sonra aktif olacaktır.
-              </p>
+        {/* Twilio SMS Ayarları */}
+        <div className="border border-neutral-200 p-5">
+          <h2 className="text-sm font-bold text-black mb-1">Twilio SMS Ayarları</h2>
+          <p className="text-xs text-neutral-500 mb-4">
+            SMS doğrulama için Twilio API bilgilerini girin.
+            <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 ml-1 underline">
+              Twilio Console
+            </a>
+          </p>
+
+          {twilioMessage && (
+            <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
+              {twilioMessage}
             </div>
           )}
+
+          <div className="space-y-3">
+            {/* Account SID */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Account SID</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={twilioSid}
+                  onChange={(e) => setTwilioSid(e.target.value)}
+                  placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                />
+                <button
+                  onClick={() => handleSaveTwilioSetting('twilio_account_sid', twilioSid)}
+                  disabled={twilioSaving || !twilioSid}
+                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                >
+                  Kaydet
+                </button>
+              </div>
+            </div>
+
+            {/* Auth Token */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Auth Token</label>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={twilioToken}
+                  onChange={(e) => setTwilioToken(e.target.value)}
+                  placeholder="Twilio Auth Token"
+                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                />
+                <button
+                  onClick={() => handleSaveTwilioSetting('twilio_auth_token', twilioToken)}
+                  disabled={twilioSaving || !twilioToken}
+                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                >
+                  Kaydet
+                </button>
+              </div>
+              <p className="text-[10px] text-neutral-400 mt-1">Veritabanında AES-256-GCM ile şifrelenerek saklanır.</p>
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Twilio Telefon Numarası</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={twilioPhone}
+                  onChange={(e) => setTwilioPhone(e.target.value)}
+                  placeholder="+1234567890"
+                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                />
+                <button
+                  onClick={() => handleSaveTwilioSetting('twilio_phone_number', twilioPhone)}
+                  disabled={twilioSaving || !twilioPhone}
+                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                >
+                  Kaydet
+                </button>
+              </div>
+            </div>
+
+            {/* Test Mode */}
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
+              <div>
+                <span className="text-xs font-medium text-neutral-600">Test Modu</span>
+                <p className="text-[10px] text-neutral-400">Açıkken SMS gönderilmez, kod sunucu loglarında gösterilir.</p>
+              </div>
+              <button
+                onClick={() => {
+                  const newVal = !twilioTestMode;
+                  setTwilioTestMode(newVal);
+                  handleSaveTwilioSetting('twilio_test_mode', String(newVal));
+                }}
+                disabled={twilioSaving}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  twilioTestMode ? 'bg-green-500' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    twilioTestMode ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Firebase Durum */}
@@ -159,7 +299,7 @@ export default function AdminSettingsPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-neutral-600">Aktif Yöntem</span>
               <span className="text-sm text-black font-medium">
-                {authMethod === 'email' ? 'E-posta / Şifre' : 'Telefon / SMS'}
+                {authMethod === 'email' ? 'E-posta / Şifre' : 'Telefon / SMS (Twilio)'}
               </span>
             </div>
           </div>
@@ -169,10 +309,10 @@ export default function AdminSettingsPage() {
         <div className="border border-neutral-200 p-5 bg-neutral-50">
           <h2 className="text-sm font-bold text-black mb-2">Gizlilik ve Güvenlik</h2>
           <ul className="text-xs text-neutral-600 space-y-1.5">
-            <li>E-posta ve telefon numaraları sadece Firebase&apos;de saklanır.</li>
-            <li>Kendi veritabanımızda hiçbir kişisel bilgi tutulmaz.</li>
+            <li>E-posta adresleri Firebase&apos;de, telefon numaraları hiçbir yerde saklanmaz.</li>
+            <li>Veritabanında sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
             <li>Kullanıcı kimliği ile oy tercihi arasında bağlantı kurulamaz.</li>
-            <li>Veritabanı hacklense bile kimlik tespiti mümkün değildir.</li>
+            <li>Twilio API bilgileri AES-256-GCM ile şifrelenerek saklanır.</li>
           </ul>
         </div>
       </div>

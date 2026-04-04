@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const dimension = request.nextUrl.searchParams.get('dimension');
   const cityFilter = request.nextUrl.searchParams.get('city');
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const body = await request.json();
   const { id, population_share } = body;

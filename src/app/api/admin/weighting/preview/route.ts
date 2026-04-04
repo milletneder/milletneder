@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   try {
     const results = await computeWeightedResults();

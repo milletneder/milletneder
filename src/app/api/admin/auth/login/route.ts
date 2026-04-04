@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: 'E-posta veya şifre hatalı' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { error: 'E-posta veya şifre hatalı' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 

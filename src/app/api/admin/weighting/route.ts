@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const roundId = request.nextUrl.searchParams.get('round_id');
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   const body = await request.json();
   const { config_key, round_id, is_enabled, parameters } = body;
