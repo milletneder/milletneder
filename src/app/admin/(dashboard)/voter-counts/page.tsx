@@ -34,9 +34,7 @@ export default function VoterCountsPage() {
   const [activeTab, setActiveTab] = useState<'il' | 'ilce'>('il');
 
   const headers = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     return {
-      'X-Admin-Token': token || '',
       'Content-Type': 'application/json',
     };
   }, []);

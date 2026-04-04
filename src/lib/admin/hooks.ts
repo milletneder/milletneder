@@ -14,17 +14,9 @@ export function useAdminAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
-      setLoading(false);
-      router.push('/admin/login');
-      return;
-    }
-
-    fetch('/api/admin/auth/me', {
-      headers: { 'X-Admin-Token': token },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
+    // Cookie tabanlı auth — header göndermeye gerek yok
+    fetch('/api/admin/auth/me', { credentials: 'same-origin' })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('unauthorized'))))
       .then((data) => {
         setAdmin(data.admin);
         setLoading(false);
@@ -36,7 +28,10 @@ export function useAdminAuth() {
       });
   }, [router]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch { /* ignore */ }
     localStorage.removeItem('admin_token');
     router.push('/admin/login');
   }, [router]);
@@ -49,12 +44,11 @@ export function useAdminApi() {
 
   const apiFetch = useCallback(
     async (url: string, options?: RequestInit) => {
-      const token = localStorage.getItem('admin_token');
       const res = await fetch(url, {
         ...options,
+        credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Token': token || '',
           ...options?.headers,
         },
       });

@@ -39,9 +39,7 @@ export default function UsersPage() {
       if (dummyFilter) params.set('dummy', dummyFilter);
 
       try {
-        const token = localStorage.getItem('admin_token');
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers['X-Admin-Token'] = token;
         const res = await fetch(`/api/admin/users?${params.toString()}`, { headers });
         if (res.ok) {
           const data = await res.json();

@@ -117,11 +117,9 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = localStorage.getItem('admin_token');
-        const headers = { 'X-Admin-Token': token || '', 'Content-Type': 'application/json' };
         const [statsRes, chartsRes] = await Promise.all([
-          fetch('/api/admin/dashboard/stats', { headers }),
-          fetch('/api/admin/dashboard/charts', { headers }),
+          fetch('/api/admin/dashboard/stats'),
+          fetch('/api/admin/dashboard/charts'),
         ]);
         if (statsRes.ok) setStats(await statsRes.json());
         if (chartsRes.ok) {

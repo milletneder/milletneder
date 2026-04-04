@@ -61,9 +61,7 @@ export default function ReferenceDataPage() {
   const [saving, setSaving] = useState(false);
 
   const headers = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     return {
-      'X-Admin-Token': token || '',
       'Content-Type': 'application/json',
     };
   }, []);

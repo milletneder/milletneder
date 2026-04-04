@@ -21,14 +21,11 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
-  const getToken = () => localStorage.getItem('admin_token') || '';
 
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/settings', {
-        headers: { 'X-Admin-Token': getToken() },
-      });
+      const res = await fetch('/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
         const method = data.settings?.auth_method?.value;
@@ -57,7 +54,6 @@ export default function AdminSettingsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Token': getToken(),
         },
         body: JSON.stringify({ key: 'auth_method', value: method }),
       });
@@ -85,7 +81,6 @@ export default function AdminSettingsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-Token': getToken(),
         },
         body: JSON.stringify({ key, value }),
       });
