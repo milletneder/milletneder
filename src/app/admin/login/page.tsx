@@ -31,6 +31,7 @@ export default function AdminLoginPage() {
       }
 
       localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('admin_data', JSON.stringify(data.admin));
       router.push('/admin');
     } catch {
       setError('bir hata oluştu. lütfen tekrar deneyin.');
