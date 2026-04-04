@@ -98,32 +98,34 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     }
   }, [emailStep]);
 
-  // reCAPTCHA'yı önceden yükle — Google'a daha fazla davranış sinyali toplamak için zaman ver
-  // Bu, mobilde reCAPTCHA skorunu artırır ve -39 hatasını azaltır
+  // reCAPTCHA'yı önceden yükle ve RENDER et — Google'a daha fazla davranış sinyali toplamak için zaman ver
+  // render() çağrısı Google'ın sayfa davranışını analiz etmesini başlatır, -39 hatasını azaltır
   useEffect(() => {
     if (method !== 'phone') return;
     const timer = setTimeout(() => {
       if (!recaptchaContainerRef.current || recaptchaVerifierRef.current) return;
       try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           size: 'invisible',
           callback: () => {},
           'expired-callback': () => {
-            // Süresi dolunca sıfırla — tekrar oluşturulacak
             if (recaptchaVerifierRef.current) {
-              recaptchaVerifierRef.current.clear();
+              try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
               recaptchaVerifierRef.current = null;
             }
           },
         });
+        recaptchaVerifierRef.current = verifier;
+        // Render et — bu Google'ın davranış sinyali toplamasını başlatır
+        verifier.render().catch(() => {});
       } catch {
-        // İlk yüklemede hata olabilir, sorun değil — buton basıldığında tekrar denenecek
+        // İlk yüklemede hata olabilir — buton basıldığında tekrar denenecek
       }
-    }, 500);
+    }, 300);
     return () => {
       clearTimeout(timer);
       if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
+        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
         recaptchaVerifierRef.current = null;
       }
     };
@@ -131,14 +133,19 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
 
   // Visible reCAPTCHA fallback — invisible başarısız olunca tetiklenir
   // Kullanıcı checkbox'ı işaretleyince SMS otomatik gönderilir
+  // recaptchaFallbackKey değişince widget yeniden oluşturulur (retry için)
+  const [recaptchaFallbackKey, setRecaptchaFallbackKey] = useState(0);
+
   useEffect(() => {
     if (!showRecaptchaFallback || method !== 'phone') return;
 
     const timer = setTimeout(() => {
       const container = document.getElementById('recaptcha-visible');
       if (!container) return;
+      // Container'ı temizle — eski widget'ı DOM'dan kaldır
+      container.innerHTML = '';
 
-      // Eski verifier'ı temizle
+      // Eski verifier'ı tamamen temizle
       if (recaptchaVerifierRef.current) {
         try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
         recaptchaVerifierRef.current = null;
@@ -162,19 +169,28 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               console.error('Visible reCAPTCHA SMS error:', retryErr);
               const fbErr = retryErr as { code?: string; message?: string };
               logClientError(fbErr.code || 'visible_recaptcha_sms_fail', fbErr.message || '', 'send_otp_visible', raw);
+              // Visible da başarısız — verifier'ı temizle, kullanıcı tekrar deneyebilsin
+              if (recaptchaVerifierRef.current) {
+                try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+                recaptchaVerifierRef.current = null;
+              }
               if (fbErr.code === 'auth/too-many-requests') {
                 setError('Çok fazla deneme yapıldı. Birkaç dakika bekleyip sayfayı yenileyin.');
               } else if (fbErr.code === 'auth/quota-exceeded') {
                 setError('SMS gönderim limiti doldu. Daha sonra tekrar deneyin.');
               } else {
-                setError('SMS gönderilemedi. Sayfayı yenileyip tekrar deneyin.');
+                setError('Doğrulama başarısız oldu. "Tekrar Dene" butonuna basın.');
               }
             } finally {
               setLoading(false);
             }
           },
           'expired-callback': () => {
-            setError('Doğrulama süresi doldu. Sayfayı yenileyip tekrar deneyin.');
+            setError('Doğrulama süresi doldu. "Tekrar Dene" butonuna basın.');
+            if (recaptchaVerifierRef.current) {
+              try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+              recaptchaVerifierRef.current = null;
+            }
           },
         });
         recaptchaVerifierRef.current = verifier;
@@ -186,17 +202,19 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRecaptchaFallback]);
+  }, [showRecaptchaFallback, recaptchaFallbackKey]);
 
   const setupRecaptcha = useCallback(() => {
     // Zaten önceden yüklenmişse dokunma
     if (recaptchaVerifierRef.current) return;
     if (!recaptchaContainerRef.current) return;
-    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+    const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
       size: 'invisible',
       callback: () => {},
       'expired-callback': () => setError('reCAPTCHA süresi doldu, tekrar deneyin.'),
     });
+    recaptchaVerifierRef.current = verifier;
+    verifier.render().catch(() => {});
   }, []);
 
   // ========== EMAIL AUTH ==========
@@ -495,6 +513,19 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Geçerli bir cep telefonu numarası girin (5XX ile başlamalı)');
       return;
     }
+
+    // Visible fallback aktifse invisible'ı deneme — sadece visible widget'ı yenile
+    if (showRecaptchaFallback) {
+      setError('');
+      // Eski verifier'ı temizle ve visible widget'ı yeniden oluştur
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+        recaptchaVerifierRef.current = null;
+      }
+      setRecaptchaFallbackKey(k => k + 1); // useEffect'i tetikle → yeni visible widget
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -517,7 +548,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         fbErr.code === 'auth/captcha-check-failed' ||
         fbErr.code?.includes('-39') || fbErr.message?.includes('-39');
 
-      if (isRecaptchaError && !showRecaptchaFallback) {
+      if (isRecaptchaError) {
         // Invisible reCAPTCHA başarısız → visible checkbox'a geç
         logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'send_otp_recaptcha_fallback', phone);
         if (recaptchaVerifierRef.current) {
@@ -530,8 +561,8 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
 
-      // Tüm SMS hatalarını logla
-      logClientError(fbErr.code || 'sms_send_fail', fbErr.message || '', 'send_otp', phone, showRecaptchaFallback ? 'visible_recaptcha' : 'invisible_recaptcha');
+      // reCAPTCHA dışı SMS hatalarını logla
+      logClientError(fbErr.code || 'sms_send_fail', fbErr.message || '', 'send_otp', phone);
 
       if (fbErr.code === 'auth/too-many-requests') {
         setError('Çok fazla deneme yapıldı. 5-10 dakika bekleyip tekrar deneyin.');
@@ -709,6 +740,18 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Geçerli bir cep telefonu numarası girin');
       return;
     }
+
+    // Visible fallback aktifse invisible'ı deneme — sadece visible widget'ı yenile
+    if (showRecaptchaFallback) {
+      setError('');
+      if (recaptchaVerifierRef.current) {
+        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+        recaptchaVerifierRef.current = null;
+      }
+      setRecaptchaFallbackKey(k => k + 1);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -729,7 +772,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         fbErr.code === 'auth/captcha-check-failed' ||
         fbErr.code?.includes('-39') || fbErr.message?.includes('-39');
 
-      if (isRecaptchaError && !showRecaptchaFallback) {
+      if (isRecaptchaError) {
         logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'forgot_send_otp_recaptcha_fallback', phone);
         if (recaptchaVerifierRef.current) {
           try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
@@ -1285,6 +1328,21 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               <div id="recaptcha-visible" className="flex justify-center overflow-hidden" />
               {loading && (
                 <p className="text-xs text-neutral-500 text-center">SMS gönderiliyor...</p>
+              )}
+              {error && !loading && (
+                <button
+                  onClick={() => {
+                    setError('');
+                    if (recaptchaVerifierRef.current) {
+                      try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
+                      recaptchaVerifierRef.current = null;
+                    }
+                    setRecaptchaFallbackKey(k => k + 1);
+                  }}
+                  className="w-full bg-amber-700 text-white py-2 text-xs font-medium hover:bg-amber-800 transition-colors"
+                >
+                  Tekrar Dene
+                </button>
               )}
             </div>
           )}
