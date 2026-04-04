@@ -94,10 +94,10 @@ export default function RoundsPage() {
                 >
                   <td className={table.td}>#{round.id}</td>
                   <td className={table.td}>
-                    {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+                    {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
                   </td>
                   <td className={table.td}>
-                    {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+                    {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={getRoundStatus(round)} />

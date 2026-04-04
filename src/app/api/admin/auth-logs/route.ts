@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       SELECT id, event_type, auth_method, identity_hint, user_id, ip_address,
              substring(user_agent from 1 for 100) as user_agent,
              error_code, error_message, details,
-             created_at::text as created_at
+             to_char(created_at AT TIME ZONE 'Europe/Berlin' AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
       FROM auth_logs
       WHERE 1=1 ${eventTypeCondition}
       ORDER BY id DESC

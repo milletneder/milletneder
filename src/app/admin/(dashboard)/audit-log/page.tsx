@@ -113,11 +113,11 @@ export default function AuditLogPage() {
                       <td className={`${table.td} whitespace-nowrap`}>
                         {entry.created_at ? (
                           <>
-                            {new Date(entry.created_at).toLocaleDateString('tr-TR', { timeZone: 'UTC' })}{' '}
+                            {new Date(entry.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}{' '}
                             {new Date(entry.created_at).toLocaleTimeString('tr-TR', {
                               hour: '2-digit',
                               minute: '2-digit',
-                              timeZone: 'UTC',
+                              timeZone: 'Europe/Istanbul',
                             })}
                           </>
                         ) : '-'}

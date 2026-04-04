@@ -180,7 +180,7 @@ export default function UserDetailPage() {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',
-                timeZone: 'UTC',
+                timeZone: 'Europe/Istanbul',
               })}
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function UserDetailPage() {
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
-                    timeZone: 'UTC',
+                    timeZone: 'Europe/Istanbul',
                   })
                 : '-'}
             </div>
@@ -303,7 +303,7 @@ export default function UserDetailPage() {
                   </td>
                   <td className="px-4 py-2.5 text-black">{vote.change_count}x</td>
                   <td className="px-4 py-2.5 text-neutral-500">
-                    {new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'UTC' })}
+                    {new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
                   </td>
                 </tr>
               ))
@@ -366,7 +366,7 @@ export default function UserDetailPage() {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
-                      timeZone: 'UTC',
+                      timeZone: 'Europe/Istanbul',
                     })}
                   </td>
                 </tr>
