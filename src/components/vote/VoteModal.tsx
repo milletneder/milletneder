@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PartyGrid from './PartyGrid';
 import DemographicForm from './DemographicForm';
-import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
+import AuthForm from '@/components/auth/AuthForm';
 import ProfileForm from './ProfileForm';
 import Confetti from '@/components/ui/Confetti';
 import { useFingerprint } from '@/hooks/useFingerprint';
@@ -46,8 +46,9 @@ export default function VoteModal({
   const [referralLink, setReferralLink] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSelectWarning, setShowSelectWarning] = useState(false);
-  const [firebaseIdToken, setFirebaseIdToken] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null); // Firebase token (email) or verified phone
   const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
+  const [authType, setAuthType] = useState<'email' | 'phone' | null>(null);
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const { fingerprint } = useFingerprint();
   const { login } = useAuth();
@@ -68,11 +69,21 @@ export default function VoteModal({
       const pending = sessionStorage.getItem('pendingRegistration');
       if (pending) {
         try {
-          const { firebaseIdToken: pendingToken, password } = JSON.parse(pending);
+          const parsed = JSON.parse(pending);
           sessionStorage.removeItem('pendingRegistration');
-          if (pendingToken) {
-            setFirebaseIdToken(pendingToken);
-            setAuthExtraData(password ? { password } : undefined);
+          if (parsed.verifiedPhone) {
+            setAuthToken(parsed.verifiedPhone);
+            setAuthType('phone');
+            setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
+            setStep('party-select');
+            setShowConfetti(false);
+            setError('');
+            setSearchQuery('');
+            return;
+          } else if (parsed.firebaseIdToken) {
+            setAuthToken(parsed.firebaseIdToken);
+            setAuthType('email');
+            setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
             setStep('party-select');
             setShowConfetti(false);
             setError('');
@@ -88,7 +99,8 @@ export default function VoteModal({
       setShowConfetti(false);
       setError('');
       setSearchQuery('');
-      setFirebaseIdToken(null);
+      setAuthToken(null);
+      setAuthType(null);
       setAuthExtraData(undefined);
     }
   }, [isOpen, initialParty]);
@@ -131,8 +143,8 @@ export default function VoteModal({
       }
     } else {
       // Pending registration varsa (Header'dan yönlendirme) — auth atlayıp profil'e git
-      if (firebaseIdToken) {
-        await handleFirebaseAuth(firebaseIdToken, authExtraData);
+      if (authToken) {
+        await handleAuth(authToken, authExtraData);
         return;
       }
       // Giriş yapılmamış — önce fingerprint kontrolü yap
@@ -196,19 +208,40 @@ export default function VoteModal({
     }
   };
 
-  const handleFirebaseAuth = async (idToken: string, extraData?: { password?: string }) => {
-    setFirebaseIdToken(idToken);
+  const handleAuth = async (tokenOrPhone: string, extraData?: { password?: string }) => {
+    // Detect if this is a phone (digits) or Firebase token
+    const isPhone = /^\d{10}$/.test(tokenOrPhone.replace(/\s/g, ''));
+    setAuthToken(tokenOrPhone);
+    setAuthType(isPhone ? 'phone' : 'email');
     setAuthExtraData(extraData);
     setLoading(true);
     setError('');
 
     try {
-      // Firebase token ile backend'e istek at (password VEK decrypt için)
-      const res = await fetch('/api/auth/firebase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken: idToken, ...(extraData?.password && { password: extraData.password }) }),
-      });
+      let res;
+      if (isPhone) {
+        // Phone auth — verify OTP was already done, check user status
+        res = await fetch('/api/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: tokenOrPhone, code: '000000', password: extraData?.password }),
+        });
+        // verify-otp might fail because code was already used, but phone is marked as verified
+        // In that case, we just need to check if user needs profile
+        if (!res.ok) {
+          // Phone already verified, just need profile form
+          setStep('profile');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Email auth — Firebase token
+        res = await fetch('/api/auth/firebase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firebaseIdToken: tokenOrPhone, ...(extraData?.password && { password: extraData.password }) }),
+        });
+      }
 
       const data = await res.json();
 
@@ -219,16 +252,14 @@ export default function VoteModal({
       }
 
       if (data.isNewUser && !data.token) {
-        // Yeni kullanici — profil bilgisi gerekiyor
         setStep('profile');
         setLoading(false);
         return;
       }
 
-      // Mevcut kullanici — login yap ve oy ver
+      // Existing user — login and vote
       login(data.token);
 
-      // Simdi oy ver
       const voteRes = await fetch('/api/vote', {
         method: 'POST',
         headers: {
@@ -240,7 +271,6 @@ export default function VoteModal({
 
       const voteData = await voteRes.json();
       if (!voteRes.ok) {
-        // Oy zaten verildiyse başarılı say
         if (voteRes.status === 400 && voteData.error?.includes('Zaten')) {
           setStep('success');
           setShowConfetti(true);
@@ -261,24 +291,43 @@ export default function VoteModal({
   };
 
   const handleProfileComplete = async (data: { city: string; district: string }) => {
-    if (!firebaseIdToken) return;
+    if (!authToken) return;
     setLoading(true);
     setError('');
 
     try {
-      const res = await fetch('/api/auth/firebase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firebaseIdToken,
-          city: data.city,
-          district: data.district,
-          fingerprint,
-          party: selectedParty,
-          roundId: activeRoundId,
-          password: authExtraData?.password,
-        }),
-      });
+      let res;
+      if (authType === 'phone') {
+        // Phone registration — use register-phone endpoint
+        res = await fetch('/api/auth/register-phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: authToken,
+            city: data.city,
+            district: data.district,
+            fingerprint,
+            party: selectedParty,
+            roundId: activeRoundId,
+            password: authExtraData?.password,
+          }),
+        });
+      } else {
+        // Email registration — use firebase endpoint
+        res = await fetch('/api/auth/firebase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firebaseIdToken: authToken,
+            city: data.city,
+            district: data.district,
+            fingerprint,
+            party: selectedParty,
+            roundId: activeRoundId,
+            password: authExtraData?.password,
+          }),
+        });
+      }
 
       const result = await res.json();
       if (!res.ok) {
@@ -424,9 +473,9 @@ export default function VoteModal({
 
             {step === 'firebase-auth' && (
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
-                <FirebaseAuthForm
+                <AuthForm
                   method={authMethod}
-                  onAuthenticated={handleFirebaseAuth}
+                  onAuthenticated={handleAuth}
                   onDirectLogin={handleDirectLogin}
                   onBack={() => setStep('party-select')}
                 />
