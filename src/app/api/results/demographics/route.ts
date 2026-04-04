@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const { brackets, column } = TYPE_MAP[type];
 
     // Find active round, or fall back to latest round with votes
-    let roundResult = await db.execute(
+    const roundResult = await db.execute(
       sql`SELECT id FROM rounds WHERE is_active = true LIMIT 1`
     );
 
