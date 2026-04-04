@@ -1,88 +1,88 @@
 # #MilletNeDer
 
-Turkiye'nin 81 ilini kapsayan, aylik turlarda calisan acik kaynakli online secim anketi platformu.
+Türkiye'nin 81 ilini kapsayan, aylık turlarda çalışan açık kaynaklı online seçim anketi platformu.
 
-**Temel Prensip:** Seffaflik. Tum metodolojiler, parametreler ve hesaplama yontemleri acik sekilde yayinlanir.
+**Temel Prensip:** Şeffaflık. Tüm metodolojiler, parametreler ve hesaplama yöntemleri açık şekilde yayınlanır.
 
-## Ozellikler
+## Özellikler
 
 ### Oy Sistemi
-- Aylik turlarla calisan cok partili anket sistemi
-- Oy degistirme ve turlar arasi oy tasima
-- Kararsiz (karasizim) secenegi ve oransal dagitim
-- Oy sifreleme (AES-256, versiyon destegi)
-- Kurtarma kodlari ile hesap kurtarma (PBKDF2)
+- Aylık turlarla çalışan çok partili anket sistemi
+- Oy değiştirme ve turlar arası oy taşıma
+- Kararsız (kararsızım) seçeneği ve oransal dağıtım
+- Oy şifreleme (AES-256, versiyon desteği)
+- Kurtarma kodları ile hesap kurtarma (PBKDF2)
 
-### Agirliklandirma Motoru
-8+ yapilandirilabilir agirliklandirma yontemi:
-- **Post-stratifikasyon:** TUIK nufus verileriyle demografik duzeltme
-- **Raking (IPF):** Cok boyutlu yinelemeli orantili uydurma
-- **Bolgesel kota:** 7 cografi bolge icin YSK secmen dagilimina gore dengeleme
-- **Katilim niyeti:** Oy kullanma olasiligina gore ayarlama
-- **Guncellik:** Yeni oylari onde tutan ustel azalma
-- **Bayesian duzeltme:** Kucuk orneklemleri ulusal ortalamaya cekme
-- **Partizan sapma:** 2023 secim sonuclariyla duzeltme
-- **Sahteclik skoru:** Agirliklandirma faktoru olarak dahil etme
+### Ağırlıklandırma Motoru
+8+ yapılandırılabilir ağırlıklandırma yöntemi:
+- **Post-stratifikasyon:** TÜİK nüfus verileriyle demografik düzeltme
+- **Raking (IPF):** Çok boyutlu yinelemeli orantılı uydurma
+- **Bölgesel kota:** 7 coğrafi bölge için YSK seçmen dağılımına göre dengeleme
+- **Katılım niyeti:** Oy kullanma olasılığına göre ayarlama
+- **Güncellik:** Yeni oyları önde tutan üstel azalma
+- **Bayesian düzeltme:** Küçük örneklemleri ulusal ortalamaya çekme
+- **Partizan sapma:** 2023 seçim sonuçlarıyla düzeltme
+- **Sahteclik skoru:** Ağırlıklandırma faktörü olarak dahil etme
 
 ### Sahteclik Tespiti
-- Cok faktorlu skor sistemi (0-100): IP kumeleme, VPN/datacenter tespiti, hesap yasi, tek kullanimlik e-posta engelleme, bos profil tespiti, supheli tarayici analizi
-- Cihaz parmak izi ile coklu hesap tespiti
-- Esik degerine gore oy gecersiz kilma veya agirlik dusurme
+- Çok faktörlü skor sistemi (0-100): IP kümeleme, VPN/datacenter tespiti, hesap yaşı, tek kullanımlık e-posta engelleme, boş profil tespiti, şüpheli tarayıcı analizi
+- Cihaz parmak izi ile çoklu hesap tespiti
+- Eşik değerine göre oy geçersiz kılma veya ağırlık düşürme
 
-### Harita ve Gorsellestirme
-- Interaktif Turkiye haritasi (il / ilce / bolge gorunum modlari)
-- Il detay modali ile parti dagilimi
-- Ilce bazinda detaylandirma
-- Ham ve agirlikli veri modlari arasi gecis
+### Harita ve Görselleştirme
+- İnteraktif Türkiye haritası (il / ilçe / bölge görünüm modları)
+- İl detay modalı ile parti dağılımı
+- İlçe bazında detaylandırma
+- Ham ve ağırlıklı veri modları arası geçiş
 
-### Sonuclar ve Analitik
-- Canli oy sayimi
-- Parti cubuk grafikleri (ham vs agirlikli)
-- Il karsilastirma tablolari
-- Katilim siralamasi (illerin temsil orani)
-- Demografik kirilim grafikleri (yas, cinsiyet, egitim, katilim niyeti)
-- Guven gostergesi (orneklem buyuklugu, hata payi)
-- Seffaflik raporu (veri kalitesi metrikleri)
+### Sonuçlar ve Analitik
+- Canlı oy sayımı
+- Parti çubuk grafikleri (ham vs ağırlıklı)
+- İl karşılaştırma tabloları
+- Katılım sıralaması (illerin temsil oranı)
+- Demografik kırılım grafikleri (yaş, cinsiyet, eğitim, katılım niyeti)
+- Güven göstergesi (örneklem büyüklüğü, hata payı)
+- Şeffaflık raporu (veri kalitesi metrikleri)
 
-### Kimlik Dogrulama ve Gizlilik
-- Firebase Authentication (e-posta/sifre + telefon/SMS)
-- **Sifir PII mimarisi** — veritabaninda e-posta, telefon, isim, sifre saklanmaz
+### Kimlik Doğrulama ve Gizlilik
+- Firebase Authentication (e-posta/şifre + telefon/SMS)
+- **Sıfır PII mimarisi** — veritabanında e-posta, telefon, isim, şifre saklanmaz
 - Sadece `firebase_uid` ve `identity_hash` (SHA256) tutulur
 - Referans sistemi ve rozet kademeleri
 
 ### Admin Paneli
-- Istatistik dashboard (kullanici, oy, supheli hesap grafikleri)
-- Kullanici yonetimi (listeleme, detay, flag/unflag, silme)
+- İstatistik dashboard (kullanıcı, oy, şüpheli hesap grafikleri)
+- Kullanıcı yönetimi (listeleme, detay, flag/unflag, silme)
 - Oy inceleme ve filtreleme
-- Tur yonetimi (olusturma, duzenleme, detay)
-- Parti yonetimi (CRUD, logo, renk, siralama)
-- Agirliklandirma konfigurasyonu
-- Referans veri duzenleme (TUIK, YSK verileri)
-- Secmen sayilari yonetimi
-- Auth loglari ve denetim gecmisi
-- Ayarlar (auth yontemi, Firebase durumu)
+- Tur yönetimi (oluşturma, düzenleme, detay)
+- Parti yönetimi (CRUD, logo, renk, sıralama)
+- Ağırlıklandırma konfigürasyonu
+- Referans veri düzenleme (TÜİK, YSK verileri)
+- Seçmen sayıları yönetimi
+- Auth logları ve denetim geçmişi
+- Ayarlar (auth yöntemi, Firebase durumu)
 
-### Islem Gecmisi
-- Tum islemlerin kriptografik hash ile kaydi
-- Oy kullanma, oy degistirme, kayit, tasima islemleri
-- Coklu filtre ve sayfalama destegi
+### İşlem Geçmişi
+- Tüm işlemlerin kriptografik hash ile kaydı
+- Oy kullanma, oy değiştirme, kayıt, taşıma işlemleri
+- Çoklu filtre ve sayfalama desteği
 
 ### Raporlar
-- Aylik yayinlanan anket raporlari
-- Goruntuleme sayisi takibi
+- Aylık yayınlanan anket raporları
+- Görüntüleme sayısı takibi
 
-## Teknoloji Yigini
+## Teknoloji Yığını
 
 | Katman | Teknoloji |
 |--------|-----------|
 | Framework | Next.js 15.5 (App Router, TypeScript) |
 | UI | Tailwind CSS 4, Framer Motion |
 | ORM | Drizzle ORM 0.45 |
-| Veritabani | PostgreSQL |
+| Veritabanı | PostgreSQL |
 | Harita | react-simple-maps, d3-geo |
 | Auth | Firebase Authentication + JWT |
-| Parmak Izi | @fingerprintjs/fingerprintjs |
-| Dogrulama | Zod |
+| Parmak İzi | @fingerprintjs/fingerprintjs |
+| Doğrulama | Zod |
 | E-posta | Nodemailer |
 
 ## Kurulum
@@ -93,73 +93,73 @@ Turkiye'nin 81 ilini kapsayan, aylik turlarda calisan acik kaynakli online secim
 - PostgreSQL 15+
 - Firebase projesi (Authentication etkin)
 
-### Adimlar
+### Adımlar
 
 ```bash
 # Repoyu klonla
 git clone https://github.com/milletneder/milletneder.git
 cd milletneder
 
-# Bagimliliklari yukle
+# Bağımlılıkları yükle
 npm install
 
-# Ortam degiskenlerini ayarla
+# Ortam değişkenlerini ayarla
 cp .env.example .env.local
-# .env.local dosyasini kendi degerlerinle doldur (asagidaki tabloya bak)
+# .env.local dosyasını kendi değerlerinle doldur (aşağıdaki tabloya bak)
 
-# Firebase client config'ini guncelle
-# src/lib/firebase/config.ts dosyasinda kendi Firebase projenizin degerlerini girin
+# Firebase client config'ini güncelle
+# src/lib/firebase/config.ts dosyasında kendi Firebase projenizin değerlerini girin
 
-# Veritabani migration
+# Veritabanı migration
 npx drizzle-kit push
 
-# Referans verileri yukle (ilk kurulumda)
+# Referans verileri yükle (ilk kurulumda)
 npx tsx scripts/seed-reference-data.ts
 npx tsx scripts/seed-district-data.ts
 
-# Gelistirme sunucusunu baslat
+# Geliştirme sunucusunu başlat
 npm run dev
 ```
 
-Tarayicida [http://localhost:3000](http://localhost:3000) adresini ac.
+Tarayıcıda [http://localhost:3000](http://localhost:3000) adresini aç.
 
-### Ortam Degiskenleri
+### Ortam Değişkenleri
 
-| Degisken | Zorunlu | Aciklama |
+| Değişken | Zorunlu | Açıklama |
 |----------|---------|----------|
-| `DATABASE_URL` | Evet | PostgreSQL baglanti URL'si |
-| `JWT_SECRET` | Evet | Kullanici JWT imzalama anahtari |
-| `SETTINGS_ENCRYPTION_KEY` | Evet | Admin ayarlari sifrelemesi (AES-256-GCM, 64 hex karakter) |
+| `DATABASE_URL` | Evet | PostgreSQL bağlantı URL'si |
+| `JWT_SECRET` | Evet | Kullanıcı JWT imzalama anahtarı |
+| `SETTINGS_ENCRYPTION_KEY` | Evet | Admin ayarları şifrelemesi (AES-256-GCM, 64 hex karakter) |
 | `FIREBASE_SERVICE_ACCOUNT` | Evet | Firebase Admin SDK service account JSON |
-| `NEXT_PUBLIC_APP_URL` | Evet | Site URL'si (ornek: `https://yourdomain.com`) |
+| `NEXT_PUBLIC_APP_URL` | Evet | Site URL'si (örnek: `https://yourdomain.com`) |
 
-Ornek degerler icin `.env.example` dosyasina bakin.
+Örnek değerler için `.env.example` dosyasına bakın.
 
 ### Firebase Kurulumu
 
-1. [Firebase Console](https://console.firebase.google.com)'da yeni proje olusturun
-2. Authentication > Sign-in method'dan Email/Password ve/veya Phone'u etkinlestirin
+1. [Firebase Console](https://console.firebase.google.com)'da yeni proje oluşturun
+2. Authentication > Sign-in method'dan Email/Password ve/veya Phone'u etkinleştirin
 3. Project Settings > Service Accounts'tan yeni private key indirin
-4. Indirilen JSON'u `FIREBASE_SERVICE_ACCOUNT` env degiskenine koyun
-5. `src/lib/firebase/config.ts` dosyasindaki config degerlerini kendi projenizinkilerle degistirin
+4. İndirilen JSON'u `FIREBASE_SERVICE_ACCOUNT` env değişkenine koyun
+5. `src/lib/firebase/config.ts` dosyasındaki config değerlerini kendi projenizinkilerle değiştirin
 
-## Proje Yapisi
+## Proje Yapısı
 
 ```
 src/
-├── app/                    — Sayfalar ve API route'lari
-│   ├── admin/              — Admin paneli sayfalari
+├── app/                    — Sayfalar ve API route'ları
+│   ├── admin/              — Admin paneli sayfaları
 │   ├── api/                — REST API endpoint'leri
-│   ├── metodoloji/         — Metodoloji sayfasi
-│   ├── profil/             — Kullanici profili
-│   ├── raporlar/           — Aylik raporlar
-│   ├── islemler/           — Islem gecmisi
-│   ├── auth/               — Firebase e-posta dogrulama
-│   ├── gizlilik/           — Gizlilik politikasi
-│   └── kullanim-kosullari/ — Kullanim kosullari
+│   ├── metodoloji/         — Metodoloji sayfası
+│   ├── profil/             — Kullanıcı profili
+│   ├── raporlar/           — Aylık raporlar
+│   ├── islemler/           — İşlem geçmişi
+│   ├── auth/               — Firebase e-posta doğrulama
+│   ├── gizlilik/           — Gizlilik politikası
+│   └── kullanim-kosullari/ — Kullanım koşulları
 ├── components/
-│   ├── admin/              — Admin panel bilesenleri
-│   ├── auth/               — Giris/kayit formlar, kurtarma kodlari
+│   ├── admin/              — Admin panel bileşenleri
+│   ├── auth/               — Giriş/kayıt formları, kurtarma kodları
 │   ├── layout/             — Header, DemographicBanner, PageHero
 │   ├── map/                — TurkeyMap, DistrictMap, CityTooltip, MapToolbar
 │   ├── results/            — PartyBars, TransparencyReport, DemographicComparison
@@ -171,26 +171,26 @@ src/
 │   ├── firebase/           — Client SDK config, Admin SDK
 │   ├── db/                 — Drizzle schema, migrations
 │   ├── fraud/              — Fraud scorer, VPN detection, disposable emails
-│   ├── geo/                — Bolge, il, ilce verileri
-│   ├── weighting/          — 8+ agirliklandirma motoru
-│   ├── crypto/             — Oy sifreleme, kurtarma kodlari
-│   └── admin/              — Audit log, sifrelenmis ayarlar
-├── types/                  — TypeScript tip tanimlari
+│   ├── geo/                — Bölge, il, ilçe verileri
+│   ├── weighting/          — 8+ ağırlıklandırma motoru
+│   ├── crypto/             — Oy şifreleme, kurtarma kodları
+│   └── admin/              — Audit log, şifrelenmiş ayarlar
+├── types/                  — TypeScript tip tanımları
 scripts/                    — Seed ve migration scriptleri
-drizzle/                    — Veritabani migration dosyalari
-public/geo/                 — Turkiye il/ilce GeoJSON verileri
+drizzle/                    — Veritabanı migration dosyaları
+public/geo/                 — Türkiye il/ilçe GeoJSON verileri
 ```
 
-## Dokumantasyon
+## Dokümantasyon
 
-- **SPEC.md** — Detayli teknik spesifikasyon (veritabani semasi, API endpoint'leri, agirliklandirma formulleri)
-- **CLAUDE.md** — Gelistirici rehberi
+- **SPEC.md** — Detaylı teknik spesifikasyon (veritabanı şeması, API endpoint'leri, ağırlıklandırma formülleri)
+- **CLAUDE.md** — Geliştirici rehberi
 
 ## Lisans
 
-Bu proje [GNU Affero General Public License v3.0](LICENSE) ile lisanslidir.
+Bu proje [GNU Affero General Public License v3.0](LICENSE) ile lisanslıdır.
 
-Bu lisans kapsaminda:
-- Kaynak kodunu goruntuleyebilir, calistirabilir ve degistirebilirsiniz
-- Degistirdiginiz surumu dagitirken kaynak kodunu acik tutmalisiniz
-- Bu yazilimi ag uzerinden bir hizmet olarak sunarsaniz, kaynak kodunu kullanicilara saglamalisiniz
+Bu lisans kapsamında:
+- Kaynak kodunu görüntüleyebilir, çalıştırabilir ve değiştirebilirsiniz
+- Değiştirdiğiniz sürümü dağıtırken kaynak kodunu açık tutmalısınız
+- Bu yazılımı ağ üzerinden bir hizmet olarak sunarsanız, kaynak kodunu kullanıcılara sağlamalısınız
