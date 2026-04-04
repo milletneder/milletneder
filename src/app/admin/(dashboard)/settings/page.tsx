@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: { 'X-Admin-Token': getToken() },
       });
       if (res.ok) {
         const data = await res.json();
@@ -57,7 +57,7 @@ export default function AdminSettingsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
+          'X-Admin-Token': getToken(),
         },
         body: JSON.stringify({ key: 'auth_method', value: method }),
       });
@@ -85,7 +85,7 @@ export default function AdminSettingsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
+          'X-Admin-Token': getToken(),
         },
         body: JSON.stringify({ key, value }),
       });

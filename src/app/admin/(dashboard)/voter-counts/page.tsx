@@ -36,7 +36,7 @@ export default function VoterCountsPage() {
   const headers = useCallback(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     return {
-      Authorization: `Bearer ${token}`,
+      'X-Admin-Token': token || '',
       'Content-Type': 'application/json',
     };
   }, []);

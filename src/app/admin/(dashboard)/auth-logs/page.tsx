@@ -52,7 +52,7 @@ export default function AuthLogsPage() {
       const params = new URLSearchParams({ page: String(page), limit: '50' });
       if (filter) params.set('event_type', filter);
       const res = await fetch(`/api/admin/auth-logs?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'X-Admin-Token': token || '' },
       });
       if (res.ok) {
         const data = await res.json();

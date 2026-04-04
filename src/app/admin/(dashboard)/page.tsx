@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
     async function fetchData() {
       try {
         const token = localStorage.getItem('admin_token');
-        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+        const headers = { 'X-Admin-Token': token || '', 'Content-Type': 'application/json' };
         const [statsRes, chartsRes] = await Promise.all([
           fetch('/api/admin/dashboard/stats', { headers }),
           fetch('/api/admin/dashboard/charts', { headers }),

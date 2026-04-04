@@ -22,7 +22,7 @@ export function useAdminAuth() {
     }
 
     fetch('/api/admin/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 'X-Admin-Token': token },
     })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
@@ -54,11 +54,11 @@ export function useAdminApi() {
         ...options,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'X-Admin-Token': token || '',
           ...options?.headers,
         },
       });
-      if (res.status === 401) {
+      if (res.status === 403) {
         localStorage.removeItem('admin_token');
         router.push('/admin/login');
       }

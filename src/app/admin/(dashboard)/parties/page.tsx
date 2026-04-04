@@ -52,7 +52,7 @@ function slugify(text: string): string {
 function getAdminHeaders(): Record<string, string> {
   const token = localStorage.getItem('admin_token');
   const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) headers['X-Admin-Token'] = token;
   return headers;
 }
 

@@ -36,7 +36,7 @@ export default function AuditLogPage() {
       try {
         const token = localStorage.getItem('admin_token');
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) headers['X-Admin-Token'] = token;
         const res = await fetch(`/api/admin/audit-log?${params.toString()}`, { headers });
         if (res.ok) {
           const data = await res.json();
