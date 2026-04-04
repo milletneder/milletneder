@@ -440,18 +440,13 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
       if (!res.ok) {
-        // DB'de kullanıcı bulunamadı veya kayıt tamamlanmamış — VoteModal'a yönlendir
-        if ((res.status === 401 || (res.status === 403 && data.needsRegistration)) && onRegistrationNeeded) {
-          onRegistrationNeeded();
-          setLoading(false);
-          return;
-        }
-        // Tamamlanmamış kayıt (needsRegistration flag'i ile)
+        // Sadece tamamlanmamış kayıt durumunda VoteModal'a yönlendir
         if (data.needsRegistration && onRegistrationNeeded) {
           onRegistrationNeeded();
           setLoading(false);
           return;
         }
+        // Diğer tüm hatalar (kullanıcı bulunamadı, yanlış şifre, hesap devre dışı) → hata mesajı göster
         setError(data.error || 'Giriş başarısız');
         setLoading(false);
         return;
