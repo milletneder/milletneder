@@ -92,7 +92,6 @@ export default function Home() {
     education: string | null;
     currentParty: string | null;
   } | null>(null);
-  const [showDemoBanner, setShowDemoBanner] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(48);
   const [profileRefreshKey, setProfileRefreshKey] = useState(0);
   const [weightedResults, setWeightedResults] = useState<{
@@ -463,10 +462,7 @@ export default function Home() {
             education: data.user.education ?? null,
             currentParty: null,
           });
-          // Eksik demografik alan varsa ve daha önce kapatılmamışsa banner göster
-          const hasMissing = !data.user.gender || !data.user.age_bracket || !data.user.education;
-          const dismissed = localStorage.getItem('demo_banner_dismissed');
-          if (hasMissing && !dismissed) setShowDemoBanner(true);
+          // Demografik banner artık Header içindeki DemographicBanner component'i tarafından yönetilir
           // Herhangi bir turda oy kullanmış mı kontrol et
           fetch('/api/user/vote-history', {
             headers: { Authorization: `Bearer ${token}` },
@@ -512,29 +508,8 @@ export default function Home() {
         userHasVoted={userHasVoted}
       />
 
-      {/* Eksik demografik bilgi banner'ı */}
-      {showDemoBanner && (
-        <div className="fixed left-0 right-0 z-30 bg-neutral-900 text-white" style={{ top: headerHeight }}>
-          <div className="max-w-screen-2xl mx-auto px-6 py-2.5 flex items-center justify-between">
-            <p className="text-sm">
-              Demografik bilgilerini ekle, anket sonuçları daha doğru olsun.{' '}
-              <a href="/profil" className="underline font-medium">Bilgileri tamamla →</a>
-            </p>
-            <button
-              onClick={() => {
-                setShowDemoBanner(false);
-                localStorage.setItem('demo_banner_dismissed', '1');
-              }}
-              className="text-white/60 hover:text-white text-lg leading-none ml-4"
-            >
-              &times;
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* MAP — true fullscreen, no padding */}
-      <section className="md:h-screen w-full overflow-hidden" style={{ paddingTop: headerHeight + (showDemoBanner ? 40 : 0) }}>
+      <section className="md:h-screen w-full overflow-hidden" style={{ paddingTop: headerHeight }}>
         <TurkeyMap
           cityData={cityData}
           isActiveRound={!!isActiveRound}
