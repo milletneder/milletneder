@@ -118,7 +118,7 @@ export default function AuthLogsPage() {
                 return (
                   <tr key={log.id} className="border-b border-neutral-100 hover:bg-neutral-50">
                     <td className="px-3 py-2 text-neutral-600 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC' })}
+                      {new Date(log.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Istanbul' })}
                     </td>
                     <td className="px-3 py-2">
                       <span className={`inline-block px-2 py-0.5 text-[10px] font-medium ${info.color}`}>

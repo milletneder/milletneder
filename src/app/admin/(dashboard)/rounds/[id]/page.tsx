@@ -128,13 +128,13 @@ export default function RoundDetailPage() {
           <div>
             <div className="text-neutral-500">Başlangıç</div>
             <div className="text-black">
-              {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+              {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
             </div>
           </div>
           <div>
             <div className="text-neutral-500">Bitiş</div>
             <div className="text-black">
-              {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+              {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
             </div>
           </div>
           <div>

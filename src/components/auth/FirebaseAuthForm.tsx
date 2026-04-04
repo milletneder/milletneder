@@ -536,6 +536,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       if (!recaptchaVerifierRef.current) {
         logClientError('recaptcha_init_fail', 'RecaptchaVerifier oluşturulamadı', 'recaptcha_setup', phone);
         setError('reCAPTCHA başlatılamadı. Sayfayı yenileyip tekrar deneyin.');
+        setLoading(false);
         return;
       }
       const result = await signInWithPhoneNumber(auth, `+90${raw}`, recaptchaVerifierRef.current);

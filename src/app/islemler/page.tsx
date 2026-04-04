@@ -40,7 +40,7 @@ function formatTime(ts: string): string {
   const diffMs = now.getTime() - d.getTime();
 
   if (diffMs < 0 || diffMs > 86400000) {
-    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' });
   }
 
   const diffMin = Math.floor(diffMs / 60000);
@@ -60,6 +60,7 @@ function formatFullTime(ts: string): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: 'Europe/Istanbul',
   });
   const ms = String(d.getMilliseconds()).padStart(3, '0');
   return `${base}.${ms}`;

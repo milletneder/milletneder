@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
           const chartsData = await chartsRes.json();
           const mapItems = (items: ChartRawItem[]) =>
             (items || []).map((d: ChartRawItem) => ({
-              label: d.date ? new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }) : '',
+              label: d.date ? new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Istanbul' }) : '',
               value: d.count ?? 0,
             }));
           setCharts({
@@ -268,11 +268,11 @@ export default function AdminDashboardPage() {
                 <span>Tur #{stats.activeRound.id}</span>
                 <span>
                   Başlangıç:{' '}
-                  {new Date(stats.activeRound.start_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' })}
+                  {new Date(stats.activeRound.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
                 </span>
                 <span>
                   Bitiş:{' '}
-                  {new Date(stats.activeRound.end_date).toLocaleDateString('tr-TR', { timeZone: 'UTC' })}
+                  {new Date(stats.activeRound.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
                 </span>
               </div>
             </div>

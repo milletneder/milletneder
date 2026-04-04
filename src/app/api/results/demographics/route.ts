@@ -62,20 +62,20 @@ export async function GET(request: NextRequest) {
     }
 
     // anonymous_vote_counts'tan demografik kırılım (sadece aktif tur)
-    const roundFilter = targetRoundId ? `AND round_id = ${Number(targetRoundId)}` : '';
-    const rawQuery = sql.raw(`
+    // column whitelist'ten geliyor (TYPE_MAP), sql.raw() güvenli
+    const rawQuery = sql`
       SELECT
-        ${column} AS bracket,
+        ${sql.raw(column)} AS bracket,
         party,
         SUM(vote_count)::int AS vote_count
       FROM anonymous_vote_counts
       WHERE is_valid = true AND vote_count > 0
         AND party != 'karasizim'
-        AND ${column} IS NOT NULL
-        ${roundFilter}
-      GROUP BY ${column}, party
-      ORDER BY ${column}, vote_count DESC
-    `);
+        AND ${sql.raw(column)} IS NOT NULL
+        ${targetRoundId ? sql`AND round_id = ${Number(targetRoundId)}` : sql``}
+      GROUP BY ${sql.raw(column)}, party
+      ORDER BY ${sql.raw(column)}, vote_count DESC
+    `;
 
     const result = await db.execute(rawQuery);
     const rows = result.rows as Array<{

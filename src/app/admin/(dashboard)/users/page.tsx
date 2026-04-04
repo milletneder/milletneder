@@ -146,7 +146,7 @@ export default function UsersPage() {
                       </td>
                       <td className={table.td}>{user.city}</td>
                       <td className={table.td}>
-                        {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
                       </td>
                       <td className="px-4 py-3">
                         {user.is_flagged ? (

@@ -137,7 +137,7 @@ export default function VotesPage() {
                       </span>
                     </td>
                     <td className={table.td}>
-                      {vote.created_at ? new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : '-'}
+                      {vote.created_at ? new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
