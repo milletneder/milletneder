@@ -60,21 +60,25 @@ export default function DemographicBanner() {
   return (
     <div className="bg-black border-b border-neutral-800">
       <div className="max-w-screen-2xl mx-auto px-6 py-2 flex items-center justify-between gap-3">
-        <p className="text-[11px] text-neutral-300 flex-1">
-          Profilinde{' '}
-          <span className="text-white font-medium">{missingCount} eksik bilgi</span>{' '}
-          var. Demografik bilgiler anketin doğruluğunu artırır.
-          <Link href="/profil" className="ml-1.5 underline text-white font-medium hover:text-neutral-200">
+        <p className="text-xs text-neutral-300 flex-1">
+          <span className="text-white font-medium">Profilinde {missingCount} eksik bilgi var.</span>
+          {' '}Demografik bilgiler anketin doğruluğunu artırır.
+        </p>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href="/profil"
+            className="text-xs font-bold text-black bg-white hover:bg-neutral-200 px-3 py-1 transition-colors whitespace-nowrap"
+          >
             Tamamla
           </Link>
-        </p>
-        <button
-          onClick={dismiss}
-          className="text-neutral-500 hover:text-white text-sm leading-none flex-shrink-0 px-1"
-          aria-label="Kapat"
-        >
-          &times;
-        </button>
+          <button
+            onClick={dismiss}
+            className="text-neutral-500 hover:text-white text-sm leading-none px-1"
+            aria-label="Kapat"
+          >
+            &times;
+          </button>
+        </div>
       </div>
     </div>
   );
