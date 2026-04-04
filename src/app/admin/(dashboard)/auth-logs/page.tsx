@@ -29,6 +29,7 @@ const eventTypeLabels: Record<string, { label: string; color: string }> = {
   register_blocked: { label: 'Engellendi', color: 'bg-red-200 text-red-900' },
   password_reset: { label: 'Şifre Sıfırlama', color: 'bg-purple-100 text-purple-800' },
   password_change: { label: 'Şifre Değişikliği', color: 'bg-purple-100 text-purple-800' },
+  client_error: { label: 'Client Hata', color: 'bg-orange-100 text-orange-800' },
 };
 
 export default function AuthLogsPage() {
