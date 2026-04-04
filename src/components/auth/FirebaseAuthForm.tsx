@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  initializeRecaptchaConfig,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   type ConfirmationResult,
@@ -97,6 +98,13 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setTimeout(() => passwordInputRef.current?.focus(), 100);
     }
   }, [emailStep]);
+
+  // Firebase SDK'ya sunucu reCAPTCHA config'ini sorgulatır
+  // Bu sayede SDK, Enterprise OFF ise token almaya çalışmaz
+  useEffect(() => {
+    if (method !== 'phone') return;
+    initializeRecaptchaConfig(auth).catch(() => {});
+  }, [method]);
 
   // reCAPTCHA'yı önceden yükle ve RENDER et — Google'a daha fazla davranış sinyali toplamak için zaman ver
   // render() çağrısı Google'ın sayfa davranışını analiz etmesini başlatır, -39 hatasını azaltır
