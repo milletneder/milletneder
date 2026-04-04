@@ -413,6 +413,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
 
   // Phone + password login
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
+  const [showRegisterHint, setShowRegisterHint] = useState(false);
 
   const handlePhonePasswordLogin = async () => {
     const raw = getRawPhone();
@@ -446,7 +447,14 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
           setLoading(false);
           return;
         }
-        // Diğer tüm hatalar (kullanıcı bulunamadı, yanlış şifre, hesap devre dışı) → hata mesajı göster
+        // Kullanıcı bulunamadı → hata mesajı + kayıt ol butonu göster
+        if (res.status === 401) {
+          setError('Bu numarayla kayıtlı bir hesap bulunamadı.');
+          setShowRegisterHint(true);
+          setLoading(false);
+          return;
+        }
+        // Diğer hatalar (yanlış şifre, hesap devre dışı) → sadece hata mesajı
         setError(data.error || 'Giriş başarısız');
         setLoading(false);
         return;
@@ -1284,7 +1292,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               <input
                 type="tel" data-clarity-mask="true"
                 value={phone}
-                onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); setExistingUserDetected(false); }}
+                onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); setExistingUserDetected(false); setShowRegisterHint(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && (loginOnly || existingUserDetected) && getRawPhone().length === 10 && phonePassword.length >= 6 && handlePhonePasswordLogin()}
                 className="flex-1 bg-white border border-neutral-300 px-4 py-3 text-black focus:border-black focus:outline-none transition-colors placeholder-neutral-400"
                 placeholder="5XX XXX XX XX"
@@ -1382,6 +1390,18 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             >
               Şifremi Unuttum
             </button>
+          )}
+
+          {showRegisterHint && onRegistrationNeeded && (
+            <div className="bg-neutral-50 border border-neutral-200 p-3 text-center space-y-2">
+              <p className="text-xs text-neutral-600">Henüz hesabınız yok mu?</p>
+              <button
+                onClick={() => { setShowRegisterHint(false); onRegistrationNeeded(); }}
+                className="w-full bg-black text-white py-2 text-sm font-medium hover:bg-neutral-800 transition-colors"
+              >
+                Oy Ver &amp; Kayıt Ol
+              </button>
+            </div>
           )}
         </div>
       )}
