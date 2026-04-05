@@ -90,8 +90,15 @@ async function castRegistrationVote(
   vek: Buffer | null,
   userDemographics: { age_bracket?: string | null; gender?: string | null; education?: string | null; income_bracket?: string | null; turnout_intention?: string | null; previous_vote_2023?: string | null },
 ): Promise<string | undefined> {
-  const [activeRound] = await db.select().from(rounds).where(eq(rounds.is_active, true)).limit(1);
-  if (!activeRound) return undefined;
+  console.log(`[VOTE] castRegistrationVote called: userId=${userId}, party=${party}, city=${city}, district=${district}`);
+  const allRounds = await db.select().from(rounds);
+  console.log(`[VOTE] All rounds:`, allRounds.map(r => ({ id: r.id, is_active: r.is_active, start: r.start_date, end: r.end_date })));
+  const [activeRound] = allRounds.filter(r => r.is_active);
+  if (!activeRound) {
+    console.error(`[VOTE] NO ACTIVE ROUND FOUND! Cannot create vote for user ${userId}`);
+    return undefined;
+  }
+  console.log(`[VOTE] Active round found: id=${activeRound.id}`);
 
   const encryptedParty = vek ? encryptParty(party, vek) : null;
 
@@ -217,14 +224,18 @@ export async function registerNewUser(input: RegistrationInput): Promise<AuthRes
 
   // Vote
   let vp: string | undefined;
+  console.log(`[REGISTER] About to cast vote: party=${party}, userId=${newUser.id}`);
   if (party) {
     vp = await castRegistrationVote(newUser.id, String(party), cityStr, districtStr, vek, {});
+    console.log(`[REGISTER] castRegistrationVote returned: vp=${vp}`);
+  } else {
+    console.error(`[REGISTER] party is falsy! party="${party}"`);
   }
 
   const vkBase64 = vek ? vek.toString('base64') : undefined;
   const token = signToken({ userId: newUser.id, vp, vk: vkBase64 });
 
-  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: newUser.id, request, details: { city: cityStr, district: districtStr } });
+  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: newUser.id, request, details: { city: cityStr, district: districtStr, voteParty: vp || 'NONE' } });
 
   return {
     token,

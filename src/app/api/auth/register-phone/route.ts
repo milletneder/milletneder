@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
       result = await registerNewUser(input);
     }
 
+    console.log(`[REGISTER-PHONE] Registration result:`, JSON.stringify(result, null, 2).slice(0, 500));
+
     // Check for error result
     if ('error' in result) {
       return NextResponse.json({ error: result.error }, { status: result.status });
