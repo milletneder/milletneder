@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/auth/admin-middleware';
 import { getSetting, setSetting, getMaskedSetting } from '@/lib/admin/settings';
 import { invalidateTwilioConfigCache } from '@/lib/sms/twilio';
+import { invalidateVatansmsConfigCache } from '@/lib/sms/vatansms';
+import { invalidateProviderCache } from '@/lib/sms/provider';
 import { db } from '@/lib/db';
 import { adminAuditLogs } from '@/lib/db/schema';
 
@@ -9,11 +11,17 @@ export const dynamic = 'force-dynamic';
 
 const ALLOWED_KEYS = [
   'auth_method', // 'email' | 'phone'
+  'sms_provider', // 'twilio' | 'vatansms'
   'twilio_account_sid',
   'twilio_auth_token',
   'twilio_verify_service_sid',
   'twilio_phone_number', // kept for backward compat, not used by Verify API
   'twilio_test_mode', // 'true' | 'false'
+  'vatansms_api_id',
+  'vatansms_api_user',
+  'vatansms_api_pass',
+  'vatansms_sender',
+  'vatansms_test_mode', // 'true' | 'false'
   'smtp_host',
   'smtp_port',
   'smtp_user',
@@ -22,7 +30,7 @@ const ALLOWED_KEYS = [
 ];
 
 // Sensitive keys — return masked values in GET
-const MASKED_KEYS = ['twilio_auth_token', 'smtp_pass'];
+const MASKED_KEYS = ['twilio_auth_token', 'vatansms_api_pass', 'smtp_pass'];
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
@@ -61,6 +69,12 @@ export async function PUT(request: NextRequest) {
   if (key === 'auth_method' && !['email', 'phone'].includes(value)) {
     return NextResponse.json({ error: 'Geçersiz doğrulama yöntemi. email veya phone olmalı.' }, { status: 400 });
   }
+  if (key === 'sms_provider' && !['twilio', 'vatansms'].includes(value)) {
+    return NextResponse.json({ error: 'Geçersiz SMS sağlayıcı. twilio veya vatansms olmalı.' }, { status: 400 });
+  }
+  if (key === 'vatansms_test_mode' && !['true', 'false'].includes(value)) {
+    return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });
+  }
   if (key === 'twilio_account_sid' && value && !String(value).startsWith('AC')) {
     return NextResponse.json({ error: 'Twilio Account SID "AC" ile başlamalı.' }, { status: 400 });
   }
@@ -88,9 +102,15 @@ export async function PUT(request: NextRequest) {
 
   await setSetting(key, String(value), admin.id);
 
-  // Twilio ayarı değiştiyse cache'i temizle
+  // Sağlayıcı ayarı değiştiyse ilgili cache'leri temizle
   if (key.startsWith('twilio_')) {
     invalidateTwilioConfigCache();
+  }
+  if (key.startsWith('vatansms_')) {
+    invalidateVatansmsConfigCache();
+  }
+  if (key === 'sms_provider') {
+    invalidateProviderCache();
   }
 
   // Audit log — hassas değerleri maskele

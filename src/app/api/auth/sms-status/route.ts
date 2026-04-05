@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBalanceStatus } from '@/lib/sms/twilio';
+import { getBalanceStatus } from '@/lib/sms/provider';
 
 export async function GET() {
   try {

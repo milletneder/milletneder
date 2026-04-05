@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendVerification } from '@/lib/sms/twilio';
+import { sendVerification } from '@/lib/sms/provider';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
 
 // Phone-based rate limiting (1 request per 60 seconds)

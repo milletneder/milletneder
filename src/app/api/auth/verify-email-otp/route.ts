@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { markEmailAsVerified } from '@/lib/auth/phone-otp-store';
-import { checkVerification } from '@/lib/sms/twilio';
+import { checkVerification } from '@/lib/sms/provider';
 import { hashIdentity, loginExistingUser } from '@/lib/auth/registration';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
 

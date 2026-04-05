@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendVerification } from '@/lib/sms/twilio';
+import { sendVerification } from '@/lib/sms/provider';
 import { isRateLimited, storeCode, generateCode } from '@/lib/auth/verification-codes';
 
 export const dynamic = 'force-dynamic';

@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { isRateLimited } from '@/lib/auth/verification-codes';
-import { sendVerification } from '@/lib/sms/twilio';
+import { sendVerification } from '@/lib/sms/provider';
 
 export const dynamic = 'force-dynamic';
 
