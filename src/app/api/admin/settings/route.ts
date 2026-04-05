@@ -27,6 +27,7 @@ const ALLOWED_KEYS = [
   'smtp_user',
   'smtp_pass',
   'smtp_from',
+  'force_low_balance', // 'true' | 'false' — test icin bakiye dusuk simule eder
 ];
 
 // Sensitive keys — return masked values in GET
@@ -98,6 +99,9 @@ export async function PUT(request: NextRequest) {
   }
   if (key === 'twilio_test_mode' && !['true', 'false'].includes(value)) {
     return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });
+  }
+  if (key === 'force_low_balance' && !['true', 'false'].includes(value)) {
+    return NextResponse.json({ error: 'Bakiye simülasyonu true veya false olmalı.' }, { status: 400 });
   }
 
   await setSetting(key, String(value), admin.id);

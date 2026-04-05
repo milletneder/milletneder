@@ -33,6 +33,11 @@ export default function AdminSettingsPage() {
   const [vatanSaving, setVatanSaving] = useState(false);
   const [vatanMessage, setVatanMessage] = useState('');
 
+  // Test: Force low balance
+  const [forceLowBalance, setForceLowBalance] = useState(false);
+  const [forceLowSaving, setForceLowSaving] = useState(false);
+  const [forceLowMessage, setForceLowMessage] = useState('');
+
   // SMTP settings
   const [smtpHost, setSmtpHost] = useState('');
   const [smtpPort, setSmtpPort] = useState('');
@@ -74,6 +79,8 @@ export default function AdminSettingsPage() {
         if (s?.vatansms_api_pass?.value) setVatanApiPass(s.vatansms_api_pass.value);
         if (s?.vatansms_sender?.value) setVatanSender(s.vatansms_sender.value);
         setVatanTestMode(s?.vatansms_test_mode?.value === 'true');
+        // Force low balance
+        setForceLowBalance(s?.force_low_balance?.value === 'true');
         // SMTP
         if (s?.smtp_host?.value) setSmtpHost(s.smtp_host.value);
         if (s?.smtp_port?.value) setSmtpPort(s.smtp_port.value);
@@ -692,6 +699,44 @@ export default function AdminSettingsPage() {
             </div>
           </>
         )}
+
+        {/* Test: Bakiye Dusuk Simülasyonu */}
+        <div className="border border-amber-300 bg-amber-50 p-5">
+          <h2 className="text-sm font-bold text-black mb-1">Test Araclari</h2>
+          <p className="text-xs text-neutral-500 mb-4">
+            Gelistirme ve test amacli simülasyon ayarlari.
+          </p>
+
+          {forceLowMessage && (
+            <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
+              {forceLowMessage}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-medium text-neutral-600">Bakiye Dusuk Simülasyonu</span>
+              <p className="text-[10px] text-neutral-400">Acikken SMS bakiyesi dusuk gibi davranir ve bagis modalini gosterir.</p>
+            </div>
+            <button
+              onClick={() => {
+                const newVal = !forceLowBalance;
+                setForceLowBalance(newVal);
+                handleSaveSetting('force_low_balance', String(newVal), setForceLowMessage, setForceLowSaving);
+              }}
+              disabled={forceLowSaving}
+              className={`relative w-11 h-6 rounded-full transition-colors ${
+                forceLowBalance ? 'bg-amber-500' : 'bg-neutral-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  forceLowBalance ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
 
         {/* Gizlilik Notu */}
         <div className="border border-neutral-200 p-5 bg-neutral-50">
