@@ -33,6 +33,16 @@ jobs:
               echo ">> WARNING: STAGING_BASIC_AUTH secret is empty!"
             fi
 
+            # Middleware dosyası kontrolü
+            if [ -f src/middleware.ts ]; then
+              echo ">> src/middleware.ts found ($(wc -c < src/middleware.ts) bytes)"
+            else
+              echo ">> ERROR: src/middleware.ts NOT FOUND!"
+            fi
+
+            # Eski build cache temizle (middleware gibi yeni dosyaların derlenmesini garanti et)
+            rm -rf .next
+
             npm run build
 
             # PM2'ye env var'ı aktar ve yeniden başlat
