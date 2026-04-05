@@ -1,31 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Next.js Middleware — Staging ortamı için Basic Auth koruması.
- *
- * Hostname "staging" içeriyorsa Basic Auth uygular.
- * Production'da (milletneder.com) devre dışıdır.
- */
-
-// Base64 encoded credentials — plaintext kodda saklanmaz
-// echo -n "staging:MnStg2026!" | base64
+// Base64("staging:MnStg2026!")
 const STAGING_CREDENTIALS_B64 = 'c3RhZ2luZzpNblN0ZzIwMjYh';
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
+  const isStaging = host.includes('staging');
 
-  // Sadece staging ortamında Basic Auth uygula
-  if (!host.includes('staging')) {
-    return NextResponse.next();
+  // Staging değilse geç, ama debug header ekle
+  if (!isStaging) {
+    const response = NextResponse.next();
+    response.headers.set('x-middleware-debug', `host=${host},staging=false`);
+    return response;
   }
 
+  // Staging — Basic Auth kontrol
   const authHeader = request.headers.get('authorization');
 
   if (authHeader?.startsWith('Basic ')) {
-    // Browser gönderdiği base64 ile karşılaştır
     const providedB64 = authHeader.slice(6);
     if (providedB64 === STAGING_CREDENTIALS_B64) {
-      return NextResponse.next();
+      const response = NextResponse.next();
+      response.headers.set('x-middleware-debug', `host=${host},staging=true,auth=valid`);
+      return response;
     }
   }
 
@@ -33,6 +30,7 @@ export function middleware(request: NextRequest) {
     status: 401,
     headers: {
       'WWW-Authenticate': 'Basic realm="Staging"',
+      'x-middleware-debug': `host=${host},staging=true,auth=missing`,
     },
   });
 }
