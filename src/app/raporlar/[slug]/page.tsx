@@ -69,7 +69,7 @@ export default function ReportDetailPage() {
       <>
         <Header />
         <main className="min-h-screen bg-white">
-          <div className="max-w-3xl mx-auto px-6 pt-24 pb-16 text-sm text-neutral-400">
+          <div className="max-w-3xl mx-auto px-6 pb-16 text-sm text-neutral-400">
             Yükleniyor...
           </div>
         </main>
@@ -82,7 +82,7 @@ export default function ReportDetailPage() {
       <>
         <Header />
         <main className="min-h-screen bg-white">
-          <div className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+          <div className="max-w-3xl mx-auto px-6 pb-16">
             <p className="text-sm text-neutral-500 mb-4">Rapor bulunamadı</p>
             <Link href="/raporlar" className="text-sm text-black underline">
               Raporlara dön

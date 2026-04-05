@@ -82,7 +82,7 @@ export default function MetodolojiPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-16">
         <PageHero
           title="Metodoloji"
           subtitle="Bu platformun anket sonuçlarını nasıl hesapladığını ve hangi düzeltme yöntemlerini uyguladığını açıklar."

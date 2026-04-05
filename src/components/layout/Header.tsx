@@ -23,9 +23,22 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const loginFormRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(48);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // Header yüksekliğini dinamik olarak takip et (topbar'lar dahil)
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Admin panelden seçili auth yöntemini varsayılan olarak ayarla
   useEffect(() => {
@@ -142,7 +155,8 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-100">
+    <>
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-100">
       <div className="max-w-screen-2xl mx-auto px-6 h-12 flex items-center justify-between">
         {/* Left: brand + stats */}
         <div className="flex items-center gap-6">
@@ -304,5 +318,7 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
       <DemographicBanner />
       <RecoveryCodesTopbar />
     </header>
+    <div style={{ height: headerHeight }} />
+    </>
   );
 }

@@ -182,7 +182,7 @@ function IslemlerPage() {
     <div className="min-h-screen bg-white">
       <Header totalVotes={totalVotes} />
 
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-16">
         <PageHero
           title="İşlem Geçmişi"
           subtitle="Tüm platform işlemleri şeffaf ve doğrulanabilir şekilde listelenir. Her işlem benzersiz bir hash ile tanımlanır."

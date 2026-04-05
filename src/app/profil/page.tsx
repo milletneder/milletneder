@@ -310,7 +310,7 @@ export default function ProfilPage() {
     return (
       <>
         <Header />
-        <main className="max-w-3xl mx-auto px-6 pt-24 pb-16" />
+        <main className="max-w-3xl mx-auto px-6 pb-16" />
       </>
     );
   }
@@ -319,7 +319,7 @@ export default function ProfilPage() {
     return (
       <>
         <Header />
-        <main className="max-w-3xl mx-auto px-6 pt-24 pb-16 text-center">
+        <main className="max-w-3xl mx-auto px-6 pb-16 text-center">
           <p className="text-neutral-500 text-sm">Profil bulunamadı.</p>
         </main>
       </>
@@ -331,7 +331,7 @@ export default function ProfilPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-16">
         <PageHero
           title="Hesabım"
           subtitle="Hesap bilgilerin, oy geçmişin ve kişisel istatistiklerin."

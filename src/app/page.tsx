@@ -92,7 +92,7 @@ export default function Home() {
     education: string | null;
     currentParty: string | null;
   } | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(48);
+
   const [profileRefreshKey, setProfileRefreshKey] = useState(0);
   const [weightedResults, setWeightedResults] = useState<{
     parties: Array<{ party: string; rawPct: number; weightedPct: number; delta: number }>;
@@ -365,16 +365,7 @@ export default function Home() {
       .catch(() => {});
   }, [viewMode, dataMode, distributeUndecided]);
 
-  // Header yüksekliğini dinamik olarak takip et (banner'lar dahil)
-  useEffect(() => {
-    const header = document.querySelector('header');
-    if (!header) return;
-    const update = () => setHeaderHeight(header.offsetHeight);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(header);
-    return () => observer.disconnect();
-  }, []);
+  // Header yüksekliği artık Header bileşenindeki spacer div tarafından yönetiliyor
 
   // selectedCity ref'ini senkronize et ve şeffaflık verisini güncelle
   useEffect(() => {
@@ -509,7 +500,7 @@ export default function Home() {
       />
 
       {/* MAP — true fullscreen, no padding */}
-      <section className="md:h-screen w-full overflow-hidden" style={{ paddingTop: headerHeight }}>
+      <section className="md:h-screen w-full overflow-hidden">
         <TurkeyMap
           cityData={cityData}
           isActiveRound={!!isActiveRound}
