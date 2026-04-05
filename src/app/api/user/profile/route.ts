@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, votes, voteChanges, deviceLogs, fraudScores, rounds } from "@/lib/db/schema";
+import { users, votes, voteChanges, deviceLogs, fraudScores, rounds, voteTransactionLog } from "@/lib/db/schema";
 import { getUserFromRequest } from "@/lib/auth/middleware";
 import { verifyToken } from "@/lib/auth/jwt";
 import { MAX_VOTE_CHANGES, VALID_AGE_BRACKETS, VALID_INCOME_BRACKETS, VALID_GENDERS, VALID_EDUCATION_BRACKETS, VALID_TURNOUT_OPTIONS } from "@/lib/constants";
@@ -249,32 +249,63 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Kullanıcının son oyunu bul — anonymous_vote_counts'tan düşmek için
-    const userVotes = await db.execute(sql`
-      SELECT DISTINCT ON (user_id) round_id, party, city, district, is_valid, is_dummy
-      FROM votes WHERE user_id = ${user.id} AND party IS NOT NULL
-      ORDER BY user_id, round_id DESC
-    `);
-    const lastVote = userVotes.rows[0] as { round_id: number; party: string; city: string; district: string | null; is_valid: boolean; is_dummy: boolean } | undefined;
+    // JWT'den şifreli oylar için parti bilgisini al
+    let jwtParty: string | undefined;
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const jwtPayload = verifyToken(authHeader.slice(7));
+        jwtParty = jwtPayload.vp ?? undefined;
+      } catch { /* ignore */ }
+    }
 
-    // anonymous_vote_counts'tan kullanıcının oyunu düş
-    if (lastVote) {
-      await db.execute(sql`
-        UPDATE anonymous_vote_counts
-        SET vote_count = GREATEST(vote_count - 1, 0)
-        WHERE round_id = ${lastVote.round_id}
-          AND party = ${lastVote.party}
-          AND city = ${lastVote.city}
-          AND COALESCE(district, '') = COALESCE(${lastVote.district}, '')
-          AND COALESCE(age_bracket, '') = COALESCE(${user.age_bracket}, '')
-          AND COALESCE(gender, '') = COALESCE(${user.gender}, '')
-          AND COALESCE(education, '') = COALESCE(${user.education}, '')
-          AND COALESCE(income_bracket, '') = COALESCE(${user.income_bracket}, '')
-          AND COALESCE(turnout_intention, '') = COALESCE(${user.turnout_intention}, '')
-          AND COALESCE(previous_vote_2023, '') = COALESCE(${user.previous_vote_2023}, '')
-          AND is_valid = ${lastVote.is_valid}
-          AND is_dummy = ${lastVote.is_dummy}
-      `);
+    // Kullanıcının TÜM oylarını bul — hem açık hem şifreli
+    const allUserVotes = await db.execute(sql`
+      SELECT id, round_id, party, encrypted_party, city, district, is_valid, is_dummy
+      FROM votes WHERE user_id = ${user.id}
+      ORDER BY round_id DESC
+    `);
+
+    // Her oy için: anonymous_vote_counts düş + OY_SILME transaction log yaz
+    for (const row of allUserVotes.rows) {
+      const vote = row as {
+        id: number; round_id: number; party: string | null; encrypted_party: string | null;
+        city: string; district: string | null; is_valid: boolean; is_dummy: boolean;
+      };
+
+      // Parti belirle: açık metin varsa onu kullan, şifreli ise JWT'den al
+      const voteParty = vote.party || (vote.encrypted_party ? jwtParty : null) || null;
+
+      // anonymous_vote_counts'tan düş (parti biliniyorsa)
+      if (voteParty) {
+        await db.execute(sql`
+          UPDATE anonymous_vote_counts
+          SET vote_count = GREATEST(vote_count - 1, 0)
+          WHERE round_id = ${vote.round_id}
+            AND party = ${voteParty}
+            AND city = ${vote.city}
+            AND COALESCE(district, '') = COALESCE(${vote.district}, '')
+            AND COALESCE(age_bracket, '') = COALESCE(${user.age_bracket}, '')
+            AND COALESCE(gender, '') = COALESCE(${user.gender}, '')
+            AND COALESCE(education, '') = COALESCE(${user.education}, '')
+            AND COALESCE(income_bracket, '') = COALESCE(${user.income_bracket}, '')
+            AND COALESCE(turnout_intention, '') = COALESCE(${user.turnout_intention}, '')
+            AND COALESCE(previous_vote_2023, '') = COALESCE(${user.previous_vote_2023}, '')
+            AND is_valid = ${vote.is_valid}
+            AND is_dummy = ${vote.is_dummy}
+        `);
+      }
+
+      // OY_SILME transaction log
+      await db.insert(voteTransactionLog).values({
+        tx_type: 'OY_SILME',
+        round_id: vote.round_id,
+        city: vote.city,
+        district: vote.district,
+        party: voteParty,
+        is_valid: vote.is_valid,
+        is_dummy: vote.is_dummy,
+      });
     }
 
     // Firebase hesabını sil
@@ -298,6 +329,15 @@ export async function DELETE(request: NextRequest) {
       .set({ referred_by: null })
       .where(eq(users.referred_by, user.id));
     await db.delete(users).where(eq(users.id, user.id));
+
+    // HESAP_SILME transaction log
+    await db.insert(voteTransactionLog).values({
+      tx_type: 'HESAP_SILME',
+      round_id: 0,
+      city: user.city,
+      district: user.district ?? null,
+      is_dummy: user.is_dummy,
+    });
 
     return NextResponse.json({ message: "Hesabınız silindi" });
   } catch (error) {

@@ -7,7 +7,7 @@ import PageHero from '@/components/layout/PageHero';
 
 interface Transaction {
   hash: string;
-  type: 'OY_KULLANIM' | 'OY_DEGISIKLIK' | 'OY_DEVIR' | 'KAYIT';
+  type: 'OY_KULLANIM' | 'OY_DEGISIKLIK' | 'OY_DEVIR' | 'KAYIT' | 'OY_SILME' | 'HESAP_SILME';
   city: string | null;
   party: string | null;
   partyColor: string | null;
@@ -32,6 +32,8 @@ const TYPE_LABELS: Record<string, string> = {
   OY_DEGISIKLIK: 'Değişiklik',
   OY_DEVIR: 'Devir',
   KAYIT: 'Kayıt',
+  OY_SILME: 'Oy Silme',
+  HESAP_SILME: 'Hesap Silme',
 };
 
 function formatTime(ts: string): string {
@@ -189,6 +191,8 @@ function IslemlerPage() {
             { label: 'Devir İşlemi', value: (typeCounts['OY_DEVIR'] || 0).toLocaleString('tr-TR') },
             { label: 'Değişiklik', value: (typeCounts['OY_DEGISIKLIK'] || 0).toLocaleString('tr-TR') },
             { label: 'Katılımcı', value: ((typeCounts['KAYIT'] || 0) - flaggedCount).toLocaleString('tr-TR') },
+            { label: 'Silinen Oy', value: (typeCounts['OY_SILME'] || 0).toLocaleString('tr-TR') },
+            { label: 'Silinen Hesap', value: (typeCounts['HESAP_SILME'] || 0).toLocaleString('tr-TR') },
             { label: 'Şüpheli Hesap', value: flaggedCount.toLocaleString('tr-TR') },
           ] : undefined}
         />
@@ -234,7 +238,7 @@ function IslemlerPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-neutral-400 mr-1">Tür:</span>
-            {['OY_KULLANIM', 'OY_DEGISIKLIK', 'OY_DEVIR', 'KAYIT'].map((t) => (
+            {['OY_KULLANIM', 'OY_DEGISIKLIK', 'OY_DEVIR', 'KAYIT', 'OY_SILME', 'HESAP_SILME'].map((t) => (
               <button
                 key={t}
                 onClick={() => handleTypeChange(t)}
@@ -407,6 +411,19 @@ function IslemlerPage() {
                           </div>
                         </>
                       )}
+                      {tx.type === 'OY_SILME' && (
+                        <div>
+                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Silinen Parti</span>
+                          {tx.party ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.partyColor || '#555' }} />
+                              <span className="text-red-600 line-through">{tx.party}</span>
+                            </span>
+                          ) : (
+                            <span className="text-neutral-400">[şifreli oy]</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -481,6 +498,8 @@ function IslemlerPage() {
                 <div><strong className="text-neutral-700">Değişiklik</strong> — Oyu başka partiye taşımak</div>
                 <div><strong className="text-neutral-700">Devir</strong> — Önceki turdan otomatik devir</div>
                 <div><strong className="text-neutral-700">Kayıt</strong> — Yeni hesap oluşturma</div>
+                <div><strong className="text-neutral-700">Oy Silme</strong> — Hesap silindiğinde oyun kaldırılması</div>
+                <div><strong className="text-neutral-700">Hesap Silme</strong> — Kullanıcı hesabının silinmesi</div>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -556,6 +575,38 @@ function TxDetail({ tx }: { tx: Transaction }) {
         </svg>
         <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
         <span className="font-medium text-neutral-800">{tx.newParty}</span>
+      </span>
+    );
+  }
+
+  if (tx.type === 'OY_SILME') {
+    return (
+      <span className="inline-flex items-center gap-1.5 flex-wrap">
+        {tx.city && (
+          <>
+            <span className="text-neutral-800 font-medium">{tx.city}</span>
+            <span className="text-neutral-300">·</span>
+          </>
+        )}
+        {tx.party ? (
+          <>
+            <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.partyColor || '#555' }} />
+            <span className="text-red-600 line-through">{tx.party}</span>
+          </>
+        ) : (
+          <span className="text-neutral-400">[şifreli oy]</span>
+        )}
+        <span className="text-red-500 text-xs font-medium">silindi</span>
+      </span>
+    );
+  }
+
+  if (tx.type === 'HESAP_SILME') {
+    return (
+      <span>
+        {tx.city && <span className="text-neutral-800 font-medium">{tx.city}</span>}
+        {tx.city && <span className="text-neutral-300 mx-1.5">·</span>}
+        <span className="text-red-500 font-medium">Hesap silindi</span>
       </span>
     );
   }
