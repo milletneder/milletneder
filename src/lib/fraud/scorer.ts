@@ -76,7 +76,7 @@ export async function computeFraudScore(
     factors.youngAccount = config.youngAccountScore;
   }
 
-  // 4. Disposable email — skipped (no email stored in DB, Firebase handles auth)
+  // 4. Disposable email — skipped (no email stored in DB, Twilio handles auth)
 
   // 5. Empty profile (no demographic data)
   if (!user.gender && !user.age_bracket && !user.education) {

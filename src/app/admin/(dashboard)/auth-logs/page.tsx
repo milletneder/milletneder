@@ -48,11 +48,9 @@ export default function AuthLogsPage() {
   async function fetchLogs() {
     setLoading(true);
     try {
-      const token = localStorage.getItem('admin_token');
       const params = new URLSearchParams({ page: String(page), limit: '50' });
       if (filter) params.set('event_type', filter);
       const res = await fetch(`/api/admin/auth-logs?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();

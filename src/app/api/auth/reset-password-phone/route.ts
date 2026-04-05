@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
-import { createHash, createHmac } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { getAdminAuth } from '@/lib/firebase/admin';
+import { isPhoneOtpVerified } from '@/lib/auth/phone-otp-store';
+import { hashIdentity } from '@/lib/auth/registration';
 import { deriveKeyFromPassword, encryptVEK, decryptVEK, deriveKeyFromRecoveryCode } from '@/lib/crypto/vote-encryption';
 import { findRecoveryEntry, type RecoveryEntry } from '@/lib/crypto/recovery-codes';
 
@@ -12,33 +12,27 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { firebaseIdToken, newPassword, recoveryCode } = await request.json();
+    const { phone, newPassword, recoveryCode } = await request.json();
 
-    if (!firebaseIdToken) {
-      return NextResponse.json({ error: 'Firebase token gerekli' }, { status: 400 });
+    // Validate phone
+    const raw = String(phone || '').replace(/\s/g, '');
+    if (raw.length !== 10 || !raw.startsWith('5')) {
+      return NextResponse.json({ error: 'Geçersiz telefon numarası' }, { status: 400 });
     }
 
     if (!newPassword || String(newPassword).length < 6) {
       return NextResponse.json({ error: 'Şifre en az 6 karakter olmalı' }, { status: 400 });
     }
 
-    // Firebase token doğrula
-    const adminAuth = getAdminAuth();
-    let decodedToken;
-    try {
-      decodedToken = await adminAuth.verifyIdToken(firebaseIdToken);
-    } catch {
-      return NextResponse.json({ error: 'Kimlik doğrulama başarısız' }, { status: 401 });
+    const fullPhone = `+90${raw}`;
+
+    // Verify phone was OTP-verified
+    if (!isPhoneOtpVerified(fullPhone)) {
+      return NextResponse.json({ error: 'Telefon numarası doğrulanmamış. Önce OTP ile doğrulayın.' }, { status: 401 });
     }
 
-    // identity_hash ile kullanıcı ara (HMAC destekli)
-    const identityValue = decodedToken.email || decodedToken.phone_number || decodedToken.uid;
-    const rawHash = createHash('sha256').update(identityValue.toLowerCase().trim()).digest('hex');
-    const IDENTITY_KEY = process.env.IDENTITY_KEY;
-    const identityHash = IDENTITY_KEY
-      ? createHmac('sha256', IDENTITY_KEY).update(Buffer.from(rawHash, 'hex')).digest('hex')
-      : rawHash;
-
+    // Find user by identity_hash
+    const identityHash = hashIdentity(fullPhone);
     const [user] = await db
       .select()
       .from(users)
@@ -46,14 +40,14 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!user) {
-      return NextResponse.json({ error: 'Bu numarayla kayıtlı bir hesap bulunamadı. Henüz kayıt olmadıysanız ana sayfadan "Oy Ver" butonuyla kayıt olabilirsiniz.' }, { status: 404 });
+      return NextResponse.json({ error: 'Bu numarayla kayıtlı bir hesap bulunamadı.' }, { status: 404 });
     }
 
-    // Şifreyi güncelle
+    // Update password
     const passwordHash = await bcrypt.hash(String(newPassword), 10);
     const updateData: Record<string, unknown> = { password_hash: passwordHash, updated_at: new Date() };
 
-    // VEK re-encrypt: kurtarma koduyla decrypt → yeni şifreyle encrypt
+    // VEK re-encrypt with recovery code
     let vekRecovered = false;
     if (user.encrypted_vek && user.vote_encryption_version === 1 && recoveryCode) {
       const entries = (user.recovery_codes ?? []) as RecoveryEntry[];

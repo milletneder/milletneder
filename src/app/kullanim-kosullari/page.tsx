@@ -10,7 +10,7 @@ export default function KullanimKosullariPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-16">
         <PageHero
           title="Kullanım Koşulları"
           subtitle="MilletNeDer platformunu kullanmadan önce lütfen bu koşulları okuyun."

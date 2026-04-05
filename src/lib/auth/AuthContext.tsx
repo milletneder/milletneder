@@ -1,8 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { auth } from '@/lib/firebase/config';
-import { signOut } from 'firebase/auth';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -40,8 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token');
     setToken(null);
     setIsLoggedIn(false);
-    // Firebase oturumunu da kapat
-    signOut(auth).catch(() => {});
   };
 
   return (

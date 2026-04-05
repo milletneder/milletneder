@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   // Fraud score distribution
   const distribution = await db.execute(sql`
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
-  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
 
   // Bulk recalculate fraud scores for all users
   const allUsers = await db.execute(sql`SELECT id FROM users WHERE is_active = true`);

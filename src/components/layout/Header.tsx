@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Counter from '@/components/ui/Counter';
-import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
+import AuthForm from '@/components/auth/AuthForm';
 import DemographicBanner from '@/components/layout/DemographicBanner';
 import RecoveryCodesTopbar from '@/components/layout/RecoveryCodesTopbar';
 
@@ -23,9 +23,22 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const loginFormRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(48);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // Header yüksekliğini dinamik olarak takip et (topbar'lar dahil)
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Admin panelden seçili auth yöntemini varsayılan olarak ayarla
   useEffect(() => {
@@ -65,41 +78,20 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
     return () => window.removeEventListener('open-login', handler);
   }, []);
 
-  const handleFirebaseAuth = async (firebaseIdToken: string, extraData?: { password?: string }) => {
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      const res = await fetch('/api/auth/firebase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken, ...(extraData?.password && { password: extraData.password }) }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setLoginError(data.error || 'Giriş başarısız');
-        return;
-      }
-      if (data.isNewUser && !data.token) {
-        // Firebase'de var ama DB'de yok — kayıt tamamlanmamış
-        // Token'ı sessionStorage'a kaydet, VoteModal profil adımından devam etsin
-        sessionStorage.setItem('pendingRegistration', JSON.stringify({
-          firebaseIdToken,
-          password: extraData?.password,
-        }));
-        setShowLoginForm(false);
-        setMobileMenuOpen(false);
-        if (onVoteClick) {
-          onVoteClick();
-        }
-        return;
-      }
-      login(data.token);
-      setShowLoginForm(false);
-      setMobileMenuOpen(false);
-    } catch {
-      setLoginError('Bağlantı hatası');
-    } finally {
-      setLoginLoading(false);
+  const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
+    // Both phone and email: new users go to VoteModal for registration
+    // Existing users are handled via onDirectLogin (password login)
+    const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
+
+    const pendingData = isPhone
+      ? { verifiedPhone: identityValue, password: extraData?.password }
+      : { verifiedEmail: identityValue, password: extraData?.password };
+
+    sessionStorage.setItem('pendingRegistration', JSON.stringify(pendingData));
+    setShowLoginForm(false);
+    setMobileMenuOpen(false);
+    if (onVoteClick) {
+      onVoteClick();
     }
   };
 
@@ -124,7 +116,8 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-100">
+    <>
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-100">
       <div className="max-w-screen-2xl mx-auto px-6 h-12 flex items-center justify-between">
         {/* Left: brand + stats */}
         <div className="flex items-center gap-6">
@@ -207,10 +200,10 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
                     </button>
                   </div>
                   {loginError && <p className="text-red-600 text-[11px] mb-3">{loginError}</p>}
-                  <FirebaseAuthForm
+                  <AuthForm
                     key={loginMethod}
                     method={loginMethod}
-                    onAuthenticated={handleFirebaseAuth}
+                    onAuthenticated={handleAuth}
                     onDirectLogin={handleDirectLogin}
                     loginOnly
                     onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }}
@@ -271,7 +264,7 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
                   </button>
                 </div>
                 {loginError && <p className="text-red-600 text-[11px]">{loginError}</p>}
-                <FirebaseAuthForm key={loginMethod} method={loginMethod} onAuthenticated={handleFirebaseAuth} onDirectLogin={handleDirectLogin} loginOnly onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }} />
+                <AuthForm key={loginMethod} method={loginMethod} onAuthenticated={handleAuth} onDirectLogin={handleDirectLogin} loginOnly onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }} />
               </div>
             )}
           </div>
@@ -286,5 +279,7 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
       <DemographicBanner />
       <RecoveryCodesTopbar />
     </header>
+    <div style={{ height: headerHeight }} />
+    </>
   );
 }

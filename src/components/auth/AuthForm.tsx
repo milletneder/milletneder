@@ -1,36 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  initializeRecaptchaConfig,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  type ConfirmationResult,
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
-
-// Client-side hataları sunucuya raporla (fire-and-forget)
-function logClientError(errorCode: string, errorMessage: string, step: string, phone?: string, context?: string) {
-  try {
-    const raw = phone?.replace(/\s/g, '') || '';
-    fetch('/api/auth/log-client-error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ errorCode, errorMessage: errorMessage?.substring(0, 500), step, phone: raw, context }),
-    }).catch(() => {}); // Sessizce yut
-  } catch { /* ignore */ }
-}
+import { useState, useEffect, useRef } from 'react';
+// Twilio OTP + DB password verification
 
 type AuthMethod = 'email' | 'phone';
 type EmailStep = 'email' | 'login' | 'verify-code' | 'set-password';
 type PhoneStep = 'input' | 'otp' | 'set-credentials';
 type Phase = 'input' | 'otp' | 'loading' | 'forgot-password' | 'forgot-code' | 'forgot-new-password';
 
-interface FirebaseAuthFormProps {
+interface AuthFormProps {
   method: AuthMethod;
-  onAuthenticated: (firebaseIdToken: string, extraData?: { password?: string }) => void;
+  onAuthenticated: (identityValue: string, extraData?: { password?: string }) => void;
   /** Direkt JWT ile login (phone+password) */
   onDirectLogin?: (token: string) => void;
   onBack?: () => void;
@@ -39,7 +19,7 @@ interface FirebaseAuthFormProps {
   onRegistrationNeeded?: () => void;
 }
 
-export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogin, onBack, loginOnly = false, onRegistrationNeeded }: FirebaseAuthFormProps) {
+export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBack, loginOnly = false, onRegistrationNeeded }: AuthFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -54,14 +34,13 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
   const [phonePassword, setPhonePassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [countdown, setCountdown] = useState(0);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [phoneStep, setPhoneStep] = useState<PhoneStep>('input');
 
   // Phone credentials (set after OTP for new users)
   const [credPassword, setCredPassword] = useState('');
 
-  // reCAPTCHA fallback — invisible başarısız olursa visible'a geç
-  const [showRecaptchaFallback, setShowRecaptchaFallback] = useState(false);
+  // Verified phone (stored after OTP verification for Twilio flow)
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
 
   // Forgot password state
   const [forgotPhase, setForgotPhase] = useState<Phase>('input');
@@ -70,13 +49,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
   const [forgotNewPassword, setForgotNewPassword] = useState('');
   // Phone forgot: OTP ile doğrula sonra şifre belirle
   const [forgotPhoneOtp, setForgotPhoneOtp] = useState('');
-  const [forgotPhoneConfirmation, setForgotPhoneConfirmation] = useState<ConfirmationResult | null>(null);
 
   const otpInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
   // Countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
@@ -98,132 +73,6 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setTimeout(() => passwordInputRef.current?.focus(), 100);
     }
   }, [emailStep]);
-
-  // Firebase SDK'ya sunucu reCAPTCHA config'ini sorgulatır
-  // Bu sayede SDK, Enterprise OFF ise token almaya çalışmaz
-  useEffect(() => {
-    if (method !== 'phone') return;
-    initializeRecaptchaConfig(auth).catch(() => {});
-  }, [method]);
-
-  // reCAPTCHA'yı önceden yükle ve RENDER et — Google'a daha fazla davranış sinyali toplamak için zaman ver
-  // render() çağrısı Google'ın sayfa davranışını analiz etmesini başlatır, -39 hatasını azaltır
-  useEffect(() => {
-    if (method !== 'phone') return;
-    const timer = setTimeout(() => {
-      if (!recaptchaContainerRef.current || recaptchaVerifierRef.current) return;
-      try {
-        const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            if (recaptchaVerifierRef.current) {
-              try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-              recaptchaVerifierRef.current = null;
-            }
-          },
-        });
-        recaptchaVerifierRef.current = verifier;
-        // Render et — bu Google'ın davranış sinyali toplamasını başlatır
-        verifier.render().catch(() => {});
-      } catch {
-        // İlk yüklemede hata olabilir — buton basıldığında tekrar denenecek
-      }
-    }, 300);
-    return () => {
-      clearTimeout(timer);
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
-    };
-  }, [method]);
-
-  // Visible reCAPTCHA fallback — invisible başarısız olunca tetiklenir
-  // Kullanıcı checkbox'ı işaretleyince SMS otomatik gönderilir
-  // recaptchaFallbackKey değişince widget yeniden oluşturulur (retry için)
-  const [recaptchaFallbackKey, setRecaptchaFallbackKey] = useState(0);
-
-  useEffect(() => {
-    if (!showRecaptchaFallback || method !== 'phone') return;
-
-    const timer = setTimeout(() => {
-      const container = document.getElementById('recaptcha-visible');
-      if (!container) return;
-      // Container'ı temizle — eski widget'ı DOM'dan kaldır
-      container.innerHTML = '';
-
-      // Eski verifier'ı tamamen temizle
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
-
-      try {
-        const raw = phone.replace(/\s/g, '');
-        const verifier = new RecaptchaVerifier(auth, container, {
-          size: 'normal',
-          callback: async () => {
-            // Checkbox çözüldü → SMS'i otomatik gönder
-            setError('');
-            setLoading(true);
-            try {
-              const result = await signInWithPhoneNumber(auth, `+90${raw}`, verifier);
-              setConfirmationResult(result);
-              setPhoneStep('otp');
-              setCountdown(90);
-              setShowRecaptchaFallback(false);
-            } catch (retryErr) {
-              console.error('Visible reCAPTCHA SMS error:', retryErr);
-              const fbErr = retryErr as { code?: string; message?: string };
-              logClientError(fbErr.code || 'visible_recaptcha_sms_fail', fbErr.message || '', 'send_otp_visible', raw);
-              // Visible da başarısız — verifier'ı temizle, kullanıcı tekrar deneyebilsin
-              if (recaptchaVerifierRef.current) {
-                try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-                recaptchaVerifierRef.current = null;
-              }
-              if (fbErr.code === 'auth/too-many-requests') {
-                setError('Çok fazla deneme yapıldı. Birkaç dakika bekleyip sayfayı yenileyin.');
-              } else if (fbErr.code === 'auth/quota-exceeded') {
-                setError('SMS gönderim limiti doldu. Daha sonra tekrar deneyin.');
-              } else {
-                setError('Doğrulama başarısız oldu. "Tekrar Dene" butonuna basın.');
-              }
-            } finally {
-              setLoading(false);
-            }
-          },
-          'expired-callback': () => {
-            setError('Doğrulama süresi doldu. "Tekrar Dene" butonuna basın.');
-            if (recaptchaVerifierRef.current) {
-              try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-              recaptchaVerifierRef.current = null;
-            }
-          },
-        });
-        recaptchaVerifierRef.current = verifier;
-        verifier.render();
-      } catch (e) {
-        console.error('Visible reCAPTCHA setup error:', e);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRecaptchaFallback, recaptchaFallbackKey]);
-
-  const setupRecaptcha = useCallback(() => {
-    // Zaten önceden yüklenmişse dokunma
-    if (recaptchaVerifierRef.current) return;
-    if (!recaptchaContainerRef.current) return;
-    const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
-      size: 'invisible',
-      callback: () => {},
-      'expired-callback': () => setError('reCAPTCHA süresi doldu, tekrar deneyin.'),
-    });
-    recaptchaVerifierRef.current = verifier;
-    verifier.render().catch(() => {});
-  }, []);
 
   // ========== EMAIL AUTH ==========
   const handleEmailContinue = async () => {
@@ -252,8 +101,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             setError('Bu e-posta ile kayıtlı hesap bulunamadı. Kayıt olmak için Oy Ver butonunu kullanın.');
           }
         } else {
+          // Send email OTP via Twilio Verify
           try {
-            const codeRes = await fetch('/api/auth/send-verification-code', {
+            const codeRes = await fetch('/api/auth/send-email-otp', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: email.trim() }),
@@ -270,6 +120,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             return;
           }
           setEmailStep('verify-code');
+          setCountdown(90);
         }
       }
     } catch {
@@ -287,27 +138,23 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setLoading(true);
     setError('');
     try {
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
-      } catch (signInErr: unknown) {
-        const fbErr = signInErr as { code?: string };
-        if (fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
-          setError('Şifre hatalı. Doğru şifrenizi girin.');
-        } else if (fbErr.code === 'auth/too-many-requests') {
-          setError('Çok fazla deneme. Lütfen bir süre bekleyin.');
-        } else if (fbErr.code === 'auth/user-not-found') {
-          setError('Bu e-posta ile hesap bulunamadı.');
-        } else {
-          setError('Giriş başarısız. Lütfen tekrar deneyin.');
-        }
+      const res = await fetch('/api/auth/email-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Giriş başarısız. Lütfen tekrar deneyin.');
         setLoading(false);
         return;
       }
-      const idToken = await userCredential.user.getIdToken();
-      onAuthenticated(idToken, { password });
+      // Direkt JWT ile login
+      if (data.token && onDirectLogin) {
+        onDirectLogin(data.token);
+      }
     } catch {
-      setError('Giriş başarısız. Lütfen tekrar deneyin.');
+      setError('Bağlantı hatası. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -321,16 +168,23 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/verify-code', {
+      const res = await fetch('/api/auth/verify-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), code: verifyCode }),
       });
       const data = await res.json();
-      if (data.verified) {
-        setEmailStep('set-password');
-      } else {
+      if (!res.ok) {
         setError(data.error || 'Doğrulama başarısız');
+        setLoading(false);
+        return;
+      }
+      if (data.token && !data.isNewUser) {
+        // Existing user — shouldn't happen (login flow handles this), but just in case
+        if (onDirectLogin) onDirectLogin(data.token);
+      } else {
+        // New user — go to set password
+        setEmailStep('set-password');
       }
     } catch {
       setError('Doğrulama sırasında bir hata oluştu');
@@ -343,14 +197,14 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/send-verification-code', {
+      const res = await fetch('/api/auth/send-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
       if (!res.ok) setError(data.error || 'Kod gönderilemedi');
-      else setVerifyCode('');
+      else { setVerifyCode(''); setCountdown(90); }
     } catch {
       setError('Kod gönderilemedi');
     } finally {
@@ -363,42 +217,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Şifre en az 6 karakter olmalı');
       return;
     }
-    setLoading(true);
-    setError('');
-    try {
-      let userCredential;
-      try {
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      } catch (regErr: unknown) {
-        const fbErr = regErr as { code?: string };
-        if (fbErr.code === 'auth/email-already-in-use') {
-          setError('Bu e-posta zaten kayıtlı. Giriş yapmayı deneyin.');
-          setEmailStep('login');
-        } else if (fbErr.code === 'auth/weak-password') {
-          setError('Şifre çok zayıf. En az 6 karakter kullanın.');
-        } else {
-          setError('Kayıt başarısız. Lütfen tekrar deneyin.');
-        }
-        setLoading(false);
-        return;
-      }
-      const idToken = await userCredential.user.getIdToken();
-      try {
-        const markRes = await fetch('/api/auth/mark-email-verified', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firebaseIdToken: idToken }),
-        });
-        if (!markRes.ok) console.error('Mark email verified failed:', await markRes.text());
-      } catch (err) {
-        console.error('Mark email verified error:', err);
-      }
-      onAuthenticated(idToken, { password });
-    } catch {
-      setError('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
+    // Email verified via Twilio OTP — pass email + password to parent
+    // Email is used as the identity (like phone number for phone auth)
+    onAuthenticated(email.trim(), { password });
   };
 
   // ========== PHONE AUTH ==========
@@ -524,73 +345,24 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Geçerli bir cep telefonu numarası girin (5XX ile başlamalı)');
       return;
     }
-
-    // Visible fallback aktifse invisible'ı deneme — sadece visible widget'ı yenile
-    if (showRecaptchaFallback) {
-      setError('');
-      // Eski verifier'ı temizle ve visible widget'ı yeniden oluştur
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
-      setRecaptchaFallbackKey(k => k + 1); // useEffect'i tetikle → yeni visible widget
-      return;
-    }
-
     setLoading(true);
     setError('');
     try {
-      setupRecaptcha();
-      if (!recaptchaVerifierRef.current) {
-        logClientError('recaptcha_init_fail', 'RecaptchaVerifier oluşturulamadı', 'recaptcha_setup', phone);
-        setError('reCAPTCHA başlatılamadı. Sayfayı yenileyip tekrar deneyin.');
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: raw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'SMS gönderilemedi');
         setLoading(false);
         return;
       }
-      const result = await signInWithPhoneNumber(auth, `+90${raw}`, recaptchaVerifierRef.current);
-      setConfirmationResult(result);
       setPhoneStep('otp');
       setCountdown(90);
-    } catch (err: unknown) {
-      console.error('Phone auth error:', err);
-      const fbErr = err as { code?: string; message?: string };
-
-      // reCAPTCHA hatası → visible fallback'e geç (mobilde sık yaşanır)
-      const isRecaptchaError =
-        fbErr.code === 'auth/captcha-check-failed' ||
-        fbErr.code?.includes('-39') || fbErr.message?.includes('-39');
-
-      if (isRecaptchaError) {
-        // Invisible reCAPTCHA başarısız → visible checkbox'a geç
-        logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'send_otp_recaptcha_fallback', phone);
-        if (recaptchaVerifierRef.current) {
-          try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-          recaptchaVerifierRef.current = null;
-        }
-        setShowRecaptchaFallback(true);
-        setError('');
-        setLoading(false);
-        return;
-      }
-
-      // reCAPTCHA dışı SMS hatalarını logla
-      logClientError(fbErr.code || 'sms_send_fail', fbErr.message || '', 'send_otp', phone);
-
-      if (fbErr.code === 'auth/too-many-requests') {
-        setError('Çok fazla deneme yapıldı. 5-10 dakika bekleyip tekrar deneyin.');
-      } else if (fbErr.code === 'auth/invalid-phone-number') {
-        setError('Geçersiz telefon numarası. 5XX ile başlayan 10 haneli numara girin.');
-      } else if (fbErr.code === 'auth/quota-exceeded') {
-        setError('SMS gönderim limiti doldu. Lütfen daha sonra tekrar deneyin.');
-      } else if (fbErr.code === 'auth/unauthorized-domain') {
-        setError('Bu domain yetkili değil. Firebase ayarlarını kontrol edin.');
-      } else {
-        setError('SMS gönderilemedi. Sayfayı yenileyip tekrar deneyin.');
-      }
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
+    } catch {
+      setError('Bağlantı hatası. Tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -601,37 +373,34 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('6 haneli doğrulama kodunu girin');
       return;
     }
-    if (!confirmationResult) {
-      setError('Doğrulama oturumu bulunamadı. Tekrar kod gönderin.');
-      return;
-    }
     setLoading(true);
     setError('');
     try {
-      const userCredential = await confirmationResult.confirm(otpCode);
-      const idToken = await userCredential.user.getIdToken();
+      const raw = getRawPhone();
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: raw, code: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Doğrulama başarısız');
+        setLoading(false);
+        return;
+      }
 
-      if (loginOnly && !needsPasswordSetup) {
-        // Normal login flow (shouldn't reach here in phone+password mode)
-        onAuthenticated(idToken);
+      if (data.token && !data.isNewUser) {
+        // Existing user logged in — direct login
+        if (onDirectLogin) {
+          onDirectLogin(data.token);
+        }
       } else {
-        // Registration flow — always show set-credentials
+        // New user or needs credentials — go to set-credentials
+        setVerifiedPhone(raw);
         setPhoneStep('set-credentials');
-        // Store the token temporarily
-        setConfirmationResult(null);
-        // We'll need this token when setting credentials
-        (window as unknown as Record<string, string>).__tempFirebaseToken = idToken;
       }
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      logClientError(fbErr.code || 'otp_verify_fail', fbErr.message || '', 'verify_otp', phone);
-      if (fbErr.code === 'auth/invalid-verification-code') {
-        setError('Girdiğiniz kod hatalı');
-      } else if (fbErr.code === 'auth/code-expired') {
-        setError('Kodun süresi dolmuş. Yeni kod gönderin.');
-      } else {
-        setError('Doğrulama başarısız. Tekrar deneyin.');
-      }
+    } catch {
+      setError('Bağlantı hatası');
     } finally {
       setLoading(false);
     }
@@ -643,25 +412,16 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       return;
     }
     setError('');
-    const idToken = (window as unknown as Record<string, string>).__tempFirebaseToken;
-    if (!idToken) {
-      logClientError('token_lost', 'Firebase token window objesinde bulunamadı', 'set_credentials', phone);
-      setError('Oturum bilgisi kayboldu. Sayfayı yenileyip tekrar deneyin.');
-      return;
-    }
-    delete (window as unknown as Record<string, string>).__tempFirebaseToken;
+    const raw = verifiedPhone || getRawPhone();
 
     if (loginOnly) {
-      // Migration flow: mevcut kullanıcı şifre belirliyor
+      // Migration flow: mevcut kullanıcı şifre belirliyor (OTP ile doğrulandı)
       setLoading(true);
       try {
-        const res = await fetch('/api/auth/firebase', {
+        const res = await fetch('/api/auth/phone-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firebaseIdToken: idToken,
-            password: credPassword,
-          }),
+          body: JSON.stringify({ phone: raw, password: credPassword, setPassword: true }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -678,7 +438,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       }
     } else {
       // Registration flow: yeni kullanıcı — profil adımına geç
-      onAuthenticated(idToken, { password: credPassword });
+      onAuthenticated(raw, { password: credPassword });
     }
   };
 
@@ -703,6 +463,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
       setForgotPhase('forgot-code');
+      setCountdown(90);
     } catch {
       setError('Bağlantı hatası');
     } finally {
@@ -752,60 +513,24 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Geçerli bir cep telefonu numarası girin');
       return;
     }
-
-    // Visible fallback aktifse invisible'ı deneme — sadece visible widget'ı yenile
-    if (showRecaptchaFallback) {
-      setError('');
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
-      setRecaptchaFallbackKey(k => k + 1);
-      return;
-    }
-
     setLoading(true);
     setError('');
     try {
-      setupRecaptcha();
-      if (!recaptchaVerifierRef.current) {
-        logClientError('recaptcha_init_fail', 'RecaptchaVerifier oluşturulamadı', 'recaptcha_setup', phone);
-        setError('reCAPTCHA başlatılamadı. Sayfayı yenileyip tekrar deneyin.');
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: raw }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'SMS gönderilemedi');
         setLoading(false);
         return;
       }
-      const result = await signInWithPhoneNumber(auth, `+90${raw}`, recaptchaVerifierRef.current);
-      setForgotPhoneConfirmation(result);
-      setForgotPhase('forgot-code'); // reuse forgot-code phase for OTP entry
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-
-      const isRecaptchaError =
-        fbErr.code === 'auth/captcha-check-failed' ||
-        fbErr.code?.includes('-39') || fbErr.message?.includes('-39');
-
-      if (isRecaptchaError) {
-        logClientError(fbErr.code || 'recaptcha_invisible_fail', fbErr.message || '', 'forgot_send_otp_recaptcha_fallback', phone);
-        if (recaptchaVerifierRef.current) {
-          try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-          recaptchaVerifierRef.current = null;
-        }
-        setShowRecaptchaFallback(true);
-        setError('');
-        setLoading(false);
-        return;
-      }
-
-      logClientError(fbErr.code || 'forgot_sms_fail', fbErr.message || '', 'forgot_send_otp', phone);
-      if (fbErr.code === 'auth/too-many-requests') {
-        setError('Çok fazla deneme yapıldı. 5-10 dakika bekleyip tekrar deneyin.');
-      } else {
-        setError('SMS gönderilemedi. Sayfayı yenileyip tekrar deneyin.');
-      }
-      if (recaptchaVerifierRef.current) {
-        try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-        recaptchaVerifierRef.current = null;
-      }
+      setForgotPhase('forgot-code');
+      setCountdown(90);
+    } catch {
+      setError('Bağlantı hatası');
     } finally {
       setLoading(false);
     }
@@ -820,22 +545,27 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Yeni şifre en az 6 karakter olmalı');
       return;
     }
-    if (!forgotPhoneConfirmation) {
-      setError('Doğrulama oturumu bulunamadı. Tekrar deneyin.');
-      return;
-    }
     setLoading(true);
     setError('');
     try {
-      // OTP doğrula
-      const userCredential = await forgotPhoneConfirmation.confirm(forgotPhoneOtp);
-      const idToken = await userCredential.user.getIdToken();
-
-      // Backend'e yeni şifre gönder
+      const raw = getRawPhone();
+      // First verify OTP
+      const verifyRes = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: raw, code: forgotPhoneOtp }),
+      });
+      if (!verifyRes.ok) {
+        const verifyData = await verifyRes.json();
+        setError(verifyData.error || 'Kod doğrulanamadı');
+        setLoading(false);
+        return;
+      }
+      // Then reset password
       const res = await fetch('/api/auth/reset-password-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken: idToken, newPassword: forgotNewPassword }),
+        body: JSON.stringify({ phone: raw, newPassword: forgotNewPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -844,15 +574,8 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
       setForgotPhase('forgot-new-password'); // success
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string };
-      if (fbErr.code === 'auth/invalid-verification-code') {
-        setError('Kod hatalı');
-      } else if (fbErr.code === 'auth/code-expired') {
-        setError('Kodun süresi dolmuş. Tekrar deneyin.');
-      } else {
-        setError('Şifre sıfırlama başarısız');
-      }
+    } catch {
+      setError('Şifre sıfırlama başarısız');
     } finally {
       setLoading(false);
     }
@@ -866,7 +589,6 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     if (method === 'phone') {
       return (
         <div className="w-full max-w-md mx-auto space-y-5">
-          <div ref={recaptchaContainerRef} id="recaptcha-container-forgot" />
           <h3 className="text-xl font-bold text-black">Şifremi Unuttum</h3>
           <p className="text-sm text-neutral-500">Telefon numaranıza doğrulama kodu göndereceğiz, ardından yeni şifre belirleyebilirsiniz.</p>
           <div>
@@ -884,32 +606,21 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               />
             </div>
           </div>
-          {/* Visible reCAPTCHA fallback */}
-          {showRecaptchaFallback && (
-            <div className="bg-amber-50 border border-amber-200 p-3 space-y-2">
-              <p className="text-xs text-amber-800 font-medium">Ek güvenlik doğrulaması gerekli</p>
-              <p className="text-[11px] text-amber-700">Kutucuğu işaretleyin, SMS otomatik gönderilecek.</p>
-              <div id="recaptcha-visible" className="flex justify-center overflow-hidden" />
-              {loading && <p className="text-xs text-neutral-500 text-center">SMS gönderiliyor...</p>}
-            </div>
-          )}
           {error && <p className="text-red-600 text-xs">{error}</p>}
           <div className="flex gap-3">
             <button
-              onClick={() => { setForgotPhase('input'); setError(''); setShowRecaptchaFallback(false); }}
+              onClick={() => { setForgotPhase('input'); setError(''); }}
               className="flex-1 bg-neutral-100 text-black py-3 font-medium hover:bg-neutral-200 transition-colors"
             >
               Geri
             </button>
-            {!showRecaptchaFallback && (
-              <button
+            <button
                 onClick={handleForgotPhoneSendOtp}
                 disabled={loading || getRawPhone().length !== 10}
                 className="flex-1 bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Gönderiliyor...' : 'SMS Kodu Gönder'}
               </button>
-            )}
           </div>
         </div>
       );
@@ -1090,9 +801,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               <div>
                 <p className="text-sm font-medium text-black mb-1">Bilgilerin güvende</p>
                 <ul className="text-xs text-neutral-600 space-y-1">
-                  <li>E-postan sadece giriş için kullanılır.</li>
+                  <li>E-postan sadece doğrulama ve giriş için kullanılır.</li>
                   <li>Oyun veya kişisel bilgilerin ile asla eşleştirilmez.</li>
-                  <li>E-postan kendi sunucumuzda saklanmaz.</li>
+                  <li>E-postan hiçbir yerde saklanmaz — sadece şifreli hash&apos;i tutulur.</li>
                 </ul>
               </div>
             </div>
@@ -1261,8 +972,6 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
   // --- PHONE AUTH ---
   return (
     <div className="w-full max-w-md mx-auto">
-      <div ref={recaptchaContainerRef} id="recaptcha-container" />
-
       {phoneStep === 'input' && (
         <div className="space-y-4">
           {!loginOnly && (
@@ -1330,35 +1039,6 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             </div>
           )}
 
-          {/* Visible reCAPTCHA fallback — invisible başarısız olunca gösterilir */}
-          {showRecaptchaFallback && phoneStep === 'input' && (
-            <div className="bg-amber-50 border border-amber-200 p-3 space-y-2">
-              <p className="text-xs text-amber-800 font-medium">Ek güvenlik doğrulaması gerekli</p>
-              <p className="text-[11px] text-amber-700">
-                Bazı cihazlarda otomatik doğrulama çalışmayabiliyor. Aşağıdaki kutucuğu işaretleyin, doğrulama kodunuz otomatik gönderilecek.
-              </p>
-              <div id="recaptcha-visible" className="flex justify-center overflow-hidden" />
-              {loading && (
-                <p className="text-xs text-neutral-500 text-center">SMS gönderiliyor...</p>
-              )}
-              {error && !loading && (
-                <button
-                  onClick={() => {
-                    setError('');
-                    if (recaptchaVerifierRef.current) {
-                      try { recaptchaVerifierRef.current.clear(); } catch { /* ignore */ }
-                      recaptchaVerifierRef.current = null;
-                    }
-                    setRecaptchaFallbackKey(k => k + 1);
-                  }}
-                  className="w-full bg-amber-700 text-white py-2 text-xs font-medium hover:bg-amber-800 transition-colors"
-                >
-                  Tekrar Dene
-                </button>
-              )}
-            </div>
-          )}
-
           {error && <p className="text-red-600 text-xs">{error}</p>}
 
           {needsPasswordSetup && (
@@ -1377,7 +1057,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             </div>
           )}
 
-          {!needsPasswordSetup && !(showRecaptchaFallback && !loginOnly) && (
+          {!needsPasswordSetup && (
             <div className="flex gap-2">
               {onBack && (
                 <button onClick={onBack} className="shrink-0 bg-neutral-100 text-black px-5 py-3 text-sm font-medium hover:bg-neutral-200 transition-colors">Geri</button>
@@ -1438,7 +1118,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
           </div>
           <div className="flex items-center justify-between text-sm">
             <button
-              onClick={() => { setPhoneStep('input'); setOtpCode(''); setError(''); setCountdown(0); setConfirmationResult(null); }}
+              onClick={() => { setPhoneStep('input'); setOtpCode(''); setError(''); setCountdown(0); }}
               className="text-neutral-500 hover:text-black transition-colors"
             >
               Numarayı Değiştir

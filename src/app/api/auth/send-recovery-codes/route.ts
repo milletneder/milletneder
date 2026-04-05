@@ -4,8 +4,18 @@ import { createHash } from 'crypto';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { getUserFromRequest } from '@/lib/auth/middleware';
+import { getSetting } from '@/lib/admin/settings';
 
 export const dynamic = 'force-dynamic';
+
+async function getSmtpConfig() {
+  const host = await getSetting('smtp_host') || process.env.SMTP_HOST || '';
+  const port = parseInt(await getSetting('smtp_port') || process.env.SMTP_PORT || '587', 10);
+  const user = await getSetting('smtp_user') || process.env.SMTP_USER || '';
+  const pass = await getSetting('smtp_pass') || process.env.SMTP_PASS || '';
+  const from = await getSetting('smtp_from') || process.env.SMTP_FROM || user;
+  return { host, port, user, pass, from };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,21 +46,28 @@ export async function POST(request: NextRequest) {
       }).where(eq(users.id, user.id));
     }
 
+    // SMTP yapılandırmasını al
+    const smtp = await getSmtpConfig();
+    if (!smtp.host || !smtp.user || !smtp.pass) {
+      console.error('SMTP not configured. Set SMTP settings in Admin Panel > Ayarlar or env vars.');
+      return NextResponse.json({ error: 'E-posta servisi henüz yapılandırılmamış. Admin panelden SMTP ayarlarını girin.' }, { status: 500 });
+    }
+
     // E-posta gönder
     try {
       const nodemailer = await import('nodemailer');
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
+        host: smtp.host,
+        port: smtp.port,
+        secure: smtp.port === 465,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: smtp.user,
+          pass: smtp.pass,
         },
       });
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        from: `"MilletNeDer" <${smtp.from}>`,
         to: emailStr,
         subject: 'milletneder.com - Kurtarma Kodlariniz',
         html: `

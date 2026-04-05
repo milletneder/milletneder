@@ -83,9 +83,7 @@ export default function WeightingPage() {
   const [previewing, setPreviewing] = useState(false);
 
   const headers = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     return {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     };
   }, []);

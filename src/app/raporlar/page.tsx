@@ -31,7 +31,7 @@ export default function RaporlarPage() {
     <>
       <Header />
       <main className="min-h-screen bg-white">
-        <div className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+        <div className="max-w-3xl mx-auto px-6 pb-16">
           <PageHero
             title="Aylık Raporlar"
             subtitle="Her ayın sonunda yayınlanan detaylı seçim analizi raporları."

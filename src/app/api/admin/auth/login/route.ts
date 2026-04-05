@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: 'E-posta veya şifre hatalı' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { error: 'E-posta veya şifre hatalı' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 
@@ -67,10 +67,21 @@ export async function POST(request: NextRequest) {
 
     const { password_hash: _, ...adminData } = admin;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       token,
       admin: { ...adminData, last_login_at: new Date() },
     });
+
+    // Cookie olarak da set et (nginx Basic Auth ile çakışmaması için)
+    response.cookies.set('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24 saat
+    });
+
+    return response;
   } catch (error) {
     console.error('Admin login error:', error);
     return NextResponse.json(

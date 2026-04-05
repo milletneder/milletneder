@@ -10,7 +10,7 @@ export default function GizlilikPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-6 pb-16">
         <PageHero
           title="Gizlilik Politikası"
           subtitle="Kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi."
@@ -46,7 +46,7 @@ export default function GizlilikPage() {
                   <li>Telefon numaranız yalnızca doğrulama amacıyla kullanılır</li>
                   <li>Numaranız tek yönlü hash ile saklanır, orijinal hali sistemimizde tutulmaz</li>
                   <li>Telefon numaranız kimliğinizle, oyunuzla veya diğer kişisel bilgilerinizle eşleştirilmez</li>
-                  <li>Doğrulama işlemi Google Firebase Authentication altyapısı üzerinden gerçekleştirilir</li>
+                  <li>Doğrulama işlemi Twilio Verify altyapısı üzerinden gerçekleştirilir</li>
                 </ul>
               </div>
               <div className="border border-neutral-200 p-4">

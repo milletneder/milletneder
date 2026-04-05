@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const admin = await getAdminFromRequest(request);
     if (!admin) {
-      return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
+      return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 403 });
     }
 
     const { searchParams } = request.nextUrl;

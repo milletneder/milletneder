@@ -7,7 +7,7 @@ export type AuthEventType =
   | 'login_fail'      // Başarısız giriş
   | 'register'        // Başarılı kayıt
   | 'register_fail'   // Başarısız kayıt (hata)
-  | 'register_incomplete' // Firebase'de oluştu ama DB'de tamamlanmadı
+  | 'register_incomplete' // Doğrulama yapıldı ama DB kaydı tamamlanmadı
   | 'register_blocked'    // Fingerprint/IP limiti ile engellendi
   | 'password_reset'      // Şifre sıfırlama
   | 'password_change'     // Şifre değiştirme

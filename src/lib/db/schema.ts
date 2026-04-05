@@ -17,7 +17,7 @@ export const users = pgTable(
   "users",
   {
     id: serial("id").primaryKey(),
-    firebase_uid: varchar("firebase_uid", { length: 128 }).notNull().unique(),
+    anon_uid: varchar("anon_uid", { length: 128 }).notNull().unique(),
     identity_hash: varchar("identity_hash", { length: 64 }),
     city: varchar("city", { length: 100 }).notNull(),
     district: varchar("district", { length: 100 }),
@@ -47,7 +47,7 @@ export const users = pgTable(
     updated_at: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("users_firebase_uid_idx").on(table.firebase_uid),
+    uniqueIndex("users_anon_uid_idx").on(table.anon_uid),
     uniqueIndex("users_referral_code_idx").on(table.referral_code),
     index("users_identity_hash_idx").on(table.identity_hash),
   ]

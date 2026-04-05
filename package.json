@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:feb": "npx tsx scripts/seed-february-2026.ts"
+    "seed:feb": "npx tsx scripts/seed-february-2026.ts",
+    "db:migrate": "npx tsx src/lib/db/migrate.ts"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.1.0",
@@ -20,8 +21,7 @@
     "canvas-confetti": "^1.9.4",
     "d3-geo": "^3.1.1",
     "drizzle-orm": "^0.45.1",
-    "firebase": "^12.11.0",
-    "firebase-admin": "^13.7.0",
+
     "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
     "nanoid": "^5.1.7",
@@ -31,6 +31,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-simple-maps": "^3.0.0",
+    "twilio": "^5.13.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

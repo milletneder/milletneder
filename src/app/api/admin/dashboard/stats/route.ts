@@ -3,7 +3,6 @@ import { eq, sql, gte, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { users, votes, rounds, authLogs, deviceLogs } from '@/lib/db/schema';
 import { getAdminFromRequest } from '@/lib/auth/admin-middleware';
-import { getAdminAuth } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: 'Yetkilendirme gerekli' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 
@@ -78,22 +77,7 @@ export async function GET(request: NextRequest) {
 
     const multiDevices = (multiAccountDevicesResult.rows[0] as { count: number })?.count ?? 0;
 
-    // Firebase toplam kullanıcı sayısı (DB'de olmayan dahil)
-    let firebaseUserCount = 0;
-    try {
-      const adminAuth = getAdminAuth();
-      let nextPageToken: string | undefined;
-      do {
-        const listResult = await adminAuth.listUsers(1000, nextPageToken);
-        firebaseUserCount += listResult.users.length;
-        nextPageToken = listResult.pageToken;
-      } while (nextPageToken);
-    } catch (e) {
-      console.error('Firebase listUsers error:', e);
-    }
-
     const realUsers = realUsersResult?.count ?? 0;
-    const firebaseOnlyUsers = Math.max(0, firebaseUserCount - realUsers);
 
     return NextResponse.json({
       // Genel
@@ -110,9 +94,8 @@ export async function GET(request: NextRequest) {
       todayLoginFails: al.today_login_fails ?? 0,
       todayIncomplete: al.today_incomplete ?? 0,
       todayBlocked: al.today_blocked ?? 0,
-      totalIncomplete: firebaseOnlyUsers, // Firebase'de var ama DB'de yok
+      totalIncomplete: al.total_incomplete ?? 0,
       totalLoginFails: al.total_login_fails ?? 0,
-      firebaseUserCount,
       // Cihaz
       uniqueDevices: uniqueDevicesResult?.count ?? 0,
       multiAccountDevices: multiDevices,

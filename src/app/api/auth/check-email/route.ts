@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminAuth } from '@/lib/firebase/admin';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { hashIdentity } from '@/lib/auth/registration';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,18 +14,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Geçersiz e-posta' }, { status: 400 });
     }
 
-    const adminAuth = getAdminAuth();
-    try {
-      await adminAuth.getUserByEmail(email);
-      // Kullanıcı var
-      return NextResponse.json({ exists: true });
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string };
-      if (fbErr.code === 'auth/user-not-found') {
-        return NextResponse.json({ exists: false });
-      }
-      throw err;
+    const trimmed = String(email).trim().toLowerCase();
+    const identityHash = hashIdentity(trimmed);
+
+    const [existingUser] = await db
+      .select({ id: users.id, password_hash: users.password_hash })
+      .from(users)
+      .where(eq(users.identity_hash, identityHash))
+      .limit(1);
+
+    if (existingUser) {
+      return NextResponse.json({
+        exists: true,
+        hasPassword: !!existingUser.password_hash,
+      });
     }
+
+    return NextResponse.json({ exists: false, hasPassword: false });
   } catch (error) {
     console.error('Check email error:', error);
     return NextResponse.json(

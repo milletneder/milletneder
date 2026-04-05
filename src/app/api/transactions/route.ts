@@ -25,7 +25,7 @@ interface TransactionRow {
 }
 
 // Güvenli whitelist — sadece bunlar kabul edilir
-const VALID_TYPES = ['OY_KULLANIM', 'OY_DEGISIKLIK', 'OY_DEVIR', 'KAYIT'];
+const VALID_TYPES = ['OY_KULLANIM', 'OY_DEGISIKLIK', 'OY_DEVIR', 'KAYIT', 'OY_SILME', 'HESAP_SILME'];
 
 export async function GET(request: NextRequest) {
   try {

@@ -61,9 +61,9 @@
 - Şeffaflık raporu (veri kalitesi metrikleri)
 
 ### Kimlik Doğrulama ve Gizlilik
-- Firebase Authentication (e-posta/şifre + telefon/SMS)
-- **Sıfır PII mimarisi** — veritabanında e-posta, telefon, isim, şifre saklanmaz
-- Sadece `firebase_uid` ve `identity_hash` (SHA256) tutulur
+- Twilio Verify (SMS OTP + E-posta OTP) ile doğrulama
+- **Sıfır PII mimarisi** — veritabanında e-posta, telefon, isim saklanmaz
+- Sadece `identity_hash` (SHA256) tutulur
 - Referans sistemi ve rozet kademeleri
 
 ### Admin Paneli
@@ -76,7 +76,7 @@
 - Referans veri düzenleme (TÜİK, YSK verileri)
 - Seçmen sayıları yönetimi
 - Auth logları ve denetim geçmişi
-- Ayarlar (auth yöntemi, Firebase durumu)
+- Ayarlar (auth yöntemi, Twilio, SMTP yapılandırması)
 
 ### İşlem Geçmişi
 - Tüm işlemlerin kriptografik hash ile kaydı
@@ -96,10 +96,10 @@
 | ORM | Drizzle ORM 0.45 |
 | Veritabanı | PostgreSQL |
 | Harita | react-simple-maps, d3-geo |
-| Auth | Firebase Authentication + JWT |
+| Auth | Twilio Verify (SMS/E-posta OTP) + JWT |
 | Parmak İzi | @fingerprintjs/fingerprintjs |
 | Doğrulama | Zod |
-| E-posta | Nodemailer |
+| E-posta | Nodemailer (SMTP), Twilio Verify (OTP) |
 
 ## Kurulum
 
@@ -107,7 +107,7 @@
 
 - Node.js 20+
 - PostgreSQL 15+
-- Firebase projesi (Authentication etkin)
+- Twilio hesabı (Verify servisi aktif)
 
 ### Adımlar
 
@@ -122,9 +122,6 @@ npm install
 # Ortam değişkenlerini ayarla
 cp .env.example .env.local
 # .env.local dosyasını kendi değerlerinle doldur (aşağıdaki tabloya bak)
-
-# Firebase client config'ini güncelle
-# src/lib/firebase/config.ts dosyasında kendi Firebase projenizin değerlerini girin
 
 # Veritabanı migration
 npx drizzle-kit push
@@ -146,18 +143,20 @@ Tarayıcıda [http://localhost:3000](http://localhost:3000) adresini aç.
 | `DATABASE_URL` | Evet | PostgreSQL bağlantı URL'si |
 | `JWT_SECRET` | Evet | Kullanıcı JWT imzalama anahtarı |
 | `SETTINGS_ENCRYPTION_KEY` | Evet | Admin ayarları şifrelemesi (AES-256-GCM, 64 hex karakter) |
-| `FIREBASE_SERVICE_ACCOUNT` | Evet | Firebase Admin SDK service account JSON |
+| `TWILIO_ACCOUNT_SID` | Evet | Twilio Account SID (veya Admin Panelden girin) |
+| `TWILIO_AUTH_TOKEN` | Evet | Twilio Auth Token (veya Admin Panelden girin) |
+| `TWILIO_VERIFY_SERVICE_SID` | Evet | Twilio Verify Service SID (veya Admin Panelden girin) |
 | `NEXT_PUBLIC_APP_URL` | Evet | Site URL'si (örnek: `https://yourdomain.com`) |
 
 Örnek değerler için `.env.example` dosyasına bakın.
 
-### Firebase Kurulumu
+### Twilio Kurulumu
 
-1. [Firebase Console](https://console.firebase.google.com)'da yeni proje oluşturun
-2. Authentication > Sign-in method'dan Email/Password ve/veya Phone'u etkinleştirin
-3. Project Settings > Service Accounts'tan yeni private key indirin
-4. İndirilen JSON'u `FIREBASE_SERVICE_ACCOUNT` env değişkenine koyun
-5. `src/lib/firebase/config.ts` dosyasındaki config değerlerini kendi projenizinkilerle değiştirin
+1. [Twilio Console](https://console.twilio.com)'da hesap oluşturun
+2. Verify > Services'tan yeni servis oluşturun
+3. SMS kanalını etkinleştirin
+4. E-posta kanalı için: SendGrid hesabı oluşturun, API key ve Dynamic Template oluşturun, Verify servisine Email Integration ekleyin
+5. Account SID, Auth Token ve Verify Service SID değerlerini Admin Panel > Ayarlar'dan veya ortam değişkenlerinden girin
 
 ## Proje Yapısı
 
@@ -170,7 +169,7 @@ src/
 │   ├── profil/             — Kullanıcı profili
 │   ├── raporlar/           — Aylık raporlar
 │   ├── islemler/           — İşlem geçmişi
-│   ├── auth/               — Firebase e-posta doğrulama
+│   ├── islemler/           — İşlem geçmişi
 │   ├── gizlilik/           — Gizlilik politikası
 │   └── kullanim-kosullari/ — Kullanım koşulları
 ├── components/
@@ -184,7 +183,7 @@ src/
 ├── hooks/                  — useFingerprint
 ├── lib/
 │   ├── auth/               — JWT, middleware, admin auth, IP whitelist
-│   ├── firebase/           — Client SDK config, Admin SDK
+│   ├── sms/                — Twilio Verify entegrasyonu
 │   ├── db/                 — Drizzle schema, migrations
 │   ├── fraud/              — Fraud scorer, VPN detection, disposable emails
 │   ├── geo/                — Bölge, il, ilçe verileri

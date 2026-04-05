@@ -44,9 +44,7 @@ export default function RoundsPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = localStorage.getItem('admin_token');
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
         const res = await fetch('/api/admin/rounds', { headers });
         if (res.ok) {
           const data = await res.json();

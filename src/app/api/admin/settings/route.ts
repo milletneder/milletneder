@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFromRequest } from '@/lib/auth/admin-middleware';
-import { getSetting, setSetting } from '@/lib/admin/settings';
+import { getSetting, setSetting, getMaskedSetting } from '@/lib/admin/settings';
+import { invalidateTwilioConfigCache } from '@/lib/sms/twilio';
 import { db } from '@/lib/db';
 import { adminAuditLogs } from '@/lib/db/schema';
 
@@ -8,30 +9,45 @@ export const dynamic = 'force-dynamic';
 
 const ALLOWED_KEYS = [
   'auth_method', // 'email' | 'phone'
+  'twilio_account_sid',
+  'twilio_auth_token',
+  'twilio_verify_service_sid',
+  'twilio_phone_number', // kept for backward compat, not used by Verify API
+  'twilio_test_mode', // 'true' | 'false'
+  'smtp_host',
+  'smtp_port',
+  'smtp_user',
+  'smtp_pass',
+  'smtp_from',
 ];
+
+// Sensitive keys — return masked values in GET
+const MASKED_KEYS = ['twilio_auth_token', 'smtp_pass'];
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) {
-    return NextResponse.json({ error: 'Yetkisiz erisim' }, { status: 401 });
+    return NextResponse.json({ error: 'Yetkisiz erisim' }, { status: 403 });
   }
 
   const settings: Record<string, { value: string | null; source: 'db' | 'none' }> = {};
   for (const key of ALLOWED_KEYS) {
-    const dbValue = await getSetting(key);
-    settings[key] = { value: dbValue, source: dbValue ? 'db' : 'none' };
+    if (MASKED_KEYS.includes(key)) {
+      const masked = await getMaskedSetting(key);
+      settings[key] = { value: masked, source: masked ? 'db' : 'none' };
+    } else {
+      const dbValue = await getSetting(key);
+      settings[key] = { value: dbValue, source: dbValue ? 'db' : 'none' };
+    }
   }
 
-  // Firebase Service Account durumu
-  const hasFirebaseServiceAccount = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-
-  return NextResponse.json({ settings, hasFirebaseServiceAccount });
+  return NextResponse.json({ settings });
 }
 
 export async function PUT(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
   if (!admin) {
-    return NextResponse.json({ error: 'Yetkisiz erisim' }, { status: 401 });
+    return NextResponse.json({ error: 'Yetkisiz erisim' }, { status: 403 });
   }
 
   const body = await request.json();
@@ -41,14 +57,44 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Gecersiz ayar' }, { status: 400 });
   }
 
-  // auth_method validasyonu
+  // Validasyonlar
   if (key === 'auth_method' && !['email', 'phone'].includes(value)) {
     return NextResponse.json({ error: 'Geçersiz doğrulama yöntemi. email veya phone olmalı.' }, { status: 400 });
+  }
+  if (key === 'twilio_account_sid' && value && !String(value).startsWith('AC')) {
+    return NextResponse.json({ error: 'Twilio Account SID "AC" ile başlamalı.' }, { status: 400 });
+  }
+  if (key === 'twilio_verify_service_sid' && value && !String(value).startsWith('VA')) {
+    return NextResponse.json({ error: 'Twilio Verify Service SID "VA" ile başlamalı.' }, { status: 400 });
+  }
+  if (key === 'twilio_phone_number') {
+    // Normalize: remove spaces, dashes, parens — keep only +digits
+    const normalized = String(value).replace(/[\s\-\(\)]/g, '');
+    if (normalized && !normalized.startsWith('+')) {
+      return NextResponse.json({ error: 'Twilio telefon numarası "+" ile başlamalı (ör: +1...).' }, { status: 400 });
+    }
+    // Save normalized version
+    if (normalized !== value) {
+      await setSetting(key, normalized, admin.id);
+      if (key.startsWith('twilio_')) invalidateTwilioConfigCache();
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+      await db.insert(adminAuditLogs).values({ admin_id: admin.id, action: 'settings_update', target_type: 'admin_settings', details: `Setting updated: ${key} = ${normalized} (normalized from: ${value})`, ip_address: ip });
+      return NextResponse.json({ success: true, normalized });
+    }
+  }
+  if (key === 'twilio_test_mode' && !['true', 'false'].includes(value)) {
+    return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });
   }
 
   await setSetting(key, String(value), admin.id);
 
-  // Audit log
+  // Twilio ayarı değiştiyse cache'i temizle
+  if (key.startsWith('twilio_')) {
+    invalidateTwilioConfigCache();
+  }
+
+  // Audit log — hassas değerleri maskele
+  const logValue = MASKED_KEYS.includes(key) ? '***' : value;
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     request.headers.get('x-real-ip') ??
@@ -58,7 +104,7 @@ export async function PUT(request: NextRequest) {
     admin_id: admin.id,
     action: 'settings_update',
     target_type: 'admin_settings',
-    details: `Setting updated: ${key} = ${value}`,
+    details: `Setting updated: ${key} = ${logValue}`,
     ip_address: ip,
   });
 

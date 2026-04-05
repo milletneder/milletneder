@@ -34,9 +34,7 @@ export default function NewRoundPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('admin_token');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch('/api/admin/rounds', {
         method: 'POST',

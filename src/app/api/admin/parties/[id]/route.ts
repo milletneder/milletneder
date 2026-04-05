@@ -18,7 +18,7 @@ export async function PATCH(
     if (!admin) {
       return NextResponse.json(
         { error: 'Yetkilendirme gerekli' },
-        { status: 401 }
+        { status: 403 }
       );
     }
 

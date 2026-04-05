@@ -5,10 +5,13 @@ import { admins } from '@/lib/db/schema';
 import { verifyAdminToken } from './admin-jwt';
 
 export async function getAdminFromRequest(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
+  // 1) Cookie'den oku (nginx Basic Auth ile çakışmaz)
+  // 2) Fallback: X-Admin-Token header'ından oku
+  const token =
+    request.cookies.get('admin_token')?.value ||
+    request.headers.get('x-admin-token');
 
-  const token = authHeader.slice(7);
+  if (!token) return null;
   const payload = verifyAdminToken(token);
   if (!payload) return null;
 

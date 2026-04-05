@@ -20,7 +20,44 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd /opt/milletneder-staging
+            git checkout -- .
             git pull origin staging
             npm install --production=false
+            npm run db:migrate
+
+            # STAGING_BASIC_AUTH env var'ını güncelle
+            STAGING_AUTH='${{ secrets.STAGING_BASIC_AUTH }}'
+            if [ -n "$STAGING_AUTH" ]; then
+              sed -i '/STAGING_BASIC_AUTH/d' .env.local 2>/dev/null || true
+              echo "STAGING_BASIC_AUTH=$STAGING_AUTH" >> .env.local
+              echo ">> STAGING_BASIC_AUTH updated in .env.local"
+            else
+              echo ">> WARNING: STAGING_BASIC_AUTH secret is empty!"
+            fi
+
+            # Middleware dosyası kontrolü
+            if [ -f src/middleware.ts ]; then
+              echo ">> src/middleware.ts found ($(wc -c < src/middleware.ts) bytes)"
+            else
+              echo ">> ERROR: src/middleware.ts NOT FOUND!"
+            fi
+
+            # Eski build cache temizle (middleware gibi yeni dosyaların derlenmesini garanti et)
+            rm -rf .next
+
             npm run build
-            pm2 reload milletneder-staging
+
+            # PM2'ye env var'ı aktar ve yeniden başlat
+            export STAGING_BASIC_AUTH="$STAGING_AUTH"
+            pm2 reload milletneder-staging --update-env
+
+            # nginx Basic Auth'u devre dışı bırak (Next.js middleware hallediyor artık)
+            NGINX_CONF="/etc/nginx/sites-enabled/staging.milletneder.com"
+            if grep -q '^\s*auth_basic ' "$NGINX_CONF" 2>/dev/null; then
+              echo ">> Disabling nginx auth_basic (handled by Next.js middleware now)..."
+              sed -i 's/^\(\s*\)auth_basic /\1#auth_basic /' "$NGINX_CONF"
+              sed -i 's/^\(\s*\)auth_basic_user_file /\1#auth_basic_user_file /' "$NGINX_CONF"
+              nginx -t && nginx -s reload && echo ">> nginx reloaded successfully" || echo ">> nginx config test FAILED, not reloading"
+            else
+              echo ">> nginx auth_basic already disabled, skipping"
+            fi
