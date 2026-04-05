@@ -91,6 +91,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errMsg }, { status: 429 });
     }
 
-    return NextResponse.json({ error: `SMS gönderilemedi: ${errMsg}` }, { status: 500 });
+    return NextResponse.json({ error: 'SMS gönderilemedi. Lütfen daha sonra tekrar deneyin.' }, { status: 500 });
   }
 }

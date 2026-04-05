@@ -90,6 +90,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errMsg }, { status: 429 });
     }
 
-    return NextResponse.json({ error: `E-posta doğrulama kodu gönderilemedi: ${errMsg}` }, { status: 500 });
+    // Twilio channel disabled
+    if (errMsg.includes('channel disabled') || errMsg.includes('Delivery channel')) {
+      return NextResponse.json({ error: 'E-posta doğrulama kanalı aktif değil. Twilio Console > Verify > Services > Email Integration bölümünden e-posta kanalını etkinleştirin.' }, { status: 500 });
+    }
+
+    return NextResponse.json({ error: 'E-posta doğrulama kodu gönderilemedi. Lütfen daha sonra tekrar deneyin.' }, { status: 500 });
   }
 }

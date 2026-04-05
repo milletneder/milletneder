@@ -81,10 +81,13 @@ export async function sendVerification(to: string, channel: 'sms' | 'email' = 's
     if (twilioError.code === 60203) {
       throw new Error('Çok fazla doğrulama denemesi. Lütfen 10 dakika bekleyin.');
     }
+    if (twilioError.code === 60207) {
+      throw new Error(channel === 'email' ? 'E-posta doğrulama kanalı aktif değil. Twilio Verify servisinde e-posta entegrasyonunu yapılandırın.' : 'SMS doğrulama kanalı aktif değil.');
+    }
     if (twilioError.code === 60212) {
       throw new Error(channel === 'email' ? 'Bu e-posta adresi doğrulama için kullanılamıyor.' : 'Bu numara doğrulama için kullanılamıyor.');
     }
-    throw err;
+    throw new Error(channel === 'email' ? 'E-posta doğrulama kodu gönderilemedi. Lütfen daha sonra tekrar deneyin.' : 'SMS doğrulama kodu gönderilemedi. Lütfen daha sonra tekrar deneyin.');
   }
 }
 
@@ -133,6 +136,6 @@ export async function checkVerification(to: string, code: string, channel: 'sms'
     if (twilioError.code === 60203) {
       return { valid: false, error: 'too_many_attempts' };
     }
-    throw err;
+    return { valid: false, error: 'verification_failed' };
   }
 }

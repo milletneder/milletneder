@@ -14,10 +14,15 @@ const ALLOWED_KEYS = [
   'twilio_verify_service_sid',
   'twilio_phone_number', // kept for backward compat, not used by Verify API
   'twilio_test_mode', // 'true' | 'false'
+  'smtp_host',
+  'smtp_port',
+  'smtp_user',
+  'smtp_pass',
+  'smtp_from',
 ];
 
 // Sensitive keys — return masked values in GET
-const MASKED_KEYS = ['twilio_auth_token'];
+const MASKED_KEYS = ['twilio_auth_token', 'smtp_pass'];
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);

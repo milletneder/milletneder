@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function AdminSettingsPage() {
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+  const [selectedMethod, setSelectedMethod] = useState<'email' | 'phone'>('email');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -17,10 +18,16 @@ export default function AdminSettingsPage() {
   const [twilioSaving, setTwilioSaving] = useState(false);
   const [twilioMessage, setTwilioMessage] = useState('');
 
+  // SMTP settings
+  const [smtpHost, setSmtpHost] = useState('');
+  const [smtpPort, setSmtpPort] = useState('');
+  const [smtpUser, setSmtpUser] = useState('');
+  const [smtpPass, setSmtpPass] = useState('');
+  const [smtpFrom, setSmtpFrom] = useState('');
+
   useEffect(() => {
     fetchSettings();
   }, []);
-
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -29,12 +36,21 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         const data = await res.json();
         const method = data.settings?.auth_method?.value;
-        if (method === 'email' || method === 'phone') setAuthMethod(method);
+        if (method === 'email' || method === 'phone') {
+          setAuthMethod(method);
+          setSelectedMethod(method);
+        }
         // Twilio
         if (data.settings?.twilio_account_sid?.value) setTwilioSid(data.settings.twilio_account_sid.value);
         if (data.settings?.twilio_auth_token?.value) setTwilioToken(data.settings.twilio_auth_token.value);
         if (data.settings?.twilio_verify_service_sid?.value) setTwilioVerifySid(data.settings.twilio_verify_service_sid.value);
         setTwilioTestMode(data.settings?.twilio_test_mode?.value === 'true');
+        // SMTP
+        if (data.settings?.smtp_host?.value) setSmtpHost(data.settings.smtp_host.value);
+        if (data.settings?.smtp_port?.value) setSmtpPort(data.settings.smtp_port.value);
+        if (data.settings?.smtp_user?.value) setSmtpUser(data.settings.smtp_user.value);
+        if (data.settings?.smtp_pass?.value) setSmtpPass(data.settings.smtp_pass.value);
+        if (data.settings?.smtp_from?.value) setSmtpFrom(data.settings.smtp_from.value);
       }
     } catch {
       // ignore
@@ -43,22 +59,22 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleSaveAuthMethod = async (method: 'email' | 'phone') => {
+  const handleSaveAuthMethod = async () => {
+    if (selectedMethod === authMethod) return;
     setSaving(true);
     setMessage('');
 
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key: 'auth_method', value: method }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'auth_method', value: selectedMethod }),
       });
 
       if (res.ok) {
-        setAuthMethod(method);
+        setAuthMethod(selectedMethod);
         setMessage('Doğrulama yöntemi güncellendi');
+        setTimeout(() => setMessage(''), 3000);
       } else {
         const data = await res.json();
         setMessage(data.error || 'Hata oluştu');
@@ -70,16 +86,14 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleSaveTwilioSetting = async (key: string, value: string) => {
+  const handleSaveSetting = async (key: string, value: string) => {
     setTwilioSaving(true);
     setTwilioMessage('');
 
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value }),
       });
 
@@ -97,6 +111,8 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const methodChanged = selectedMethod !== authMethod;
+
   if (loading) {
     return (
       <div className="p-6">
@@ -109,7 +125,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-xl font-bold text-black mb-1">Ayarlar</h1>
-      <p className="text-neutral-500 text-sm mb-6">Kimlik doğrulama ve SMS ayarları</p>
+      <p className="text-neutral-500 text-sm mb-6">Kimlik doğrulama ve servis ayarları</p>
 
       {message && (
         <div className="bg-neutral-50 border border-neutral-200 p-3 mb-4 text-sm text-black">
@@ -127,10 +143,9 @@ export default function AdminSettingsPage() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => handleSaveAuthMethod('email')}
-              disabled={saving}
+              onClick={() => setSelectedMethod('email')}
               className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                authMethod === 'email'
+                selectedMethod === 'email'
                   ? 'bg-black text-white border-black'
                   : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
               }`}
@@ -141,10 +156,9 @@ export default function AdminSettingsPage() {
               </div>
             </button>
             <button
-              onClick={() => handleSaveAuthMethod('phone')}
-              disabled={saving}
+              onClick={() => setSelectedMethod('phone')}
               className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                authMethod === 'phone'
+                selectedMethod === 'phone'
                   ? 'bg-black text-white border-black'
                   : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
               }`}
@@ -155,13 +169,36 @@ export default function AdminSettingsPage() {
               </div>
             </button>
           </div>
+
+          {methodChanged && (
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-xs text-amber-600">
+                Yöntem değiştirildi, kaydetmek için onaylayın.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedMethod(authMethod)}
+                  className="px-4 py-2 text-xs font-medium text-neutral-500 border border-neutral-200 hover:border-black hover:text-black transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleSaveAuthMethod}
+                  disabled={saving}
+                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Twilio SMS Ayarları */}
+        {/* Twilio Ayarları — her zaman görünür (SMS ve E-posta ortak) */}
         <div className="border border-neutral-200 p-5">
-          <h2 className="text-sm font-bold text-black mb-1">Twilio SMS Ayarları</h2>
+          <h2 className="text-sm font-bold text-black mb-1">Twilio Ayarları</h2>
           <p className="text-xs text-neutral-500 mb-4">
-            SMS doğrulama için Twilio API bilgilerini girin.
+            {selectedMethod === 'phone' ? 'SMS' : 'E-posta'} doğrulama için Twilio API bilgilerini girin.
             <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 ml-1 underline">
               Twilio Console
             </a>
@@ -174,7 +211,6 @@ export default function AdminSettingsPage() {
           )}
 
           <div className="space-y-3">
-            {/* Account SID */}
             <div>
               <label className="block text-xs font-medium text-neutral-600 mb-1">Account SID</label>
               <div className="flex gap-2">
@@ -186,7 +222,7 @@ export default function AdminSettingsPage() {
                   className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                 />
                 <button
-                  onClick={() => handleSaveTwilioSetting('twilio_account_sid', twilioSid)}
+                  onClick={() => handleSaveSetting('twilio_account_sid', twilioSid)}
                   disabled={twilioSaving || !twilioSid}
                   className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
                 >
@@ -195,7 +231,6 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* Auth Token */}
             <div>
               <label className="block text-xs font-medium text-neutral-600 mb-1">Auth Token</label>
               <div className="flex gap-2">
@@ -207,7 +242,7 @@ export default function AdminSettingsPage() {
                   className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                 />
                 <button
-                  onClick={() => handleSaveTwilioSetting('twilio_auth_token', twilioToken)}
+                  onClick={() => handleSaveSetting('twilio_auth_token', twilioToken)}
                   disabled={twilioSaving || !twilioToken}
                   className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
                 >
@@ -217,7 +252,6 @@ export default function AdminSettingsPage() {
               <p className="text-[10px] text-neutral-400 mt-1">Veritabanında AES-256-GCM ile şifrelenerek saklanır.</p>
             </div>
 
-            {/* Verify Service SID */}
             <div>
               <label className="block text-xs font-medium text-neutral-600 mb-1">Verify Service SID</label>
               <div className="flex gap-2">
@@ -229,7 +263,7 @@ export default function AdminSettingsPage() {
                   className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                 />
                 <button
-                  onClick={() => handleSaveTwilioSetting('twilio_verify_service_sid', twilioVerifySid)}
+                  onClick={() => handleSaveSetting('twilio_verify_service_sid', twilioVerifySid)}
                   disabled={twilioSaving || !twilioVerifySid}
                   className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
                 >
@@ -239,17 +273,16 @@ export default function AdminSettingsPage() {
               <p className="text-[10px] text-neutral-400 mt-1">Twilio Console &gt; Verify &gt; Services &gt; Service SID</p>
             </div>
 
-            {/* Test Mode */}
             <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
               <div>
                 <span className="text-xs font-medium text-neutral-600">Test Modu</span>
-                <p className="text-[10px] text-neutral-400">Açıkken SMS gönderilmez, kod sunucu loglarında gösterilir.</p>
+                <p className="text-[10px] text-neutral-400">Açıkken doğrulama kodu gönderilmez, sunucu loglarında gösterilir.</p>
               </div>
               <button
                 onClick={() => {
                   const newVal = !twilioTestMode;
                   setTwilioTestMode(newVal);
-                  handleSaveTwilioSetting('twilio_test_mode', String(newVal));
+                  handleSaveSetting('twilio_test_mode', String(newVal));
                 }}
                 disabled={twilioSaving}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
@@ -266,168 +299,141 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* Twilio E-posta Ayarları */}
-        <div className="border border-neutral-200 p-5">
-          <h2 className="text-sm font-bold text-black mb-1">Twilio E-posta Ayarları</h2>
-          <p className="text-xs text-neutral-500 mb-4">
-            E-posta ile OTP doğrulama için Twilio Verify servisinde e-posta kanalı aktif olmalıdır.
-          </p>
-
-          <div className="space-y-3">
-            <div className="bg-neutral-50 border border-neutral-100 p-3">
-              <p className="text-xs text-neutral-600">
-                Twilio Console &gt; Verify &gt; Services &gt; Email Integration bölümünden yapılandırın.
+        {/* E-posta seçiliyken: Twilio E-posta + SMTP ayarları */}
+        {selectedMethod === 'email' && (
+          <>
+            <div className="border border-neutral-200 p-5">
+              <h2 className="text-sm font-bold text-black mb-1">Twilio E-posta Kanalı</h2>
+              <p className="text-xs text-neutral-500 mb-4">
+                E-posta ile OTP doğrulama için Twilio Verify servisinde e-posta kanalı aktif olmalıdır.
               </p>
-              <a
-                href="https://console.twilio.com/us1/develop/verify/services"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 underline mt-1 inline-block"
-              >
-                Twilio Verify Services
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* SMTP E-posta Ayarları (Kurtarma Kodları) */}
-        <div className="border border-neutral-200 p-5">
-          <h2 className="text-sm font-bold text-black mb-1">SMTP E-posta Ayarları</h2>
-          <p className="text-xs text-neutral-500 mb-4">
-            Kurtarma kodlarını e-posta ile göndermek için SMTP sunucu bilgilerini girin.
-            Herhangi bir SMTP sağlayıcı kullanabilirsiniz (SendGrid, Brevo, Amazon SES, vb.)
-          </p>
-
-          {twilioMessage && (
-            <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
-              {twilioMessage}
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {/* SMTP Host */}
-            <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Host</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  defaultValue=""
-                  id="smtp-host"
-                  placeholder="smtp.sendgrid.net"
-                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('smtp-host') as HTMLInputElement;
-                    if (el) handleSaveTwilioSetting('smtp_host', el.value);
-                  }}
-                  disabled={twilioSaving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+              <div className="bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-600">
+                  Twilio Console &gt; Verify &gt; Services &gt; Email Integration bölümünden yapılandırın.
+                </p>
+                <a
+                  href="https://console.twilio.com/us1/develop/verify/services"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 underline mt-1 inline-block"
                 >
-                  Kaydet
-                </button>
+                  Twilio Verify Services
+                </a>
               </div>
             </div>
 
-            {/* SMTP Port */}
-            <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Port</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  defaultValue=""
-                  id="smtp-port"
-                  placeholder="587"
-                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('smtp-port') as HTMLInputElement;
-                    if (el) handleSaveTwilioSetting('smtp_port', el.value);
-                  }}
-                  disabled={twilioSaving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                >
-                  Kaydet
-                </button>
-              </div>
-              <p className="text-[10px] text-neutral-400 mt-1">587 (TLS) veya 465 (SSL)</p>
-            </div>
+            <div className="border border-neutral-200 p-5">
+              <h2 className="text-sm font-bold text-black mb-1">SMTP E-posta Ayarları</h2>
+              <p className="text-xs text-neutral-500 mb-4">
+                Kurtarma kodlarını e-posta ile göndermek için SMTP sunucu bilgilerini girin.
+              </p>
 
-            {/* SMTP User */}
-            <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Kullanıcı</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  defaultValue=""
-                  id="smtp-user"
-                  placeholder="apikey veya kullanıcı adı"
-                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('smtp-user') as HTMLInputElement;
-                    if (el) handleSaveTwilioSetting('smtp_user', el.value);
-                  }}
-                  disabled={twilioSaving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                >
-                  Kaydet
-                </button>
-              </div>
-            </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Host</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={smtpHost}
+                      onChange={(e) => setSmtpHost(e.target.value)}
+                      placeholder="smtp.sendgrid.net"
+                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSaveSetting('smtp_host', smtpHost)}
+                      disabled={twilioSaving || !smtpHost}
+                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                </div>
 
-            {/* SMTP Password */}
-            <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Şifre</label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  defaultValue=""
-                  id="smtp-pass"
-                  placeholder="SMTP API key veya şifre"
-                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('smtp-pass') as HTMLInputElement;
-                    if (el) handleSaveTwilioSetting('smtp_pass', el.value);
-                  }}
-                  disabled={twilioSaving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                >
-                  Kaydet
-                </button>
-              </div>
-              <p className="text-[10px] text-neutral-400 mt-1">Veritabanında AES-256-GCM ile şifrelenerek saklanır.</p>
-            </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Port</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={smtpPort}
+                      onChange={(e) => setSmtpPort(e.target.value)}
+                      placeholder="587"
+                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSaveSetting('smtp_port', smtpPort)}
+                      disabled={twilioSaving || !smtpPort}
+                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mt-1">587 (TLS) veya 465 (SSL)</p>
+                </div>
 
-            {/* SMTP From */}
-            <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">Gönderen E-posta</label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  defaultValue=""
-                  id="smtp-from"
-                  placeholder="noreply@milletneder.com"
-                  className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('smtp-from') as HTMLInputElement;
-                    if (el) handleSaveTwilioSetting('smtp_from', el.value);
-                  }}
-                  disabled={twilioSaving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                >
-                  Kaydet
-                </button>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Kullanıcı</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={smtpUser}
+                      onChange={(e) => setSmtpUser(e.target.value)}
+                      placeholder="apikey"
+                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSaveSetting('smtp_user', smtpUser)}
+                      disabled={twilioSaving || !smtpUser}
+                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Şifre</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={smtpPass}
+                      onChange={(e) => setSmtpPass(e.target.value)}
+                      placeholder="SMTP API key veya şifre"
+                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSaveSetting('smtp_pass', smtpPass)}
+                      disabled={twilioSaving || !smtpPass}
+                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mt-1">Veritabanında AES-256-GCM ile şifrelenerek saklanır.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">Gönderen E-posta</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={smtpFrom}
+                      onChange={(e) => setSmtpFrom(e.target.value)}
+                      placeholder="noreply@milletneder.com"
+                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSaveSetting('smtp_from', smtpFrom)}
+                      disabled={twilioSaving || !smtpFrom}
+                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Gizlilik Notu */}
         <div className="border border-neutral-200 p-5 bg-neutral-50">
@@ -436,7 +442,7 @@ export default function AdminSettingsPage() {
             <li>E-posta ve telefon numaraları hiçbir yerde saklanmaz.</li>
             <li>Veritabanında sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
             <li>Kullanıcı kimliği ile oy tercihi arasında bağlantı kurulamaz.</li>
-            <li>Twilio API bilgileri AES-256-GCM ile şifrelenerek saklanır.</li>
+            <li>Twilio ve SMTP bilgileri AES-256-GCM ile şifrelenerek saklanır.</li>
           </ul>
         </div>
       </div>
