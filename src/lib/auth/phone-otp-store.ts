@@ -9,6 +9,7 @@ interface OtpEntry {
 
 const otpStore = new Map<string, OtpEntry>();
 const verifiedPhones = new Map<string, number>();
+const verifiedEmails = new Map<string, number>();
 
 // Cleanup expired entries every 5 minutes
 if (typeof setInterval !== 'undefined') {
@@ -19,6 +20,9 @@ if (typeof setInterval !== 'undefined') {
     }
     for (const [phone, ts] of verifiedPhones) {
       if (now - ts > 10 * 60 * 1000) verifiedPhones.delete(phone);
+    }
+    for (const [email, ts] of verifiedEmails) {
+      if (now - ts > 10 * 60 * 1000) verifiedEmails.delete(email);
     }
   }, 5 * 60 * 1000);
 }
@@ -84,4 +88,22 @@ export function isPhoneOtpVerified(phone: string): boolean {
 
 export function clearPhoneVerified(phone: string) {
   verifiedPhones.delete(phone);
+}
+
+export function markEmailAsVerified(email: string) {
+  verifiedEmails.set(email.toLowerCase(), Date.now());
+}
+
+export function isEmailOtpVerified(email: string): boolean {
+  const ts = verifiedEmails.get(email.toLowerCase());
+  if (!ts) return false;
+  if (Date.now() - ts > 10 * 60 * 1000) {
+    verifiedEmails.delete(email.toLowerCase());
+    return false;
+  }
+  return true;
+}
+
+export function clearEmailVerified(email: string) {
+  verifiedEmails.delete(email.toLowerCase());
 }

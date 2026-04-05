@@ -20,7 +20,6 @@ interface StatData {
   todayBlocked: number;
   totalIncomplete: number;
   totalLoginFails: number;
-  firebaseUserCount: number;
   uniqueDevices: number;
   multiAccountDevices: number;
   errorBreakdown: { error_code: string | null; count: number }[];
@@ -156,8 +155,7 @@ export default function AdminDashboardPage() {
 
   const authCards = stats
     ? [
-        { label: 'Firebase Toplam', value: stats.firebaseUserCount, color: 'border-blue-300' },
-        { label: 'Firebase-Only (Kayıtsız)', value: stats.totalIncomplete, color: 'border-amber-300' },
+        { label: 'Tamamlanmamış Kayıt', value: stats.totalIncomplete, color: 'border-amber-300' },
         { label: 'Bugün Giriş', value: stats.todayLogins, color: 'border-green-300' },
         { label: 'Bugün Başarısız Giriş', value: stats.todayLoginFails, color: 'border-red-300' },
         { label: 'Bugün Engellenen Kayıt', value: stats.todayBlocked, color: 'border-red-300' },

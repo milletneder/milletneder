@@ -36,10 +36,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Firebase Service Account durumu
-  const hasFirebaseServiceAccount = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-
-  return NextResponse.json({ settings, hasFirebaseServiceAccount });
+  return NextResponse.json({ settings });
 }
 
 export async function PUT(request: NextRequest) {

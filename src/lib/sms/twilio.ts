@@ -44,11 +44,11 @@ function getClient(sid: string, token: string): twilio.Twilio {
  * Send a verification code via Twilio Verify API
  * Twilio handles code generation, delivery, and storage
  */
-export async function sendVerification(phone: string): Promise<void> {
+export async function sendVerification(to: string, channel: 'sms' | 'email' = 'sms'): Promise<void> {
   const config = await getConfig();
 
   if (config.testMode) {
-    console.log(`[TWILIO TEST] Verification request to ${phone} (test mode — no SMS sent)`);
+    console.log(`[TWILIO TEST] Verification request to ${to} via ${channel} (test mode — no ${channel} sent)`);
     return;
   }
 
@@ -59,30 +59,30 @@ export async function sendVerification(phone: string): Promise<void> {
     throw new Error('Twilio Verify Service SID ayarlanmalı (Admin Panel > Ayarlar)');
   }
 
-  console.log(`[TWILIO] Sending verification to ${phone} via Verify API`);
+  console.log(`[TWILIO] Sending ${channel} verification to ${to} via Verify API`);
 
   try {
     const verification = await getClient(config.sid, config.token)
       .verify.v2
       .services(config.verifyServiceSid)
       .verifications.create({
-        to: phone,
-        channel: 'sms',
+        to,
+        channel,
       });
 
-    console.log(`[TWILIO] Verification sent: SID=${verification.sid}, status=${verification.status}`);
+    console.log(`[TWILIO] ${channel} verification sent: SID=${verification.sid}, status=${verification.status}`);
   } catch (err: unknown) {
     const twilioError = err as { code?: number; message?: string; moreInfo?: string; status?: number };
-    console.error(`[TWILIO ERROR] code=${twilioError.code}, message=${twilioError.message}, moreInfo=${twilioError.moreInfo}`);
+    console.error(`[TWILIO ERROR] ${channel} code=${twilioError.code}, message=${twilioError.message}, moreInfo=${twilioError.moreInfo}`);
 
     if (twilioError.code === 60200) {
-      throw new Error('Geçersiz telefon numarası.');
+      throw new Error(channel === 'email' ? 'Geçersiz e-posta adresi.' : 'Geçersiz telefon numarası.');
     }
     if (twilioError.code === 60203) {
       throw new Error('Çok fazla doğrulama denemesi. Lütfen 10 dakika bekleyin.');
     }
     if (twilioError.code === 60212) {
-      throw new Error('Bu numara doğrulama için kullanılamıyor.');
+      throw new Error(channel === 'email' ? 'Bu e-posta adresi doğrulama için kullanılamıyor.' : 'Bu numara doğrulama için kullanılamıyor.');
     }
     throw err;
   }
@@ -92,12 +92,12 @@ export async function sendVerification(phone: string): Promise<void> {
  * Check a verification code via Twilio Verify API
  * Returns 'approved' if correct, 'pending' if wrong code
  */
-export async function checkVerification(phone: string, code: string): Promise<{ valid: boolean; error?: string }> {
+export async function checkVerification(to: string, code: string, channel: 'sms' | 'email' = 'sms'): Promise<{ valid: boolean; error?: string }> {
   const config = await getConfig();
 
   if (config.testMode) {
     // In test mode, accept any 6-digit code
-    console.log(`[TWILIO TEST] Verification check for ${phone}: code=${code} (test mode — auto-approved)`);
+    console.log(`[TWILIO TEST] ${channel} verification check for ${to}: code=${code} (test mode — auto-approved)`);
     return { valid: true };
   }
 
@@ -110,11 +110,11 @@ export async function checkVerification(phone: string, code: string): Promise<{ 
       .verify.v2
       .services(config.verifyServiceSid)
       .verificationChecks.create({
-        to: phone,
+        to,
         code,
       });
 
-    console.log(`[TWILIO] Verification check: status=${check.status}`);
+    console.log(`[TWILIO] ${channel} verification check: status=${check.status}`);
 
     if (check.status === 'approved') {
       return { valid: true };
@@ -122,7 +122,7 @@ export async function checkVerification(phone: string, code: string): Promise<{ 
     return { valid: false, error: 'invalid_code' };
   } catch (err: unknown) {
     const twilioError = err as { code?: number; message?: string; status?: number };
-    console.error(`[TWILIO ERROR] Check failed: code=${twilioError.code}, message=${twilioError.message}`);
+    console.error(`[TWILIO ERROR] ${channel} check failed: code=${twilioError.code}, message=${twilioError.message}`);
 
     if (twilioError.code === 60200) {
       return { valid: false, error: 'invalid_code' };

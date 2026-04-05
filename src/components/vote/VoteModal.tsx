@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PartyGrid from './PartyGrid';
 import DemographicForm from './DemographicForm';
-import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
+import AuthForm from '@/components/auth/AuthForm';
 import ProfileForm from './ProfileForm';
 import Confetti from '@/components/ui/Confetti';
 import { useFingerprint } from '@/hooks/useFingerprint';
@@ -28,7 +28,7 @@ interface VoteModalProps {
   initialParty?: string;
 }
 
-type ModalStep = 'party-select' | 'firebase-auth' | 'profile' | 'success' | 'demographic' | 'blocked';
+type ModalStep = 'party-select' | 'auth' | 'profile' | 'success' | 'demographic' | 'blocked';
 
 export default function VoteModal({
   isOpen,
@@ -46,7 +46,7 @@ export default function VoteModal({
   const [referralLink, setReferralLink] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSelectWarning, setShowSelectWarning] = useState(false);
-  const [firebaseIdToken, setFirebaseIdToken] = useState<string | null>(null);
+  const [verifiedIdentity, setVerifiedIdentity] = useState<string | null>(null);
   const [authType, setAuthType] = useState<'email' | 'phone' | null>(null);
   const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
@@ -72,7 +72,7 @@ export default function VoteModal({
           const parsed = JSON.parse(pending);
           sessionStorage.removeItem('pendingRegistration');
           if (parsed.verifiedPhone) {
-            setFirebaseIdToken(parsed.verifiedPhone);
+            setVerifiedIdentity(parsed.verifiedPhone);
             setAuthType('phone');
             setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
             setStep('party-select');
@@ -80,8 +80,8 @@ export default function VoteModal({
             setError('');
             setSearchQuery('');
             return;
-          } else if (parsed.firebaseIdToken) {
-            setFirebaseIdToken(parsed.firebaseIdToken);
+          } else if (parsed.verifiedEmail) {
+            setVerifiedIdentity(parsed.verifiedEmail);
             setAuthType('email');
             setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
             setStep('party-select');
@@ -99,7 +99,7 @@ export default function VoteModal({
       setShowConfetti(false);
       setError('');
       setSearchQuery('');
-      setFirebaseIdToken(null);
+      setVerifiedIdentity(null);
       setAuthExtraData(undefined);
       setAuthType(null);
     }
@@ -143,8 +143,8 @@ export default function VoteModal({
       }
     } else {
       // Pending registration varsa (Header'dan yönlendirme) — auth atlayıp profil'e git
-      if (firebaseIdToken) {
-        await handleFirebaseAuth(firebaseIdToken, authExtraData);
+      if (verifiedIdentity) {
+        await handleAuth(verifiedIdentity, authExtraData);
         return;
       }
       // Giriş yapılmamış — önce fingerprint kontrolü yap
@@ -167,7 +167,7 @@ export default function VoteModal({
         }
         setLoading(false);
       }
-      setStep('firebase-auth');
+      setStep('auth');
     }
   };
 
@@ -208,81 +208,25 @@ export default function VoteModal({
     }
   };
 
-  const handleFirebaseAuth = async (idTokenOrPhone: string, extraData?: { password?: string }) => {
-    setFirebaseIdToken(idTokenOrPhone);
+  const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
+    setVerifiedIdentity(identityValue);
     setAuthExtraData(extraData);
-    setLoading(true);
-    setError('');
 
-    // Detect if this is a phone number (10 digits starting with 5) or Firebase ID token
-    const isPhone = /^\d{10}$/.test(idTokenOrPhone.replace(/\s/g, ''));
+    // Detect if this is a phone number (10 digits starting with 5) or email
+    const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
 
     if (isPhone) {
-      // Phone auth — OTP already verified, user is new (existing users go through onDirectLogin)
       setAuthType('phone');
-      setStep('profile');
-      setLoading(false);
-      return;
+    } else {
+      setAuthType('email');
     }
 
-    // Email auth — same flow as before
-    setAuthType('email');
-    try {
-      const res = await fetch('/api/auth/firebase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken: idTokenOrPhone, ...(extraData?.password && { password: extraData.password }) }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Kimlik doğrulama hatası');
-        setLoading(false);
-        return;
-      }
-
-      if (data.isNewUser && !data.token) {
-        setStep('profile');
-        setLoading(false);
-        return;
-      }
-
-      // Mevcut kullanici — login yap ve oy ver
-      login(data.token);
-
-      const voteRes = await fetch('/api/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.token}`,
-        },
-        body: JSON.stringify({ party: selectedParty, roundId: activeRoundId }),
-      });
-
-      const voteData = await voteRes.json();
-      if (!voteRes.ok) {
-        if (voteRes.status === 400 && voteData.error?.includes('Zaten')) {
-          setStep('success');
-          setShowConfetti(true);
-          return;
-        }
-        setError(voteData.error || 'Oy verirken bir hata oluştu');
-        return;
-      }
-
-      setStep('success');
-      setShowConfetti(true);
-      setReferralLink(voteData.referralLink || '');
-    } catch {
-      setError('Bağlantı hatası. Tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
+    // Both phone and email: OTP already verified, user is new (existing users go through onDirectLogin)
+    setStep('profile');
   };
 
   const handleProfileComplete = async (data: { city: string; district: string }) => {
-    if (!firebaseIdToken) return;
+    if (!verifiedIdentity) return;
     setLoading(true);
     setError('');
 
@@ -294,7 +238,7 @@ export default function VoteModal({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: firebaseIdToken,
+            phone: verifiedIdentity,
             city: data.city,
             district: data.district,
             fingerprint,
@@ -304,12 +248,12 @@ export default function VoteModal({
           }),
         });
       } else {
-        // Email registration — use firebase endpoint
-        res = await fetch('/api/auth/firebase', {
+        // Email registration — use register-email endpoint
+        res = await fetch('/api/auth/register-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firebaseIdToken,
+            email: verifiedIdentity,
             city: data.city,
             district: data.district,
             fingerprint,
@@ -462,11 +406,11 @@ export default function VoteModal({
               </div>
             )}
 
-            {step === 'firebase-auth' && (
+            {step === 'auth' && (
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
-                <FirebaseAuthForm
+                <AuthForm
                   method={authMethod}
-                  onAuthenticated={handleFirebaseAuth}
+                  onAuthenticated={handleAuth}
                   onDirectLogin={handleDirectLogin}
                   onBack={() => setStep('party-select')}
                 />
@@ -482,7 +426,7 @@ export default function VoteModal({
                 </p>
                 <ProfileForm
                   onComplete={handleProfileComplete}
-                  onBack={() => setStep('firebase-auth')}
+                  onBack={() => setStep('auth')}
                 />
                 {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
               </div>

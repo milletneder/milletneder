@@ -1,20 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+// Twilio OTP + DB password verification
 
 type AuthMethod = 'email' | 'phone';
 type EmailStep = 'email' | 'login' | 'verify-code' | 'set-password';
 type PhoneStep = 'input' | 'otp' | 'set-credentials';
 type Phase = 'input' | 'otp' | 'loading' | 'forgot-password' | 'forgot-code' | 'forgot-new-password';
 
-interface FirebaseAuthFormProps {
+interface AuthFormProps {
   method: AuthMethod;
-  onAuthenticated: (firebaseIdToken: string, extraData?: { password?: string }) => void;
+  onAuthenticated: (identityValue: string, extraData?: { password?: string }) => void;
   /** Direkt JWT ile login (phone+password) */
   onDirectLogin?: (token: string) => void;
   onBack?: () => void;
@@ -23,7 +19,7 @@ interface FirebaseAuthFormProps {
   onRegistrationNeeded?: () => void;
 }
 
-export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogin, onBack, loginOnly = false, onRegistrationNeeded }: FirebaseAuthFormProps) {
+export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBack, loginOnly = false, onRegistrationNeeded }: AuthFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -105,8 +101,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             setError('Bu e-posta ile kayıtlı hesap bulunamadı. Kayıt olmak için Oy Ver butonunu kullanın.');
           }
         } else {
+          // Send email OTP via Twilio Verify
           try {
-            const codeRes = await fetch('/api/auth/send-verification-code', {
+            const codeRes = await fetch('/api/auth/send-email-otp', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: email.trim() }),
@@ -123,6 +120,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
             return;
           }
           setEmailStep('verify-code');
+          setCountdown(90);
         }
       }
     } catch {
@@ -140,27 +138,23 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setLoading(true);
     setError('');
     try {
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
-      } catch (signInErr: unknown) {
-        const fbErr = signInErr as { code?: string };
-        if (fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
-          setError('Şifre hatalı. Doğru şifrenizi girin.');
-        } else if (fbErr.code === 'auth/too-many-requests') {
-          setError('Çok fazla deneme. Lütfen bir süre bekleyin.');
-        } else if (fbErr.code === 'auth/user-not-found') {
-          setError('Bu e-posta ile hesap bulunamadı.');
-        } else {
-          setError('Giriş başarısız. Lütfen tekrar deneyin.');
-        }
+      const res = await fetch('/api/auth/email-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Giriş başarısız. Lütfen tekrar deneyin.');
         setLoading(false);
         return;
       }
-      const idToken = await userCredential.user.getIdToken();
-      onAuthenticated(idToken, { password });
+      // Direkt JWT ile login
+      if (data.token && onDirectLogin) {
+        onDirectLogin(data.token);
+      }
     } catch {
-      setError('Giriş başarısız. Lütfen tekrar deneyin.');
+      setError('Bağlantı hatası. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -174,16 +168,23 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/verify-code', {
+      const res = await fetch('/api/auth/verify-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), code: verifyCode }),
       });
       const data = await res.json();
-      if (data.verified) {
-        setEmailStep('set-password');
-      } else {
+      if (!res.ok) {
         setError(data.error || 'Doğrulama başarısız');
+        setLoading(false);
+        return;
+      }
+      if (data.token && !data.isNewUser) {
+        // Existing user — shouldn't happen (login flow handles this), but just in case
+        if (onDirectLogin) onDirectLogin(data.token);
+      } else {
+        // New user — go to set password
+        setEmailStep('set-password');
       }
     } catch {
       setError('Doğrulama sırasında bir hata oluştu');
@@ -196,14 +197,14 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/send-verification-code', {
+      const res = await fetch('/api/auth/send-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
       if (!res.ok) setError(data.error || 'Kod gönderilemedi');
-      else setVerifyCode('');
+      else { setVerifyCode(''); setCountdown(90); }
     } catch {
       setError('Kod gönderilemedi');
     } finally {
@@ -216,42 +217,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
       setError('Şifre en az 6 karakter olmalı');
       return;
     }
-    setLoading(true);
-    setError('');
-    try {
-      let userCredential;
-      try {
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      } catch (regErr: unknown) {
-        const fbErr = regErr as { code?: string };
-        if (fbErr.code === 'auth/email-already-in-use') {
-          setError('Bu e-posta zaten kayıtlı. Giriş yapmayı deneyin.');
-          setEmailStep('login');
-        } else if (fbErr.code === 'auth/weak-password') {
-          setError('Şifre çok zayıf. En az 6 karakter kullanın.');
-        } else {
-          setError('Kayıt başarısız. Lütfen tekrar deneyin.');
-        }
-        setLoading(false);
-        return;
-      }
-      const idToken = await userCredential.user.getIdToken();
-      try {
-        const markRes = await fetch('/api/auth/mark-email-verified', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firebaseIdToken: idToken }),
-        });
-        if (!markRes.ok) console.error('Mark email verified failed:', await markRes.text());
-      } catch (err) {
-        console.error('Mark email verified error:', err);
-      }
-      onAuthenticated(idToken, { password });
-    } catch {
-      setError('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
+    // Email verified via Twilio OTP — pass email + password to parent
+    // Email is used as the identity (like phone number for phone auth)
+    onAuthenticated(email.trim(), { password });
   };
 
   // ========== PHONE AUTH ==========
@@ -495,6 +463,7 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
         return;
       }
       setForgotPhase('forgot-code');
+      setCountdown(90);
     } catch {
       setError('Bağlantı hatası');
     } finally {
@@ -832,9 +801,9 @@ export default function FirebaseAuthForm({ method, onAuthenticated, onDirectLogi
               <div>
                 <p className="text-sm font-medium text-black mb-1">Bilgilerin güvende</p>
                 <ul className="text-xs text-neutral-600 space-y-1">
-                  <li>E-postan sadece giriş için kullanılır.</li>
+                  <li>E-postan sadece doğrulama ve giriş için kullanılır.</li>
                   <li>Oyun veya kişisel bilgilerin ile asla eşleştirilmez.</li>
-                  <li>E-postan kendi sunucumuzda saklanmaz.</li>
+                  <li>E-postan hiçbir yerde saklanmaz — sadece şifreli hash&apos;i tutulur.</li>
                 </ul>
               </div>
             </div>

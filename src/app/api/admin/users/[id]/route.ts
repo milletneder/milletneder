@@ -205,8 +205,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
     }
 
-    // Firebase hesabı ayrıca silinmez — firebase_uid saklanmadığından eşleştirme mümkün değil.
-    // Orphan Firebase hesapları zararsızdır (DB kaydı olmadan sisteme giriş yapılamaz).
+    // Harici auth hesabı yok — tüm doğrulama Twilio + DB üzerinden yapılıyor.
 
     // Kullanıcının TÜM oylarını bul — hem açık hem şifreli
     const allUserVotes = await db.execute(sql`

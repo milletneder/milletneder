@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Counter from '@/components/ui/Counter';
-import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
+import AuthForm from '@/components/auth/AuthForm';
 import DemographicBanner from '@/components/layout/DemographicBanner';
 import RecoveryCodesTopbar from '@/components/layout/RecoveryCodesTopbar';
 
@@ -78,59 +78,20 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
     return () => window.removeEventListener('open-login', handler);
   }, []);
 
-  const handleFirebaseAuth = async (tokenOrPhone: string, extraData?: { password?: string }) => {
-    setLoginLoading(true);
-    setLoginError('');
+  const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
+    // Both phone and email: new users go to VoteModal for registration
+    // Existing users are handled via onDirectLogin (password login)
+    const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
 
-    // Detect if this is a phone number or Firebase token
-    const isPhone = /^\d{10}$/.test(tokenOrPhone.replace(/\s/g, ''));
+    const pendingData = isPhone
+      ? { verifiedPhone: identityValue, password: extraData?.password }
+      : { verifiedEmail: identityValue, password: extraData?.password };
 
-    if (isPhone) {
-      // Phone auth — new user needs registration via VoteModal
-      sessionStorage.setItem('pendingRegistration', JSON.stringify({
-        verifiedPhone: tokenOrPhone,
-        password: extraData?.password,
-      }));
-      setShowLoginForm(false);
-      setMobileMenuOpen(false);
-      if (onVoteClick) {
-        onVoteClick();
-      }
-      setLoginLoading(false);
-      return;
-    }
-
-    // Email auth — same as before
-    try {
-      const res = await fetch('/api/auth/firebase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken: tokenOrPhone, ...(extraData?.password && { password: extraData.password }) }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setLoginError(data.error || 'Giriş başarısız');
-        return;
-      }
-      if (data.isNewUser && !data.token) {
-        sessionStorage.setItem('pendingRegistration', JSON.stringify({
-          firebaseIdToken: tokenOrPhone,
-          password: extraData?.password,
-        }));
-        setShowLoginForm(false);
-        setMobileMenuOpen(false);
-        if (onVoteClick) {
-          onVoteClick();
-        }
-        return;
-      }
-      login(data.token);
-      setShowLoginForm(false);
-      setMobileMenuOpen(false);
-    } catch {
-      setLoginError('Bağlantı hatası');
-    } finally {
-      setLoginLoading(false);
+    sessionStorage.setItem('pendingRegistration', JSON.stringify(pendingData));
+    setShowLoginForm(false);
+    setMobileMenuOpen(false);
+    if (onVoteClick) {
+      onVoteClick();
     }
   };
 
@@ -239,10 +200,10 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
                     </button>
                   </div>
                   {loginError && <p className="text-red-600 text-[11px] mb-3">{loginError}</p>}
-                  <FirebaseAuthForm
+                  <AuthForm
                     key={loginMethod}
                     method={loginMethod}
-                    onAuthenticated={handleFirebaseAuth}
+                    onAuthenticated={handleAuth}
                     onDirectLogin={handleDirectLogin}
                     loginOnly
                     onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }}
@@ -303,7 +264,7 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
                   </button>
                 </div>
                 {loginError && <p className="text-red-600 text-[11px]">{loginError}</p>}
-                <FirebaseAuthForm key={loginMethod} method={loginMethod} onAuthenticated={handleFirebaseAuth} onDirectLogin={handleDirectLogin} loginOnly onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }} />
+                <AuthForm key={loginMethod} method={loginMethod} onAuthenticated={handleAuth} onDirectLogin={handleDirectLogin} loginOnly onRegistrationNeeded={() => { setShowLoginForm(false); setMobileMenuOpen(false); if (onVoteClick) onVoteClick(); }} />
               </div>
             )}
           </div>

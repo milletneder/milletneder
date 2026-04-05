@@ -308,17 +308,6 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    // Firebase hesabını sil
-    try {
-      const { getAdminAuth } = await import('@/lib/firebase/admin');
-      const adminAuth = getAdminAuth();
-      if (user.firebase_uid && !user.firebase_uid.startsWith('anon_') && !user.firebase_uid.startsWith('pending_migration_') && !user.firebase_uid.startsWith('dummy_')) {
-        await adminAuth.deleteUser(user.firebase_uid);
-      }
-    } catch (fbErr) {
-      console.error("Firebase account delete error (non-blocking):", fbErr);
-    }
-
     // İlişkili verileri sil (sıra önemli — FK bağımlılıkları)
     await db.delete(voteChanges).where(eq(voteChanges.user_id, user.id));
     await db.delete(votes).where(eq(votes.user_id, user.id));

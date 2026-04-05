@@ -1,8 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// Firebase signOut removed — phone auth uses Twilio now
-// Email auth still uses Firebase but signOut is handled separately if needed
 
 interface AuthState {
   isLoggedIn: boolean;
