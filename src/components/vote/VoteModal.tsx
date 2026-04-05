@@ -423,8 +423,8 @@ export default function VoteModal({
 
             {step === 'donation' && (
               <div className="p-6 text-center space-y-5">
-                <div className="w-14 h-14 mx-auto bg-amber-50 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5">
+                <div className="w-14 h-14 mx-auto bg-neutral-100 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="1.5">
                     <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
@@ -435,8 +435,8 @@ export default function VoteModal({
                     Ancak bağımsız bir platform olarak SMS gönderim bakiyemiz şu an tükenmiş durumda.
                   </p>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 p-4 text-left">
-                  <p className="text-sm text-amber-900 leading-relaxed">
+                <div className="bg-neutral-50 border border-neutral-200 p-4 text-left">
+                  <p className="text-sm text-neutral-700 leading-relaxed">
                     <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
                     Platformun devam edebilmesi tamamen bireysel bağışlara bağlıdır.
                   </p>
@@ -452,7 +452,7 @@ export default function VoteModal({
                     }}
                     className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
                   >
-                    Platforma Destek Ol
+                    Destekçimiz Ol
                   </button>
                   <button
                     onClick={onClose}
