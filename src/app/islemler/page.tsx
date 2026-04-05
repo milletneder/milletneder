@@ -413,11 +413,11 @@ function IslemlerPage() {
                       )}
                       {tx.type === 'OY_SILME' && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Silinen Parti</span>
+                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Parti</span>
                           {tx.party ? (
                             <span className="inline-flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.partyColor || '#555' }} />
-                              <span className="text-red-600 line-through">{tx.party}</span>
+                              <span className="text-neutral-800 font-medium">{tx.party}</span>
                             </span>
                           ) : (
                             <span className="text-neutral-400">[şifreli oy]</span>
@@ -591,12 +591,12 @@ function TxDetail({ tx }: { tx: Transaction }) {
         {tx.party ? (
           <>
             <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.partyColor || '#555' }} />
-            <span className="text-red-600 line-through">{tx.party}</span>
+            <span className="font-medium text-neutral-800">{tx.party}</span>
           </>
         ) : (
           <span className="text-neutral-400">[şifreli oy]</span>
         )}
-        <span className="text-red-500 text-xs font-medium">silindi</span>
+        <span className="text-neutral-400 text-xs">silindi</span>
       </span>
     );
   }
@@ -606,7 +606,7 @@ function TxDetail({ tx }: { tx: Transaction }) {
       <span>
         {tx.city && <span className="text-neutral-800 font-medium">{tx.city}</span>}
         {tx.city && <span className="text-neutral-300 mx-1.5">·</span>}
-        <span className="text-red-500 font-medium">Hesap silindi</span>
+        <span className="text-neutral-400">Hesap silindi</span>
       </span>
     );
   }

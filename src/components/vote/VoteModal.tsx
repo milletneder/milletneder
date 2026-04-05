@@ -475,7 +475,7 @@ export default function VoteModal({
             )}
 
             {step === 'profile' && (
-              <div className="p-6 overflow-y-auto max-h-[85vh]">
+              <div className="p-6">
                 <h2 className="text-2xl font-bold text-black mb-2">Profil Bilgileri</h2>
                 <p className="text-neutral-500 text-sm mb-6">
                   Son adım — şehrini ve ilçeni seç, oyun sayılsın.
