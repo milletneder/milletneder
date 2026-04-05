@@ -12,7 +12,7 @@ export default function AdminSettingsPage() {
   // Twilio settings
   const [twilioSid, setTwilioSid] = useState('');
   const [twilioToken, setTwilioToken] = useState('');
-  const [twilioPhone, setTwilioPhone] = useState('');
+  const [twilioVerifySid, setTwilioVerifySid] = useState('');
   const [twilioTestMode, setTwilioTestMode] = useState(false);
   const [twilioSaving, setTwilioSaving] = useState(false);
   const [twilioMessage, setTwilioMessage] = useState('');
@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
         // Twilio
         if (data.settings?.twilio_account_sid?.value) setTwilioSid(data.settings.twilio_account_sid.value);
         if (data.settings?.twilio_auth_token?.value) setTwilioToken(data.settings.twilio_auth_token.value);
-        if (data.settings?.twilio_phone_number?.value) setTwilioPhone(data.settings.twilio_phone_number.value);
+        if (data.settings?.twilio_verify_service_sid?.value) setTwilioVerifySid(data.settings.twilio_verify_service_sid.value);
         setTwilioTestMode(data.settings?.twilio_test_mode?.value === 'true');
       }
     } catch {
@@ -219,25 +219,26 @@ export default function AdminSettingsPage() {
               <p className="text-[10px] text-neutral-400 mt-1">Veritabanında AES-256-GCM ile şifrelenerek saklanır.</p>
             </div>
 
-            {/* Phone Number */}
+            {/* Verify Service SID */}
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">Twilio Telefon Numarası</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Verify Service SID</label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={twilioPhone}
-                  onChange={(e) => setTwilioPhone(e.target.value)}
-                  placeholder="+1234567890"
+                  value={twilioVerifySid}
+                  onChange={(e) => setTwilioVerifySid(e.target.value)}
+                  placeholder="VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                 />
                 <button
-                  onClick={() => handleSaveTwilioSetting('twilio_phone_number', twilioPhone)}
-                  disabled={twilioSaving || !twilioPhone}
+                  onClick={() => handleSaveTwilioSetting('twilio_verify_service_sid', twilioVerifySid)}
+                  disabled={twilioSaving || !twilioVerifySid}
                   className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
                 >
                   Kaydet
                 </button>
               </div>
+              <p className="text-[10px] text-neutral-400 mt-1">Twilio Console &gt; Verify &gt; Services &gt; Service SID</p>
             </div>
 
             {/* Test Mode */}

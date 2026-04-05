@@ -11,7 +11,8 @@ const ALLOWED_KEYS = [
   'auth_method', // 'email' | 'phone'
   'twilio_account_sid',
   'twilio_auth_token',
-  'twilio_phone_number',
+  'twilio_verify_service_sid',
+  'twilio_phone_number', // kept for backward compat, not used by Verify API
   'twilio_test_mode', // 'true' | 'false'
 ];
 
@@ -60,6 +61,9 @@ export async function PUT(request: NextRequest) {
   }
   if (key === 'twilio_account_sid' && value && !String(value).startsWith('AC')) {
     return NextResponse.json({ error: 'Twilio Account SID "AC" ile başlamalı.' }, { status: 400 });
+  }
+  if (key === 'twilio_verify_service_sid' && value && !String(value).startsWith('VA')) {
+    return NextResponse.json({ error: 'Twilio Verify Service SID "VA" ile başlamalı.' }, { status: 400 });
   }
   if (key === 'twilio_phone_number') {
     // Normalize: remove spaces, dashes, parens — keep only +digits

@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateOtpCode, storeOtp, isOtpRateLimited } from '@/lib/auth/phone-otp-store';
-import { sendOTP } from '@/lib/sms/twilio';
+import { sendVerification } from '@/lib/sms/twilio';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
+
+// Phone-based rate limiting (1 request per 60 seconds)
+const phoneSendTimestamps = new Map<string, number>();
 
 // IP-based rate limiting for OTP sends
 const ipSendCounts = new Map<string, { count: number; windowStart: number }>();
+
+function isPhoneRateLimited(phone: string): boolean {
+  const lastSent = phoneSendTimestamps.get(phone);
+  if (!lastSent) return false;
+  return Date.now() - lastSent < 60 * 1000;
+}
 
 function isIpRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -23,6 +31,9 @@ if (typeof setInterval !== 'undefined') {
     const now = Date.now();
     for (const [ip, entry] of ipSendCounts) {
       if (now - entry.windowStart > 15 * 60 * 1000) ipSendCounts.delete(ip);
+    }
+    for (const [phone, ts] of phoneSendTimestamps) {
+      if (now - ts > 60 * 1000) phoneSendTimestamps.delete(phone);
     }
   }, 10 * 60 * 1000);
 }
@@ -44,7 +55,7 @@ export async function POST(request: NextRequest) {
       ?? request.headers.get('x-real-ip') ?? 'unknown';
 
     // Rate limits
-    if (isOtpRateLimited(fullPhone)) {
+    if (isPhoneRateLimited(fullPhone)) {
       return NextResponse.json({ error: 'Çok sık deneme. 60 saniye bekleyin.', retryAfter: 60 }, { status: 429 });
     }
 
@@ -53,11 +64,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Çok fazla deneme. Lütfen daha sonra tekrar deneyin.' }, { status: 429 });
     }
 
-    // Generate and send OTP
-    const code = generateOtpCode();
-    storeOtp(fullPhone, code);
+    // Send verification via Twilio Verify API
+    await sendVerification(fullPhone);
 
-    await sendOTP(fullPhone, code);
+    // Track send timestamp for rate limiting
+    phoneSendTimestamps.set(fullPhone, Date.now());
 
     await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, request, details: { step: 'otp_sent' } });
 
@@ -67,14 +78,17 @@ export async function POST(request: NextRequest) {
     console.error('Send OTP error:', errMsg);
 
     // Twilio-specific user-facing errors
-    if (errMsg.includes('doğrulanmış numara') || errMsg.includes('Verified Caller')) {
-      return NextResponse.json({ error: 'Twilio trial hesabı: Bu numara henüz doğrulanmamış. Twilio Console\'dan numaranızı doğrulayın.' }, { status: 400 });
-    }
-    if (errMsg.includes('uluslararası SMS') || errMsg.includes('Geo Permissions') || errMsg.includes('bu bölgeye')) {
-      return NextResponse.json({ error: 'SMS servisi Türkiye\'ye gönderim için yapılandırılmamış. Admin panelden ayarları kontrol edin.' }, { status: 500 });
+    if (errMsg.includes('Verify Service SID')) {
+      return NextResponse.json({ error: 'SMS servisi henüz yapılandırılmamış. Admin panelden Twilio Verify Service SID girin.' }, { status: 500 });
     }
     if (errMsg.includes('SID') || errMsg.includes('Token') || errMsg.includes('ayarlanmalı')) {
       return NextResponse.json({ error: 'SMS servisi henüz yapılandırılmamış. Admin panelden Twilio ayarlarını girin.' }, { status: 500 });
+    }
+    if (errMsg.includes('Geçersiz telefon') || errMsg.includes('kullanılamıyor')) {
+      return NextResponse.json({ error: errMsg }, { status: 400 });
+    }
+    if (errMsg.includes('Çok fazla')) {
+      return NextResponse.json({ error: errMsg }, { status: 429 });
     }
 
     return NextResponse.json({ error: `SMS gönderilemedi: ${errMsg}` }, { status: 500 });

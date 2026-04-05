@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { verifyOtp, markPhoneAsVerified } from '@/lib/auth/phone-otp-store';
+import { markPhoneAsVerified } from '@/lib/auth/phone-otp-store';
+import { checkVerification } from '@/lib/sms/twilio';
 import { hashIdentity, loginExistingUser } from '@/lib/auth/registration';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
 
@@ -23,8 +24,8 @@ export async function POST(request: NextRequest) {
 
     const fullPhone = `+90${raw}`;
 
-    // Verify OTP
-    const result = verifyOtp(fullPhone, String(code));
+    // Verify OTP via Twilio Verify API
+    const result = await checkVerification(fullPhone, String(code));
     if (!result.valid) {
       const errorMessages: Record<string, string> = {
         no_code: 'Doğrulama kodu bulunamadı. Tekrar kod gönderin.',
