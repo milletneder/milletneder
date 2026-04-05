@@ -421,6 +421,7 @@ export const featureVotes = pgTable("feature_votes", {
   id: serial("id").primaryKey(),
   request_id: integer("request_id").notNull().references(() => featureRequests.id, { onDelete: "cascade" }),
   user_id: integer("user_id").notNull().references(() => users.id),
+  is_upvote: boolean("is_upvote").notNull().default(true),
   created_at: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   unique("feature_votes_user_request_idx").on(table.user_id, table.request_id),
