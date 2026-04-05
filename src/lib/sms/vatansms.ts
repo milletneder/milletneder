@@ -47,18 +47,27 @@ export function invalidateVatansmsConfigCache(): void {
 
 // ── SMS gönderimi ──────────────────────────────────────────────
 
-/** VatanSMS XML API hata kodları */
+/**
+ * VatanSMS XML API hata kodları
+ * Yanıt formatı: "kod:açıklama" (ör: "2:Orjinator hatali veya onaysiz")
+ * veya sadece negatif sayı (ör: "-1")
+ * Başarılı yanıt: sadece pozitif sayı (SMS ID, ör: "12345678")
+ */
 const ERROR_CODES: Record<string, string> = {
+  '1': 'Kullanıcı adı veya şifre hatalı',
+  '2': 'Gönderici başlığı (originator) hatalı veya onaysız',
+  '3': 'Mesaj metni boş',
+  '4': 'Numara listesi boş',
+  '5': 'Geçersiz XML formatı',
+  '6': 'Tarih formatı hatalı',
+  '7': 'Mesaj çok uzun',
+  '8': 'Aynı mesaj tekrar gönderilmeye çalışıldı',
+  '9': 'Sistem hatası',
+  '10': 'Kredisi yetersiz',
+  // Eski format (negatif kodlar) da desteklenir
   '-1': 'Kullanıcı adı veya şifre hatalı',
   '-2': 'Kredisi yetersiz',
   '-3': 'Geçersiz gönderen adı',
-  '-4': 'Mesaj metni boş',
-  '-5': 'Numara listesi boş',
-  '-6': 'Geçersiz XML formatı',
-  '-7': 'Tarih formatı hatalı',
-  '-8': 'Mesaj çok uzun',
-  '-9': 'Aynı mesaj tekrar gönderilmeye çalışıldı',
-  '-10': 'Sistem hatası',
 };
 
 /**
@@ -106,24 +115,41 @@ export async function sendVerification(to: string): Promise<void> {
     const responseText = (await res.text()).trim();
     console.log(`[VATANSMS] Response: ${responseText}`);
 
-    // Pozitif sayı = SMS ID (başarılı)
-    // Negatif sayı veya hata metni = başarısız
-    if (responseText.startsWith('-')) {
-      const errorDesc = ERROR_CODES[responseText] || 'Bilinmeyen hata';
-      console.error(`[VATANSMS ERROR] Code: ${responseText}, Description: ${errorDesc}`);
+    // Yanıt formatları:
+    //   Başarılı: sadece sayı (SMS ID), ör: "12345678"
+    //   Hata: "kod:açıklama", ör: "2:Orjinator hatali veya onaysiz"
+    //   Eski hata: negatif sayı, ör: "-1"
+    const isSuccess = /^\d+$/.test(responseText) && !responseText.includes(':');
 
-      if (responseText === '-2') {
+    if (!isSuccess) {
+      // Hata kodunu parse et
+      const errorCode = responseText.split(':')[0].trim();
+      const errorMsg = responseText.includes(':') ? responseText.split(':').slice(1).join(':').trim() : '';
+      const errorDesc = ERROR_CODES[errorCode] || errorMsg || 'Bilinmeyen hata';
+      console.error(`[VATANSMS ERROR] Code: ${errorCode}, Message: ${errorMsg}, Description: ${errorDesc}`);
+
+      // Bilinen hata türleri
+      if (errorCode === '2' || errorCode === '-3') {
+        throw new Error(`VatanSMS gönderici başlığı onaysız. VatanSMS panelinden "${config.sender}" başlığını kaydedin ve onay alın.`);
+      }
+      if (errorCode === '10' || errorCode === '-2') {
         throw new Error('SMS kredisi yetersiz. Lütfen VatanSMS panelinden kredi yükleyin.');
       }
-      if (responseText === '-1') {
+      if (errorCode === '1' || errorCode === '-1') {
         throw new Error('VatanSMS kimlik doğrulama hatası. Admin panelden API bilgilerini kontrol edin.');
       }
-      throw new Error('SMS gönderilemedi. Lütfen daha sonra tekrar deneyin.');
+      throw new Error(`SMS gönderilemedi: ${errorDesc}`);
     }
 
     console.log(`[VATANSMS] SMS sent successfully, ID: ${responseText}`);
   } catch (err) {
-    if (err instanceof Error && (err.message.includes('kredisi') || err.message.includes('kimlik') || err.message.includes('ayarlanmalı'))) {
+    if (err instanceof Error && (
+      err.message.includes('kredisi') ||
+      err.message.includes('kimlik') ||
+      err.message.includes('ayarlanmalı') ||
+      err.message.includes('gönderici') ||
+      err.message.includes('gönderilemedi:')
+    )) {
       throw err; // Bilinen hataları olduğu gibi fırlat
     }
     console.error('[VATANSMS ERROR]', err);
