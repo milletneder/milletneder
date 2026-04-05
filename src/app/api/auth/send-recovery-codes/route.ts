@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       });
 
       await transporter.sendMail({
-        from: smtp.from,
+        from: `"MilletNeDer" <${smtp.from}>`,
         to: emailStr,
         subject: 'milletneder.com - Kurtarma Kodlariniz',
         html: `
