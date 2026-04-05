@@ -181,7 +181,7 @@ export async function registerNewUser(input: RegistrationInput): Promise<AuthRes
   const [newUser] = await db
     .insert(users)
     .values({
-      firebase_uid: anonUid,
+      anon_uid: anonUid,
       identity_hash: identityHash,
       city: cityStr,
       district: districtStr,

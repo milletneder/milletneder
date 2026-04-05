@@ -15,6 +15,13 @@
       "when": 1774978427759,
       "tag": "0001_chilly_absorbing_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775571600000,
+      "tag": "0002_rename_firebase_uid",
+      "breakpoints": true
     }
   ]
 }

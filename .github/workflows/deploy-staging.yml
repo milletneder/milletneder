@@ -23,6 +23,7 @@ jobs:
             git checkout -- .
             git pull origin staging
             npm install --production=false
+            npm run db:migrate
 
             # STAGING_BASIC_AUTH env var'ını güncelle
             STAGING_AUTH='${{ secrets.STAGING_BASIC_AUTH }}'
