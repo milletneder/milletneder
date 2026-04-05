@@ -42,9 +42,7 @@ jobs:
               echo ">> ERROR: src/middleware.ts NOT FOUND!"
             fi
 
-            # Eski build cache temizle (middleware gibi yeni dosyaların derlenmesini garanti et)
-            rm -rf .next
-
+            # Zero-downtime build: eski .next silinmez, ustune build edilir
             npm run build
 
             # PM2'ye env var'ı aktar ve yeniden başlat
