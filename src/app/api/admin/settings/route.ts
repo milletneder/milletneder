@@ -61,8 +61,20 @@ export async function PUT(request: NextRequest) {
   if (key === 'twilio_account_sid' && value && !String(value).startsWith('AC')) {
     return NextResponse.json({ error: 'Twilio Account SID "AC" ile başlamalı.' }, { status: 400 });
   }
-  if (key === 'twilio_phone_number' && value && !String(value).startsWith('+')) {
-    return NextResponse.json({ error: 'Twilio telefon numarası "+" ile başlamalı (ör: +1...).' }, { status: 400 });
+  if (key === 'twilio_phone_number') {
+    // Normalize: remove spaces, dashes, parens — keep only +digits
+    const normalized = String(value).replace(/[\s\-\(\)]/g, '');
+    if (normalized && !normalized.startsWith('+')) {
+      return NextResponse.json({ error: 'Twilio telefon numarası "+" ile başlamalı (ör: +1...).' }, { status: 400 });
+    }
+    // Save normalized version
+    if (normalized !== value) {
+      await setSetting(key, normalized, admin.id);
+      if (key.startsWith('twilio_')) invalidateTwilioConfigCache();
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'unknown';
+      await db.insert(adminAuditLogs).values({ admin_id: admin.id, action: 'settings_update', target_type: 'admin_settings', details: `Setting updated: ${key} = ${normalized} (normalized from: ${value})`, ip_address: ip });
+      return NextResponse.json({ success: true, normalized });
+    }
   }
   if (key === 'twilio_test_mode' && !['true', 'false'].includes(value)) {
     return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });

@@ -63,7 +63,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, expiresIn: 300 });
   } catch (error) {
-    console.error('Send OTP error:', error);
-    return NextResponse.json({ error: 'SMS gönderilemedi. Lütfen tekrar deneyin.' }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('Send OTP error:', errMsg);
+
+    // Twilio-specific user-facing errors
+    if (errMsg.includes('doğrulanmış numara') || errMsg.includes('Verified Caller')) {
+      return NextResponse.json({ error: 'Twilio trial hesabı: Bu numara henüz doğrulanmamış. Twilio Console\'dan numaranızı doğrulayın.' }, { status: 400 });
+    }
+    if (errMsg.includes('uluslararası SMS') || errMsg.includes('Geo Permissions') || errMsg.includes('bu bölgeye')) {
+      return NextResponse.json({ error: 'SMS servisi Türkiye\'ye gönderim için yapılandırılmamış. Admin panelden ayarları kontrol edin.' }, { status: 500 });
+    }
+    if (errMsg.includes('SID') || errMsg.includes('Token') || errMsg.includes('ayarlanmalı')) {
+      return NextResponse.json({ error: 'SMS servisi henüz yapılandırılmamış. Admin panelden Twilio ayarlarını girin.' }, { status: 500 });
+    }
+
+    return NextResponse.json({ error: `SMS gönderilemedi: ${errMsg}` }, { status: 500 });
   }
 }
