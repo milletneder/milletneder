@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PartyGrid from './PartyGrid';
 import DemographicForm from './DemographicForm';
-import AuthForm from '@/components/auth/AuthForm';
+import FirebaseAuthForm from '@/components/auth/FirebaseAuthForm';
 import ProfileForm from './ProfileForm';
 import Confetti from '@/components/ui/Confetti';
 import { useFingerprint } from '@/hooks/useFingerprint';
@@ -46,9 +46,9 @@ export default function VoteModal({
   const [referralLink, setReferralLink] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSelectWarning, setShowSelectWarning] = useState(false);
-  const [authToken, setAuthToken] = useState<string | null>(null); // Firebase token (email) or verified phone
-  const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
+  const [firebaseIdToken, setFirebaseIdToken] = useState<string | null>(null);
   const [authType, setAuthType] = useState<'email' | 'phone' | null>(null);
+  const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const { fingerprint } = useFingerprint();
   const { login } = useAuth();
@@ -72,7 +72,7 @@ export default function VoteModal({
           const parsed = JSON.parse(pending);
           sessionStorage.removeItem('pendingRegistration');
           if (parsed.verifiedPhone) {
-            setAuthToken(parsed.verifiedPhone);
+            setFirebaseIdToken(parsed.verifiedPhone);
             setAuthType('phone');
             setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
             setStep('party-select');
@@ -81,7 +81,7 @@ export default function VoteModal({
             setSearchQuery('');
             return;
           } else if (parsed.firebaseIdToken) {
-            setAuthToken(parsed.firebaseIdToken);
+            setFirebaseIdToken(parsed.firebaseIdToken);
             setAuthType('email');
             setAuthExtraData(parsed.password ? { password: parsed.password } : undefined);
             setStep('party-select');
@@ -99,9 +99,9 @@ export default function VoteModal({
       setShowConfetti(false);
       setError('');
       setSearchQuery('');
-      setAuthToken(null);
-      setAuthType(null);
+      setFirebaseIdToken(null);
       setAuthExtraData(undefined);
+      setAuthType(null);
     }
   }, [isOpen, initialParty]);
 
@@ -143,8 +143,8 @@ export default function VoteModal({
       }
     } else {
       // Pending registration varsa (Header'dan yönlendirme) — auth atlayıp profil'e git
-      if (authToken) {
-        await handleAuth(authToken, authExtraData);
+      if (firebaseIdToken) {
+        await handleFirebaseAuth(firebaseIdToken, authExtraData);
         return;
       }
       // Giriş yapılmamış — önce fingerprint kontrolü yap
@@ -208,40 +208,31 @@ export default function VoteModal({
     }
   };
 
-  const handleAuth = async (tokenOrPhone: string, extraData?: { password?: string }) => {
-    // Detect if this is a phone (digits) or Firebase token
-    const isPhone = /^\d{10}$/.test(tokenOrPhone.replace(/\s/g, ''));
-    setAuthToken(tokenOrPhone);
-    setAuthType(isPhone ? 'phone' : 'email');
+  const handleFirebaseAuth = async (idTokenOrPhone: string, extraData?: { password?: string }) => {
+    setFirebaseIdToken(idTokenOrPhone);
     setAuthExtraData(extraData);
     setLoading(true);
     setError('');
 
+    // Detect if this is a phone number (10 digits starting with 5) or Firebase ID token
+    const isPhone = /^\d{10}$/.test(idTokenOrPhone.replace(/\s/g, ''));
+
+    if (isPhone) {
+      // Phone auth — OTP already verified, user is new (existing users go through onDirectLogin)
+      setAuthType('phone');
+      setStep('profile');
+      setLoading(false);
+      return;
+    }
+
+    // Email auth — same flow as before
+    setAuthType('email');
     try {
-      let res;
-      if (isPhone) {
-        // Phone auth — verify OTP was already done, check user status
-        res = await fetch('/api/auth/verify-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: tokenOrPhone, code: '000000', password: extraData?.password }),
-        });
-        // verify-otp might fail because code was already used, but phone is marked as verified
-        // In that case, we just need to check if user needs profile
-        if (!res.ok) {
-          // Phone already verified, just need profile form
-          setStep('profile');
-          setLoading(false);
-          return;
-        }
-      } else {
-        // Email auth — Firebase token
-        res = await fetch('/api/auth/firebase', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firebaseIdToken: tokenOrPhone, ...(extraData?.password && { password: extraData.password }) }),
-        });
-      }
+      const res = await fetch('/api/auth/firebase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firebaseIdToken: idTokenOrPhone, ...(extraData?.password && { password: extraData.password }) }),
+      });
 
       const data = await res.json();
 
@@ -257,7 +248,7 @@ export default function VoteModal({
         return;
       }
 
-      // Existing user — login and vote
+      // Mevcut kullanici — login yap ve oy ver
       login(data.token);
 
       const voteRes = await fetch('/api/vote', {
@@ -291,7 +282,7 @@ export default function VoteModal({
   };
 
   const handleProfileComplete = async (data: { city: string; district: string }) => {
-    if (!authToken) return;
+    if (!firebaseIdToken) return;
     setLoading(true);
     setError('');
 
@@ -303,7 +294,7 @@ export default function VoteModal({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: authToken,
+            phone: firebaseIdToken,
             city: data.city,
             district: data.district,
             fingerprint,
@@ -318,7 +309,7 @@ export default function VoteModal({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firebaseIdToken: authToken,
+            firebaseIdToken,
             city: data.city,
             district: data.district,
             fingerprint,
@@ -473,9 +464,9 @@ export default function VoteModal({
 
             {step === 'firebase-auth' && (
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
-                <AuthForm
+                <FirebaseAuthForm
                   method={authMethod}
-                  onAuthenticated={handleAuth}
+                  onAuthenticated={handleFirebaseAuth}
                   onDirectLogin={handleDirectLogin}
                   onBack={() => setStep('party-select')}
                 />
