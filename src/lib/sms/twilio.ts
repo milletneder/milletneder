@@ -71,6 +71,9 @@ export async function sendVerification(to: string, channel: 'sms' | 'email' = 's
       });
 
     console.log(`[TWILIO] ${channel} verification sent: SID=${verification.sid}, status=${verification.status}`);
+
+    // OTP gönderildikten sonra bakiyeyi kontrol et (arka planda)
+    checkBalance().catch(() => {});
   } catch (err: unknown) {
     const twilioError = err as { code?: number; message?: string; moreInfo?: string; status?: number };
     console.error(`[TWILIO ERROR] ${channel} code=${twilioError.code}, message=${twilioError.message}, moreInfo=${twilioError.moreInfo}`);
@@ -95,6 +98,62 @@ export async function sendVerification(to: string, channel: 'sms' | 'email' = 's
  * Check a verification code via Twilio Verify API
  * Returns 'approved' if correct, 'pending' if wrong code
  */
+// ── Balance check ──────────────────────────────────────────────
+let cachedBalance: { balance: number; lowBalance: boolean; checkedAt: number } | null = null;
+const BALANCE_CACHE_TTL = 300_000; // 5 dakika
+const LOW_BALANCE_THRESHOLD = 1.0; // $1
+
+/**
+ * Twilio hesap bakiyesini kontrol et ve cache'le.
+ * Her OTP gönderiminden sonra çağrılır.
+ */
+export async function checkBalance(): Promise<{ balance: number; lowBalance: boolean }> {
+  // Cache geçerliyse direkt dön
+  if (cachedBalance && Date.now() - cachedBalance.checkedAt < BALANCE_CACHE_TTL) {
+    return { balance: cachedBalance.balance, lowBalance: cachedBalance.lowBalance };
+  }
+
+  try {
+    const config = await getConfig();
+    if (!config.sid || !config.token) {
+      return { balance: 0, lowBalance: true };
+    }
+
+    const auth = Buffer.from(`${config.sid}:${config.token}`).toString('base64');
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${config.sid}/Balance.json`, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+
+    if (!res.ok) {
+      console.error('[TWILIO] Balance check failed:', res.status);
+      return cachedBalance ?? { balance: 0, lowBalance: true };
+    }
+
+    const data = await res.json();
+    const balance = parseFloat(data.balance);
+    const lowBalance = balance < LOW_BALANCE_THRESHOLD;
+
+    cachedBalance = { balance, lowBalance, checkedAt: Date.now() };
+    console.log(`[TWILIO] Balance: $${balance.toFixed(2)}, lowBalance: ${lowBalance}`);
+    return { balance, lowBalance };
+  } catch (err) {
+    console.error('[TWILIO] Balance check error:', err);
+    return cachedBalance ?? { balance: 0, lowBalance: true };
+  }
+}
+
+/**
+ * Cache'lenmiş bakiye durumunu döndür (API çağrısı yapmaz).
+ * Cache yoksa yeni sorgu yapar.
+ */
+export async function getBalanceStatus(): Promise<{ balance: number; lowBalance: boolean }> {
+  if (cachedBalance && Date.now() - cachedBalance.checkedAt < BALANCE_CACHE_TTL) {
+    return { balance: cachedBalance.balance, lowBalance: cachedBalance.lowBalance };
+  }
+  return checkBalance();
+}
+
+// ── Verification check ─────────────────────────────────────────
 export async function checkVerification(to: string, code: string, channel: 'sms' | 'email' = 'sms'): Promise<{ valid: boolean; error?: string }> {
   const config = await getConfig();
 

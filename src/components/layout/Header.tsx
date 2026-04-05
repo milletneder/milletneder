@@ -112,6 +112,7 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
     { href: '/islemler', label: 'İşlemler' },
     { href: '/raporlar', label: 'Raporlar' },
     { href: '/metodoloji', label: 'Metodoloji' },
+    { href: '/oneriler', label: 'Öneriler' },
     { href: '/#bagis-yap', label: 'Bağış Yap' },
   ];
 

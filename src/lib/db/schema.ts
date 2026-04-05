@@ -391,3 +391,41 @@ export type CityElectionResult2023 = typeof cityElectionResults2023.$inferSelect
 export type DistrictElectionResult2023 = typeof districtElectionResults2023.$inferSelect;
 export type DistrictVoterCount = typeof districtVoterCounts.$inferSelect;
 export type AdminSetting = typeof adminSettings.$inferSelect;
+
+// --- Özellik Önerileri (User Voice) ---
+
+export const featureRequests = pgTable("feature_requests", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  vote_count: integer("vote_count").default(0).notNull(),
+  comment_count: integer("comment_count").default(0).notNull(),
+  is_open: boolean("is_open").default(true).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("feature_requests_vote_count_idx").on(table.vote_count),
+  index("feature_requests_created_at_idx").on(table.created_at),
+]);
+
+export const featureComments = pgTable("feature_comments", {
+  id: serial("id").primaryKey(),
+  request_id: integer("request_id").notNull().references(() => featureRequests.id, { onDelete: "cascade" }),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const featureVotes = pgTable("feature_votes", {
+  id: serial("id").primaryKey(),
+  request_id: integer("request_id").notNull().references(() => featureRequests.id, { onDelete: "cascade" }),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  unique("feature_votes_user_request_idx").on(table.user_id, table.request_id),
+]);
+
+export type FeatureRequest = typeof featureRequests.$inferSelect;
+export type FeatureComment = typeof featureComments.$inferSelect;
+export type FeatureVote = typeof featureVotes.$inferSelect;
