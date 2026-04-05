@@ -22,6 +22,13 @@
       "when": 1775571600000,
       "tag": "0002_rename_firebase_uid",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775592000000,
+      "tag": "0003_feature_requests",
+      "breakpoints": true
     }
   ]
 }
