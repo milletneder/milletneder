@@ -7,11 +7,16 @@ export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const isStaging = host.includes('staging');
 
-  // Staging değilse geç, ama debug header ekle
+  // Staging değilse geç
   if (!isStaging) {
-    const response = NextResponse.next();
-    response.headers.set('x-middleware-debug', `host=${host},staging=false`);
-    return response;
+    return NextResponse.next();
+  }
+
+  // API route'ları Basic Auth'dan muaf — kendi auth mekanizmaları var
+  // fetch() tarayıcı Basic Auth credential'ını otomatik göndermez
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
   }
 
   // Staging — Basic Auth kontrol
@@ -20,9 +25,7 @@ export function middleware(request: NextRequest) {
   if (authHeader?.startsWith('Basic ')) {
     const providedB64 = authHeader.slice(6);
     if (providedB64 === STAGING_CREDENTIALS_B64) {
-      const response = NextResponse.next();
-      response.headers.set('x-middleware-debug', `host=${host},staging=true,auth=valid`);
-      return response;
+      return NextResponse.next();
     }
   }
 
@@ -30,7 +33,6 @@ export function middleware(request: NextRequest) {
     status: 401,
     headers: {
       'WWW-Authenticate': 'Basic realm="Staging"',
-      'x-middleware-debug': `host=${host},staging=true,auth=missing`,
     },
   });
 }
