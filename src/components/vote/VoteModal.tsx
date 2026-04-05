@@ -28,7 +28,7 @@ interface VoteModalProps {
   initialParty?: string;
 }
 
-type ModalStep = 'party-select' | 'auth' | 'profile' | 'success' | 'demographic' | 'blocked';
+type ModalStep = 'party-select' | 'auth' | 'profile' | 'success' | 'demographic' | 'blocked' | 'donation';
 
 export default function VoteModal({
   isOpen,
@@ -147,9 +147,24 @@ export default function VoteModal({
         await handleAuth(verifiedIdentity, authExtraData);
         return;
       }
-      // Giriş yapılmamış — önce fingerprint kontrolü yap
+      // Giriş yapılmamış — önce SMS bakiye kontrolü yap
+      setLoading(true);
+      try {
+        const statusRes = await fetch('/api/auth/sms-status');
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (!statusData.available) {
+            setLoading(false);
+            setStep('donation');
+            return;
+          }
+        }
+      } catch {
+        // API hatası durumunda devam et
+      }
+
+      // Fingerprint kontrolü yap
       if (fingerprint) {
-        setLoading(true);
         try {
           const fpRes = await fetch('/api/auth/check-fingerprint', {
             method: 'POST',
@@ -165,8 +180,8 @@ export default function VoteModal({
         } catch {
           // API hatası durumunda engelleme — devam et
         }
-        setLoading(false);
       }
+      setLoading(false);
       setStep('auth');
     }
   };
@@ -395,6 +410,49 @@ export default function VoteModal({
                     className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
                   >
                     Hesabıma Giriş Yap
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="w-full text-neutral-500 text-sm hover:text-black transition-colors"
+                  >
+                    Kapat
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 'donation' && (
+              <div className="p-6 text-center space-y-5">
+                <div className="w-14 h-14 mx-auto bg-amber-50 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5">
+                    <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-black">SMS Bakiyemiz Tükendi</h2>
+                  <p className="text-sm text-neutral-600 leading-relaxed">
+                    Oy kullanabilmen için sana SMS ile doğrulama kodu göndermemiz gerekiyor.
+                    Ancak bağımsız bir platform olarak SMS gönderim bakiyemiz şu an tükenmiş durumda.
+                  </p>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 p-4 text-left">
+                  <p className="text-sm text-amber-900 leading-relaxed">
+                    <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
+                    Platformun devam edebilmesi tamamen bireysel bağışlara bağlıdır.
+                  </p>
+                </div>
+                <div className="pt-1 space-y-3">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      setTimeout(() => {
+                        const el = document.getElementById('bagis-yap');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }, 200);
+                    }}
+                    className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
+                  >
+                    Platforma Destek Ol
                   </button>
                   <button
                     onClick={onClose}

@@ -80,6 +80,11 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       setError('Geçerli bir e-posta adresi girin');
       return;
     }
+    // Bakiye kontrolü (yeni kayıt OTP gerektirebilir)
+    if (!loginOnly) {
+      const available = await checkSmsAvailability();
+      if (!available) return;
+    }
     setError('');
     setLoading(true);
 
@@ -345,6 +350,10 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       setError('Geçerli bir cep telefonu numarası girin (5XX ile başlamalı)');
       return;
     }
+    // Bakiye kontrolü
+    const available = await checkSmsAvailability();
+    if (!available) return;
+
     setLoading(true);
     setError('');
     try {
@@ -442,12 +451,33 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
     }
   };
 
+  // ========== SMS BAKİYE KONTROLÜ ==========
+  const [smsUnavailable, setSmsUnavailable] = useState(false);
+
+  const checkSmsAvailability = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/sms-status');
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.available) {
+          setSmsUnavailable(true);
+          return false;
+        }
+      }
+    } catch { /* hata durumunda devam et */ }
+    return true;
+  };
+
   // ========== FORGOT PASSWORD ==========
   const handleForgotSendCode = async () => {
     if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
       setError('Geçerli bir e-posta adresi girin');
       return;
     }
+    // Bakiye kontrolü
+    const available = await checkSmsAvailability();
+    if (!available) return;
+
     setLoading(true);
     setError('');
     try {
@@ -513,6 +543,10 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       setError('Geçerli bir cep telefonu numarası girin');
       return;
     }
+    // Bakiye kontrolü
+    const available = await checkSmsAvailability();
+    if (!available) return;
+
     setLoading(true);
     setError('');
     try {
@@ -582,6 +616,45 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
   };
 
   // ========== RENDER ==========
+
+  // --- SMS BAKİYE TÜKENDİ ---
+  if (smsUnavailable) {
+    return (
+      <div className="w-full max-w-md mx-auto space-y-5 text-center">
+        <div className="w-14 h-14 mx-auto bg-amber-50 flex items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5">
+            <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-bold text-black">SMS Bakiyemiz Tükendi</h3>
+          <p className="text-sm text-neutral-600 leading-relaxed">
+            Doğrulama kodu göndermek için SMS bakiyemiz şu an yetersiz.
+            Bağımsız bir platform olarak devam edebilmemiz bireysel desteklere bağlıdır.
+          </p>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 p-4 text-left">
+          <p className="text-sm text-amber-900">
+            <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            const el = document.getElementById('bagis-yap');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
+        >
+          Platforma Destek Ol
+        </button>
+        {onBack && (
+          <button onClick={onBack} className="text-neutral-500 text-sm hover:text-black transition-colors">
+            Geri
+          </button>
+        )}
+      </div>
+    );
+  }
 
   // --- FORGOT PASSWORD FLOW ---
   if (forgotPhase === 'forgot-password') {
