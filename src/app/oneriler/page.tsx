@@ -14,7 +14,7 @@ interface FeatureRequest {
   created_at: string;
   author_anon_uid: string;
   author_city: string;
-  user_voted: boolean;
+  user_vote: 'up' | 'down' | null;
 }
 
 interface Comment {
@@ -101,18 +101,31 @@ export default function OnerilerPage() {
     }
   };
 
-  const handleVote = async (id: number) => {
+  const handleVote = async (id: number, is_upvote: boolean) => {
     if (!isLoggedIn) return;
     try {
-      const res = await fetch(`/api/features/${id}/vote`, { method: 'POST', headers });
+      const res = await fetch(`/api/features/${id}/vote`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ is_upvote }),
+      });
       if (res.ok) {
         const data = await res.json();
+        // Eski ve yeni oy durumuna gore vote_count'u hesapla
         setItems((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? { ...item, user_voted: data.voted, vote_count: item.vote_count + (data.voted ? 1 : -1) }
-              : item
-          )
+          prev.map((item) => {
+            if (item.id !== id) return item;
+            const oldVote = item.user_vote;
+            const newVote = data.user_vote as 'up' | 'down' | null;
+            let diff = 0;
+            if (oldVote === null && newVote === 'up') diff = 1;
+            else if (oldVote === null && newVote === 'down') diff = -1;
+            else if (oldVote === 'up' && newVote === null) diff = -1;
+            else if (oldVote === 'down' && newVote === null) diff = 1;
+            else if (oldVote === 'up' && newVote === 'down') diff = -2;
+            else if (oldVote === 'down' && newVote === 'up') diff = 2;
+            return { ...item, user_vote: newVote, vote_count: item.vote_count + diff };
+          })
         );
       }
     } catch { /* ignore */ }
@@ -237,27 +250,42 @@ export default function OnerilerPage() {
             </button>
 
             <div className="border border-neutral-200 p-5">
-              <div className="flex gap-4">
-                <button
-                  onClick={() => handleVote(selectedItem.id)}
-                  disabled={!isLoggedIn}
-                  className={`flex flex-col items-center justify-center min-w-[48px] py-2 border transition-colors ${
-                    selectedItem.user_voted
-                      ? 'border-black bg-black text-white'
-                      : 'border-neutral-200 text-neutral-500 hover:border-black hover:text-black'
-                  } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 15l-6-6-6 6" />
-                  </svg>
-                  <span className="text-sm font-bold">{selectedItem.vote_count}</span>
-                </button>
-                <div className="flex-1">
-                  <h2 className="text-lg font-bold text-black">{selectedItem.title}</h2>
-                  <p className="text-sm text-neutral-600 mt-2 whitespace-pre-wrap">{selectedItem.description}</p>
-                  <p className="text-xs text-neutral-400 mt-3">
-                    {selectedItem.author_city} · {timeAgo(selectedItem.created_at)}
-                  </p>
+              <div>
+                <h2 className="text-lg font-bold text-black">{selectedItem.title}</h2>
+                <p className="text-sm text-neutral-600 mt-2 whitespace-pre-wrap">{selectedItem.description}</p>
+                <p className="text-xs text-neutral-400 mt-3">
+                  {selectedItem.author_city} · {timeAgo(selectedItem.created_at)}
+                </p>
+
+                {/* Evet / Hayir oy butonlari */}
+                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-neutral-100">
+                  <span className="text-xs font-medium text-neutral-500">Bu öneriyi destekliyor musun?</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleVote(selectedItem.id, true)}
+                      disabled={!isLoggedIn}
+                      className={`px-4 py-1.5 text-sm font-bold border-2 transition-colors ${
+                        selectedItem.user_vote === 'up'
+                          ? 'border-black bg-black text-white'
+                          : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
+                      } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      Evet
+                    </button>
+                    <button
+                      onClick={() => handleVote(selectedItem.id, false)}
+                      disabled={!isLoggedIn}
+                      className={`px-4 py-1.5 text-sm font-bold border-2 transition-colors ${
+                        selectedItem.user_vote === 'down'
+                          ? 'border-black bg-black text-white'
+                          : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
+                      } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      Hayır
+                    </button>
+                  </div>
+                  <span className="text-sm font-bold text-black">{selectedItem.vote_count}</span>
+                  <span className="text-xs text-neutral-400">puan</span>
                 </div>
               </div>
             </div>
@@ -353,25 +381,9 @@ export default function OnerilerPage() {
             ) : (
               <div className="space-y-2">
                 {items.map((item) => (
-                  <div key={item.id} className="flex gap-3 border border-neutral-200 p-4 hover:border-neutral-300 transition-colors">
-                    {/* Oy butonu */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleVote(item.id); }}
-                      disabled={!isLoggedIn}
-                      className={`flex flex-col items-center justify-center min-w-[44px] py-1.5 border transition-colors ${
-                        item.user_voted
-                          ? 'border-black bg-black text-white'
-                          : 'border-neutral-200 text-neutral-500 hover:border-black hover:text-black'
-                      } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M18 15l-6-6-6 6" />
-                      </svg>
-                      <span className="text-xs font-bold">{item.vote_count}</span>
-                    </button>
-
+                  <div key={item.id} className="border border-neutral-200 p-4 hover:border-neutral-300 transition-colors">
                     {/* Icerik */}
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openDetail(item.id)}>
+                    <div className="cursor-pointer" onClick={() => openDetail(item.id)}>
                       <h3 className="text-sm font-bold text-black truncate">{item.title}</h3>
                       <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{item.description}</p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-neutral-400">
@@ -379,6 +391,34 @@ export default function OnerilerPage() {
                         <span>{timeAgo(item.created_at)}</span>
                         <span>{item.comment_count} yorum</span>
                       </div>
+                    </div>
+
+                    {/* Evet / Hayir oy butonlari */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleVote(item.id, true); }}
+                        disabled={!isLoggedIn}
+                        className={`px-3 py-1 text-xs font-bold border-2 transition-colors ${
+                          item.user_vote === 'up'
+                            ? 'border-black bg-black text-white'
+                            : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
+                        } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        Evet
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleVote(item.id, false); }}
+                        disabled={!isLoggedIn}
+                        className={`px-3 py-1 text-xs font-bold border-2 transition-colors ${
+                          item.user_vote === 'down'
+                            ? 'border-black bg-black text-white'
+                            : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
+                        } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        Hayır
+                      </button>
+                      <span className="text-sm font-bold text-black ml-1">{item.vote_count}</span>
+                      <span className="text-xs text-neutral-400">puan</span>
                     </div>
                   </div>
                 ))}

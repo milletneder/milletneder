@@ -31,18 +31,20 @@ export async function GET(request: NextRequest) {
       .orderBy(orderBy);
 
     // Kullanicinin oylari
-    let userVotedIds: number[] = [];
+    let userVoteMap: Record<number, 'up' | 'down'> = {};
     if (user) {
       const voted = await db
-        .select({ request_id: featureVotes.request_id })
+        .select({ request_id: featureVotes.request_id, is_upvote: featureVotes.is_upvote })
         .from(featureVotes)
         .where(eq(featureVotes.user_id, user.id));
-      userVotedIds = voted.map((v) => v.request_id);
+      for (const v of voted) {
+        userVoteMap[v.request_id] = v.is_upvote ? 'up' : 'down';
+      }
     }
 
     const items = rows.map((r) => ({
       ...r,
-      user_voted: userVotedIds.includes(r.id),
+      user_vote: userVoteMap[r.id] || null,
     }));
 
     return NextResponse.json({ items });
