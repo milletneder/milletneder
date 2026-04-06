@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-type SmsProvider = 'twilio' | 'vatansms';
+type SmsProvider = 'twilio' | 'vatansms' | 'firebase';
 
 export default function AdminSettingsPage() {
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
@@ -16,6 +16,10 @@ export default function AdminSettingsPage() {
   const [smsProvider, setSmsProvider] = useState<SmsProvider>('twilio');
   const [selectedProvider, setSelectedProvider] = useState<SmsProvider>('twilio');
 
+  // Fallback provider (Firebase aktifken kullanılacak yedek)
+  const [fallbackProvider, setFallbackProvider] = useState<'twilio' | 'vatansms'>('twilio');
+  const [selectedFallback, setSelectedFallback] = useState<'twilio' | 'vatansms'>('twilio');
+
   // Twilio settings
   const [twilioSid, setTwilioSid] = useState('');
   const [twilioToken, setTwilioToken] = useState('');
@@ -23,6 +27,14 @@ export default function AdminSettingsPage() {
   const [twilioTestMode, setTwilioTestMode] = useState(false);
   const [twilioSaving, setTwilioSaving] = useState(false);
   const [twilioMessage, setTwilioMessage] = useState('');
+
+  // Firebase settings
+  const [firebaseApiKey, setFirebaseApiKey] = useState('');
+  const [firebaseProjectId, setFirebaseProjectId] = useState('');
+  const [firebaseAuthDomain, setFirebaseAuthDomain] = useState('');
+  const [firebaseTestMode, setFirebaseTestMode] = useState(false);
+  const [firebaseSaving, setFirebaseSaving] = useState(false);
+  const [firebaseMessage, setFirebaseMessage] = useState('');
 
   // VatanSMS settings
   const [vatanApiId, setVatanApiId] = useState('');
@@ -64,9 +76,15 @@ export default function AdminSettingsPage() {
         }
         // SMS Provider
         const provider = s?.sms_provider?.value;
-        if (provider === 'twilio' || provider === 'vatansms') {
+        if (provider === 'twilio' || provider === 'vatansms' || provider === 'firebase') {
           setSmsProvider(provider);
           setSelectedProvider(provider);
+        }
+        // Fallback provider
+        const fb = s?.sms_provider_fallback?.value;
+        if (fb === 'twilio' || fb === 'vatansms') {
+          setFallbackProvider(fb);
+          setSelectedFallback(fb);
         }
         // Twilio
         if (s?.twilio_account_sid?.value) setTwilioSid(s.twilio_account_sid.value);
@@ -79,6 +97,11 @@ export default function AdminSettingsPage() {
         if (s?.vatansms_api_pass?.value) setVatanApiPass(s.vatansms_api_pass.value);
         if (s?.vatansms_sender?.value) setVatanSender(s.vatansms_sender.value);
         setVatanTestMode(s?.vatansms_test_mode?.value === 'true');
+        // Firebase
+        if (s?.firebase_api_key?.value) setFirebaseApiKey(s.firebase_api_key.value);
+        if (s?.firebase_project_id?.value) setFirebaseProjectId(s.firebase_project_id.value);
+        if (s?.firebase_auth_domain?.value) setFirebaseAuthDomain(s.firebase_auth_domain.value);
+        setFirebaseTestMode(s?.firebase_test_mode?.value === 'true');
         // Force low balance
         setForceLowBalance(s?.force_low_balance?.value === 'true');
         // SMTP
@@ -123,25 +146,45 @@ export default function AdminSettingsPage() {
   };
 
   const handleSaveProvider = async () => {
-    if (selectedProvider === smsProvider) return;
+    if (selectedProvider === smsProvider && selectedFallback === fallbackProvider) return;
     setSaving(true);
     setMessage('');
 
     try {
-      const res = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'sms_provider', value: selectedProvider }),
-      });
-
-      if (res.ok) {
+      // Birincil sağlayıcı
+      if (selectedProvider !== smsProvider) {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'sms_provider', value: selectedProvider }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          setMessage(data.error || 'Hata olustu');
+          setSaving(false);
+          return;
+        }
         setSmsProvider(selectedProvider);
-        setMessage('SMS saglayici guncellendi');
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        const data = await res.json();
-        setMessage(data.error || 'Hata olustu');
       }
+
+      // Yedek sağlayıcı
+      if (selectedFallback !== fallbackProvider) {
+        const res2 = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'sms_provider_fallback', value: selectedFallback }),
+        });
+        if (!res2.ok) {
+          const data = await res2.json();
+          setMessage(data.error || 'Yedek saglayici kaydedilemedi');
+          setSaving(false);
+          return;
+        }
+        setFallbackProvider(selectedFallback);
+      }
+
+      setMessage('SMS saglayici ayarlari guncellendi');
+      setTimeout(() => setMessage(''), 3000);
     } catch {
       setMessage('Baglanti hatasi');
     } finally {
@@ -175,13 +218,15 @@ export default function AdminSettingsPage() {
   };
 
   const methodChanged = selectedMethod !== authMethod;
-  const providerChanged = selectedProvider !== smsProvider;
+  const providerChanged = selectedProvider !== smsProvider || selectedFallback !== fallbackProvider;
 
   // Twilio ayarları ne zaman gösterilir:
   // - E-posta modu seçiliyse (e-posta OTP Twilio Verify kullanır)
   // - SMS modu + Twilio sağlayıcı seçiliyse
-  const showTwilioSettings = selectedMethod === 'email' || selectedProvider === 'twilio';
-  const showVatanSettings = selectedMethod === 'phone' && selectedProvider === 'vatansms';
+  // - Firebase birincilse ve Twilio yedekse
+  const showTwilioSettings = selectedMethod === 'email' || selectedProvider === 'twilio' || (selectedProvider === 'firebase' && selectedFallback === 'twilio');
+  const showVatanSettings = selectedMethod === 'phone' && (selectedProvider === 'vatansms' || (selectedProvider === 'firebase' && selectedFallback === 'vatansms'));
+  const showFirebaseSettings = selectedMethod === 'phone' && selectedProvider === 'firebase';
 
   if (loading) {
     return (
@@ -267,12 +312,25 @@ export default function AdminSettingsPage() {
         {/* SMS Saglayici Secimi (sadece SMS modu seciliyken) */}
         {selectedMethod === 'phone' && (
           <div className="border border-neutral-200 p-5">
-            <h2 className="text-sm font-bold text-black mb-3">SMS Saglayici</h2>
+            <h2 className="text-sm font-bold text-black mb-3">Birincil SMS Saglayici</h2>
             <p className="text-xs text-neutral-500 mb-4">
               SMS dogrulama kodlari icin kullanilacak servis saglayicisini secin.
             </p>
 
             <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedProvider('firebase')}
+                className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
+                  selectedProvider === 'firebase'
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
+                }`}
+              >
+                <div className="text-center">
+                  <span className="block text-lg mb-1">Firebase</span>
+                  <span className="block text-[11px] opacity-70">Google (ucuz, istemci tarafli)</span>
+                </div>
+              </button>
               <button
                 onClick={() => setSelectedProvider('twilio')}
                 className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
@@ -301,14 +359,46 @@ export default function AdminSettingsPage() {
               </button>
             </div>
 
+            {/* Yedek saglayici (Firebase seciliyken) */}
+            {selectedProvider === 'firebase' && (
+              <div className="mt-4 pt-4 border-t border-neutral-100">
+                <h3 className="text-xs font-bold text-black mb-2">Yedek SMS Saglayici</h3>
+                <p className="text-[10px] text-neutral-500 mb-3">
+                  Firebase hata verdiginde (Error 39, reCAPTCHA sorunu vb.) kullanici fark etmeden bu saglayiciya duser.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSelectedFallback('twilio')}
+                    className={`flex-1 py-2 px-3 text-xs font-medium border transition-colors ${
+                      selectedFallback === 'twilio'
+                        ? 'bg-neutral-800 text-white border-neutral-800'
+                        : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
+                    }`}
+                  >
+                    Twilio (Yedek)
+                  </button>
+                  <button
+                    onClick={() => setSelectedFallback('vatansms')}
+                    className={`flex-1 py-2 px-3 text-xs font-medium border transition-colors ${
+                      selectedFallback === 'vatansms'
+                        ? 'bg-neutral-800 text-white border-neutral-800'
+                        : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
+                    }`}
+                  >
+                    VatanSMS (Yedek)
+                  </button>
+                </div>
+              </div>
+            )}
+
             {providerChanged && (
               <div className="mt-4 flex items-center justify-between">
-                <p className="text-xs text-amber-600">
+                <p className="text-xs text-neutral-600">
                   Saglayici degistirildi, kaydetmek icin onaylayin.
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setSelectedProvider(smsProvider)}
+                    onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}
                     className="px-4 py-2 text-xs font-medium text-neutral-500 border border-neutral-200 hover:border-black hover:text-black transition-colors"
                   >
                     Iptal
@@ -559,6 +649,120 @@ export default function AdminSettingsPage() {
                     }`}
                   />
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Firebase Ayarlari */}
+        {showFirebaseSettings && (
+          <div className="border border-neutral-200 p-5">
+            <h2 className="text-sm font-bold text-black mb-1">Firebase Ayarlari</h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Firebase Phone Auth istemci tarafinda calisir. reCAPTCHA otomatik olarak yonetilir.{' '}
+              <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="underline">
+                Firebase Console
+              </a>
+            </p>
+
+            {firebaseMessage && (
+              <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
+                {firebaseMessage}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Web API Key</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={firebaseApiKey}
+                    onChange={(e) => setFirebaseApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSaveSetting('firebase_api_key', firebaseApiKey, setFirebaseMessage, setFirebaseSaving)}
+                    disabled={firebaseSaving || !firebaseApiKey}
+                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                  >
+                    Kaydet
+                  </button>
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-1">Firebase Console &gt; Project Settings &gt; Web API Key</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Project ID</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={firebaseProjectId}
+                    onChange={(e) => setFirebaseProjectId(e.target.value)}
+                    placeholder="my-project-12345"
+                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSaveSetting('firebase_project_id', firebaseProjectId, setFirebaseMessage, setFirebaseSaving)}
+                    disabled={firebaseSaving || !firebaseProjectId}
+                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                  >
+                    Kaydet
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Auth Domain</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={firebaseAuthDomain}
+                    onChange={(e) => setFirebaseAuthDomain(e.target.value)}
+                    placeholder="my-project-12345.firebaseapp.com"
+                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSaveSetting('firebase_auth_domain', firebaseAuthDomain, setFirebaseMessage, setFirebaseSaving)}
+                    disabled={firebaseSaving || !firebaseAuthDomain}
+                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+                  >
+                    Kaydet
+                  </button>
+                </div>
+                <p className="text-[10px] text-neutral-400 mt-1">Bos birakilirsa project-id.firebaseapp.com kullanilir.</p>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
+                <div>
+                  <span className="text-xs font-medium text-neutral-600">Test Modu</span>
+                  <p className="text-[10px] text-neutral-400">Acikken token dogrulama atlanir (gelistirme icin).</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newVal = !firebaseTestMode;
+                    setFirebaseTestMode(newVal);
+                    handleSaveSetting('firebase_test_mode', String(newVal), setFirebaseMessage, setFirebaseSaving);
+                  }}
+                  disabled={firebaseSaving}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    firebaseTestMode ? 'bg-neutral-800' : 'bg-neutral-300'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      firebaseTestMode ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="bg-neutral-50 border border-neutral-100 p-3 mt-2">
+                <p className="text-[10px] text-neutral-600">
+                  <strong>Not:</strong> Firebase Phone Auth istemci tarafinda calisir. Hata 39, reCAPTCHA sorunu veya kota asiminda
+                  kullanici fark etmeden yedek saglayiciya ({selectedFallback === 'twilio' ? 'Twilio' : 'VatanSMS'}) duser.
+                </p>
               </div>
             </div>
           </div>

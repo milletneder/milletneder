@@ -3,6 +3,7 @@ import { getAdminFromRequest } from '@/lib/auth/admin-middleware';
 import { getSetting, setSetting, getMaskedSetting } from '@/lib/admin/settings';
 import { invalidateTwilioConfigCache } from '@/lib/sms/twilio';
 import { invalidateVatansmsConfigCache } from '@/lib/sms/vatansms';
+import { invalidateFirebaseConfigCache } from '@/lib/sms/firebase';
 import { invalidateProviderCache } from '@/lib/sms/provider';
 import { db } from '@/lib/db';
 import { adminAuditLogs } from '@/lib/db/schema';
@@ -11,7 +12,8 @@ export const dynamic = 'force-dynamic';
 
 const ALLOWED_KEYS = [
   'auth_method', // 'email' | 'phone'
-  'sms_provider', // 'twilio' | 'vatansms'
+  'sms_provider', // 'twilio' | 'vatansms' | 'firebase'
+  'sms_provider_fallback', // 'twilio' | 'vatansms' — Firebase başarısız olursa kullanılır
   'twilio_account_sid',
   'twilio_auth_token',
   'twilio_verify_service_sid',
@@ -22,6 +24,10 @@ const ALLOWED_KEYS = [
   'vatansms_api_pass',
   'vatansms_sender',
   'vatansms_test_mode', // 'true' | 'false'
+  'firebase_api_key', // Firebase Web API Key (public)
+  'firebase_project_id', // Firebase Project ID
+  'firebase_auth_domain', // Firebase Auth Domain
+  'firebase_test_mode', // 'true' | 'false'
   'smtp_host',
   'smtp_port',
   'smtp_user',
@@ -70,8 +76,11 @@ export async function PUT(request: NextRequest) {
   if (key === 'auth_method' && !['email', 'phone'].includes(value)) {
     return NextResponse.json({ error: 'Geçersiz doğrulama yöntemi. email veya phone olmalı.' }, { status: 400 });
   }
-  if (key === 'sms_provider' && !['twilio', 'vatansms'].includes(value)) {
-    return NextResponse.json({ error: 'Geçersiz SMS sağlayıcı. twilio veya vatansms olmalı.' }, { status: 400 });
+  if (key === 'sms_provider' && !['twilio', 'vatansms', 'firebase'].includes(value)) {
+    return NextResponse.json({ error: 'Geçersiz SMS sağlayıcı. twilio, vatansms veya firebase olmalı.' }, { status: 400 });
+  }
+  if (key === 'sms_provider_fallback' && !['twilio', 'vatansms'].includes(value)) {
+    return NextResponse.json({ error: 'Geçersiz yedek sağlayıcı. twilio veya vatansms olmalı.' }, { status: 400 });
   }
   if (key === 'vatansms_test_mode' && !['true', 'false'].includes(value)) {
     return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });
@@ -100,6 +109,9 @@ export async function PUT(request: NextRequest) {
   if (key === 'twilio_test_mode' && !['true', 'false'].includes(value)) {
     return NextResponse.json({ error: 'Test modu true veya false olmalı.' }, { status: 400 });
   }
+  if (key === 'firebase_test_mode' && !['true', 'false'].includes(value)) {
+    return NextResponse.json({ error: 'Firebase test modu true veya false olmalı.' }, { status: 400 });
+  }
   if (key === 'force_low_balance' && !['true', 'false'].includes(value)) {
     return NextResponse.json({ error: 'Bakiye simülasyonu true veya false olmalı.' }, { status: 400 });
   }
@@ -113,7 +125,10 @@ export async function PUT(request: NextRequest) {
   if (key.startsWith('vatansms_')) {
     invalidateVatansmsConfigCache();
   }
-  if (key === 'sms_provider') {
+  if (key.startsWith('firebase_')) {
+    invalidateFirebaseConfigCache();
+  }
+  if (key === 'sms_provider' || key === 'sms_provider_fallback') {
     invalidateProviderCache();
   }
 
