@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       SELECT tx_type, id, city, party, old_party, new_party,
              round_id, is_valid, to_char(created_at AT TIME ZONE 'Europe/Berlin' AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
       FROM vote_transaction_log
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
     `);
 
     let rows = allRows.rows as unknown as TransactionRow[];
