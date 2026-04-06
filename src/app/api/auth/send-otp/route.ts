@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendVerification } from '@/lib/sms/provider';
+import { sendVerification, getEffectiveProviderName } from '@/lib/sms/provider';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
+import { logSmsSend } from '@/lib/sms/sms-logger';
 
 // Phone-based rate limiting (1 request per 60 seconds)
 const phoneSendTimestamps = new Map<string, number>();
@@ -42,7 +43,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone } = await request.json();
+    const { phone, firebaseFallback } = await request.json();
 
     // Validate phone
     const raw = String(phone || '').replace(/\s/g, '');
@@ -64,13 +65,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Çok fazla deneme. Lütfen daha sonra tekrar deneyin.' }, { status: 429 });
     }
 
-    // Send verification via Twilio Verify API
+    // Firebase fallback logu: istemcide Firebase başarısız oldu, sunucu tarafına düştü
+    if (firebaseFallback) {
+      await logSmsSend({
+        provider: 'firebase',
+        phone: fullPhone,
+        status: 'failed',
+        errorMessage: typeof firebaseFallback === 'string' ? firebaseFallback : 'client_fallback',
+      });
+    }
+
+    // Efektif SMS sağlayıcısını belirle (Firebase seçiliyse fallback'i kullanır)
+    const providerName = await getEffectiveProviderName();
+
+    // Send verification via active provider
     await sendVerification(fullPhone);
+
+    // SMS gönderim logla
+    await logSmsSend({
+      provider: providerName,
+      phone: fullPhone,
+      status: 'sent',
+      isFallback: !!firebaseFallback,
+    });
 
     // Track send timestamp for rate limiting
     phoneSendTimestamps.set(fullPhone, Date.now());
 
-    await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, request, details: { step: 'otp_sent' } });
+    await logAuthEvent({
+      eventType: 'otp_sent',
+      authMethod: 'phone',
+      identityHint: fullPhone,
+      request,
+      details: {
+        sms_provider: providerName,
+        is_fallback: !!firebaseFallback,
+      },
+    });
 
     return NextResponse.json({ success: true, expiresIn: 300 });
   } catch (error) {

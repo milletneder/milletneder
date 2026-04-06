@@ -430,3 +430,20 @@ export const featureVotes = pgTable("feature_votes", {
 export type FeatureRequest = typeof featureRequests.$inferSelect;
 export type FeatureComment = typeof featureComments.$inferSelect;
 export type FeatureVote = typeof featureVotes.$inferSelect;
+
+// --- SMS Gönderim Logları (Provider Analitik) ---
+
+export const smsSendLog = pgTable("sms_send_log", {
+  id: serial("id").primaryKey(),
+  provider: varchar("provider", { length: 20 }).notNull(), // firebase, twilio, vatansms
+  phone_hint: varchar("phone_hint", { length: 20 }),       // maskelenmiş (***1234)
+  status: varchar("status", { length: 20 }).notNull(),     // sent, failed
+  is_fallback: boolean("is_fallback").default(false).notNull(),
+  error_message: text("error_message"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("sms_send_log_provider_idx").on(table.provider),
+  index("sms_send_log_created_at_idx").on(table.created_at),
+]);
+
+export type SmsSendLog = typeof smsSendLog.$inferSelect;

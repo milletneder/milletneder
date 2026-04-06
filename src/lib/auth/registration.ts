@@ -11,6 +11,7 @@ import {
   IP_RATE_LIMIT_WINDOW_MINUTES,
   REFERRAL_CODE_LENGTH,
 } from '@/lib/constants';
+import { getActiveProviderName } from '@/lib/sms/provider';
 import { isIPWhitelisted } from '@/lib/auth/admin-ip-whitelist';
 import {
   generateVEK, deriveKeyFromPassword, encryptVEK, decryptVEK,
@@ -235,7 +236,8 @@ export async function registerNewUser(input: RegistrationInput): Promise<AuthRes
   const vkBase64 = vek ? vek.toString('base64') : undefined;
   const token = signToken({ userId: newUser.id, vp, vk: vkBase64 });
 
-  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: newUser.id, request, details: { city: cityStr, district: districtStr, voteParty: vp || 'NONE' } });
+  const smsProviderName = authProvider === 'phone' ? await getActiveProviderName() : undefined;
+  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: newUser.id, request, details: { city: cityStr, district: districtStr, voteParty: vp || 'NONE', ...(smsProviderName && { sms_provider: smsProviderName }) } });
 
   return {
     token,
@@ -321,7 +323,8 @@ export async function completeIncompleteRegistration(
   const vkBase64 = vek ? vek.toString('base64') : undefined;
   const token = signToken({ userId: existingUser.id, vp, vk: vkBase64 });
 
-  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: existingUser.id, request, details: { city: cityStr, district: districtStr, completedIncomplete: true } });
+  const smsProviderNameComplete = authProvider === 'phone' ? await getActiveProviderName() : undefined;
+  await logAuthEvent({ eventType: 'register', authMethod: authProvider, identityHint: identityValue, userId: existingUser.id, request, details: { city: cityStr, district: districtStr, completedIncomplete: true, ...(smsProviderNameComplete && { sms_provider: smsProviderNameComplete }) } });
 
   return {
     token,
@@ -413,7 +416,8 @@ export async function loginExistingUser(
 
   const token = signToken({ userId: existingUser.id, vp, vk });
 
-  await logAuthEvent({ eventType: 'login', authMethod: authProvider, identityHint: identityValue, userId: existingUser.id, request });
+  const smsProviderNameLogin = authProvider === 'phone' ? await getActiveProviderName() : undefined;
+  await logAuthEvent({ eventType: 'login', authMethod: authProvider, identityHint: identityValue, userId: existingUser.id, request, details: smsProviderNameLogin ? { sms_provider: smsProviderNameLogin } : undefined });
 
   return {
     token,

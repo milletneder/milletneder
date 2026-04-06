@@ -144,3 +144,12 @@ export async function getActiveProviderName(): Promise<SmsProviderName> {
 export async function getFallbackProviderName(): Promise<SmsProviderName> {
   return getFallbackProvider();
 }
+
+/**
+ * Sunucu tarafı SMS gönderimi için efektif sağlayıcının adını döndürür.
+ * Firebase seçiliyse fallback sağlayıcıyı, değilse birincil sağlayıcıyı verir.
+ * SMS log kaydı için kullanılır.
+ */
+export async function getEffectiveProviderName(): Promise<Exclude<SmsProviderName, 'firebase'>> {
+  return getEffectiveSmsProvider();
+}
