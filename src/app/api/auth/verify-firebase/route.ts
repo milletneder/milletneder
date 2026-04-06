@@ -15,6 +15,7 @@ import { markPhoneAsVerified } from '@/lib/auth/phone-otp-store';
 import { verifyFirebaseIdToken } from '@/lib/sms/firebase';
 import { hashIdentity, loginExistingUser } from '@/lib/auth/registration';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
+import { logSmsSend } from '@/lib/sms/sms-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
     // Firebase +90 formatında verir
     const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
 
+    // Firebase üzerinden başarıyla SMS gönderildi ve doğrulandı — logla
+    await logSmsSend({ provider: 'firebase', phone: fullPhone, status: 'sent' });
+
     // Telefonu doğrulanmış olarak işaretle (register-phone endpoint'i için gerekli)
     markPhoneAsVerified(fullPhone);
 
@@ -63,17 +67,17 @@ export async function POST(request: NextRequest) {
       const isIncomplete = !existingUser.city || existingUser.city.trim() === '';
 
       if (!existingUser.is_active && isIncomplete) {
-        await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request });
+        await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, details: { sms_provider: 'firebase', step: 'incomplete_profile' } });
         return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
       }
 
       if (!existingUser.is_active) {
-        await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, errorCode: 'account_disabled' });
+        await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, errorCode: 'account_disabled', details: { sms_provider: 'firebase' } });
         return NextResponse.json({ error: 'Hesabınız devre dışı bırakılmıştır' }, { status: 403 });
       }
 
       if (isIncomplete) {
-        await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request });
+        await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, details: { sms_provider: 'firebase', step: 'incomplete_profile' } });
         return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
       }
 
@@ -88,8 +92,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(loginResult);
     }
 
-    // Yeni kullanıcı — telefon doğrulandı, kayıt gerekiyor
-    await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, request, details: { step: 'firebase_verified_new_user' } });
+    // Yeni kullanıcı — Firebase ile doğrulandı, kayıt bekleniyor
+    await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, request, details: { sms_provider: 'firebase', step: 'new_user' } });
     return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
   } catch (error) {
     console.error('Verify Firebase error:', error);

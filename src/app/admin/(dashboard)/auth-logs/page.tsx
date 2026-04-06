@@ -21,15 +21,17 @@ interface Summary {
 }
 
 const eventTypeLabels: Record<string, { label: string; color: string }> = {
-  login: { label: 'Giriş', color: 'bg-green-100 text-green-800' },
-  login_fail: { label: 'Başarısız Giriş', color: 'bg-red-100 text-red-800' },
-  register: { label: 'Kayıt', color: 'bg-blue-100 text-blue-800' },
-  register_fail: { label: 'Başarısız Kayıt', color: 'bg-red-100 text-red-800' },
-  register_incomplete: { label: 'Tamamlanmamış', color: 'bg-amber-100 text-amber-800' },
-  register_blocked: { label: 'Engellendi', color: 'bg-red-200 text-red-900' },
-  password_reset: { label: 'Şifre Sıfırlama', color: 'bg-purple-100 text-purple-800' },
-  password_change: { label: 'Şifre Değişikliği', color: 'bg-purple-100 text-purple-800' },
-  client_error: { label: 'Client Hata', color: 'bg-orange-100 text-orange-800' },
+  login: { label: 'Giriş', color: 'bg-neutral-100 text-black' },
+  login_fail: { label: 'Başarısız Giriş', color: 'bg-neutral-200 text-neutral-800' },
+  register: { label: 'Kayıt', color: 'bg-black text-white' },
+  register_fail: { label: 'Başarısız Kayıt', color: 'bg-neutral-200 text-neutral-800' },
+  register_incomplete: { label: 'Tamamlanmamış', color: 'bg-neutral-200 text-neutral-700' },
+  register_blocked: { label: 'Engellendi', color: 'bg-neutral-300 text-neutral-900' },
+  password_reset: { label: 'Şifre Sıfırlama', color: 'bg-neutral-100 text-neutral-700' },
+  password_change: { label: 'Şifre Değişikliği', color: 'bg-neutral-100 text-neutral-700' },
+  client_error: { label: 'Client Hata', color: 'bg-neutral-200 text-neutral-800' },
+  otp_sent: { label: 'OTP Gönderim', color: 'bg-neutral-100 text-neutral-600' },
+  otp_verified: { label: 'OTP Doğrulama', color: 'bg-neutral-100 text-black' },
 };
 
 export default function AuthLogsPage() {
@@ -99,6 +101,7 @@ export default function AuthLogsPage() {
               <th className="px-3 py-2 text-left font-medium text-neutral-500">Tarih</th>
               <th className="px-3 py-2 text-left font-medium text-neutral-500">Olay</th>
               <th className="px-3 py-2 text-left font-medium text-neutral-500">Yöntem</th>
+              <th className="px-3 py-2 text-left font-medium text-neutral-500">Sağlayıcı</th>
               <th className="px-3 py-2 text-left font-medium text-neutral-500">Kimlik</th>
               <th className="px-3 py-2 text-left font-medium text-neutral-500">User ID</th>
               <th className="px-3 py-2 text-left font-medium text-neutral-500">IP</th>
@@ -107,9 +110,9 @@ export default function AuthLogsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="px-3 py-8 text-center text-neutral-400">Yükleniyor...</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-center text-neutral-400">Yükleniyor...</td></tr>
             ) : logs.length === 0 ? (
-              <tr><td colSpan={7} className="px-3 py-8 text-center text-neutral-400">Log bulunamadı</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-center text-neutral-400">Log bulunamadı</td></tr>
             ) : (
               logs.map((log) => {
                 const info = eventInfo(log.event_type);
@@ -124,6 +127,14 @@ export default function AuthLogsPage() {
                       </span>
                     </td>
                     <td className="px-3 py-2 text-neutral-600">{log.auth_method || '-'}</td>
+                    <td className="px-3 py-2 text-neutral-600 text-[10px]">
+                      {(() => {
+                        try {
+                          const d = log.details ? JSON.parse(log.details) : null;
+                          return d?.sms_provider || '-';
+                        } catch { return '-'; }
+                      })()}
+                    </td>
                     <td className="px-3 py-2 font-mono text-neutral-600">{log.identity_hint || '-'}</td>
                     <td className="px-3 py-2 text-neutral-600">{log.user_id ?? '-'}</td>
                     <td className="px-3 py-2 font-mono text-neutral-500 text-[10px]">{log.ip_address || '-'}</td>

@@ -59,13 +59,37 @@ export async function GET(request: NextRequest) {
         count(*) FILTER (WHERE event_type = 'login' AND created_at >= ${today})::int as today_logins_logged,
         count(*) FILTER (WHERE event_type = 'login_fail' AND created_at >= ${today})::int as today_login_fails,
         count(*) FILTER (WHERE event_type = 'register' AND created_at >= ${today})::int as today_registers,
-        count(*) FILTER (WHERE event_type = 'register_incomplete' AND created_at >= ${today})::int as today_incomplete,
         count(*) FILTER (WHERE event_type = 'register_blocked' AND created_at >= ${today})::int as today_blocked,
         count(*) FILTER (WHERE event_type = 'login_fail')::int as total_login_fails,
-        count(*) FILTER (WHERE event_type = 'register_incomplete')::int as total_incomplete
+        count(*) FILTER (WHERE event_type = 'otp_sent' AND created_at >= ${today})::int as today_otp_sent,
+        count(*) FILTER (WHERE event_type = 'otp_verified' AND created_at >= ${today})::int as today_otp_verified
       FROM auth_logs
     `);
     const al = authLogCounts.rows[0] as Record<string, number>;
+
+    // Gerçek tamamlanmamış kayıtlar: telefon doğrulanmış ama profil eksik, 10+ dakika geçmiş
+    const [incompleteResult] = await db.execute(sql`
+      SELECT count(*)::int as count FROM users
+      WHERE identity_hash IS NOT NULL
+        AND (city IS NULL OR city = '')
+        AND is_active = false
+        AND is_dummy = false
+        AND created_at < NOW() - INTERVAL '10 minutes'
+    `).then(r => r.rows as { count: number }[]);
+
+    // SMS provider istatistikleri
+    const smsStats = await db.execute(sql`
+      SELECT
+        provider,
+        count(*)::int as total,
+        count(*) FILTER (WHERE created_at >= ${today})::int as today,
+        count(*) FILTER (WHERE status = 'sent')::int as sent,
+        count(*) FILTER (WHERE status = 'failed')::int as failed,
+        count(*) FILTER (WHERE is_fallback = true)::int as fallback_count
+      FROM sms_send_log
+      GROUP BY provider
+      ORDER BY total DESC
+    `);
 
     // Hata dagilimi (bugunki)
     const errorBreakdown = await db.execute(sql`
@@ -92,13 +116,16 @@ export async function GET(request: NextRequest) {
       // Auth & Güvenlik
       todayLogins: todayLoginsResult?.count ?? 0,
       todayLoginFails: al.today_login_fails ?? 0,
-      todayIncomplete: al.today_incomplete ?? 0,
       todayBlocked: al.today_blocked ?? 0,
-      totalIncomplete: al.total_incomplete ?? 0,
+      totalIncomplete: incompleteResult?.count ?? 0,
       totalLoginFails: al.total_login_fails ?? 0,
+      todayOtpSent: al.today_otp_sent ?? 0,
+      todayOtpVerified: al.today_otp_verified ?? 0,
       // Cihaz
       uniqueDevices: uniqueDevicesResult?.count ?? 0,
       multiAccountDevices: multiDevices,
+      // SMS sağlayıcı istatistikleri
+      smsStats: smsStats.rows ?? [],
       // Hata dağılımı
       errorBreakdown: errorBreakdown.rows ?? [],
     });

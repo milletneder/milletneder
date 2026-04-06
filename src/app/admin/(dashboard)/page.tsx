@@ -1,6 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+interface SmsProviderStat {
+  provider: string;
+  total: number;
+  today: number;
+  sent: number;
+  failed: number;
+  fallback_count: number;
+}
+
 interface StatData {
   realUsers: number;
   dummyUsers: number;
@@ -16,12 +25,14 @@ interface StatData {
   } | null;
   todayLogins: number;
   todayLoginFails: number;
-  todayIncomplete: number;
   todayBlocked: number;
   totalIncomplete: number;
   totalLoginFails: number;
+  todayOtpSent: number;
+  todayOtpVerified: number;
   uniqueDevices: number;
   multiAccountDevices: number;
+  smsStats: SmsProviderStat[];
   errorBreakdown: { error_code: string | null; count: number }[];
 }
 
@@ -144,31 +155,39 @@ export default function AdminDashboardPage() {
 
   const mainCards = stats
     ? [
-        { label: 'Gerçek Kullanıcı', value: stats.realUsers, color: 'border-black' },
-        { label: 'Geçerli Oy', value: stats.validVotes, color: 'border-black' },
-        { label: 'Geçersiz Oy', value: stats.invalidVotes, color: 'border-red-300' },
-        { label: 'Şüpheli Hesap', value: stats.flaggedAccounts, color: 'border-red-300' },
-        { label: 'Bugünkü Kayıt', value: stats.todayRegistrations, color: 'border-black' },
-        { label: 'Bugünkü Oy', value: stats.todayVotes, color: 'border-black' },
+        { label: 'Gerçek Kullanıcı', value: stats.realUsers },
+        { label: 'Geçerli Oy', value: stats.validVotes },
+        { label: 'Geçersiz Oy', value: stats.invalidVotes },
+        { label: 'Şüpheli Hesap', value: stats.flaggedAccounts },
+        { label: 'Bugünkü Kayıt', value: stats.todayRegistrations },
+        { label: 'Bugünkü Oy', value: stats.todayVotes },
       ]
     : [];
 
   const authCards = stats
     ? [
-        { label: 'Tamamlanmamış Kayıt', value: stats.totalIncomplete, color: 'border-amber-300' },
-        { label: 'Bugün Giriş', value: stats.todayLogins, color: 'border-green-300' },
-        { label: 'Bugün Başarısız Giriş', value: stats.todayLoginFails, color: 'border-red-300' },
-        { label: 'Bugün Engellenen Kayıt', value: stats.todayBlocked, color: 'border-red-300' },
-        { label: 'Toplam Başarısız Giriş', value: stats.totalLoginFails, color: 'border-red-300' },
+        { label: 'Tamamlanmamış Kayıt', value: stats.totalIncomplete, color: 'border-black' },
+        { label: 'Bugün Giriş', value: stats.todayLogins, color: 'border-black' },
+        { label: 'Bugün OTP Gönderim', value: stats.todayOtpSent, color: 'border-black' },
+        { label: 'Bugün OTP Doğrulama', value: stats.todayOtpVerified, color: 'border-black' },
+        { label: 'Bugün Başarısız Giriş', value: stats.todayLoginFails, color: 'border-black' },
+        { label: 'Bugün Engellenen Kayıt', value: stats.todayBlocked, color: 'border-black' },
+        { label: 'Toplam Başarısız Giriş', value: stats.totalLoginFails, color: 'border-black' },
       ]
     : [];
 
   const deviceCards = stats
     ? [
-        { label: 'Benzersiz Cihaz', value: stats.uniqueDevices, color: 'border-blue-300' },
-        { label: 'Çoklu Hesap Cihazı', value: stats.multiAccountDevices, color: 'border-amber-300' },
+        { label: 'Benzersiz Cihaz', value: stats.uniqueDevices },
+        { label: 'Çoklu Hesap Cihazı', value: stats.multiAccountDevices },
       ]
     : [];
+
+  const providerLabels: Record<string, string> = {
+    firebase: 'Firebase',
+    twilio: 'Twilio',
+    vatansms: 'VatanSMS',
+  };
 
   return (
     <div className="space-y-6">
@@ -185,7 +204,7 @@ export default function AdminDashboardPage() {
               {mainCards.map((card) => (
                 <div
                   key={card.label}
-                  className={`border-l-4 ${card.color} border border-neutral-200 p-4`}
+                  className="border-l-4 border-black border border-neutral-200 p-4"
                 >
                   <div className="text-2xl font-bold text-black">
                     {(card.value ?? 0).toLocaleString('tr-TR')}
@@ -201,11 +220,11 @@ export default function AdminDashboardPage() {
           {/* Auth Metrikleri */}
           <div>
             <h2 className="text-sm font-medium text-neutral-500 mb-2">Auth & Güvenlik</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
               {authCards.map((card) => (
                 <div
                   key={card.label}
-                  className={`border-l-4 ${card.color} border border-neutral-200 p-4`}
+                  className="border-l-4 border-black border border-neutral-200 p-4"
                 >
                   <div className="text-2xl font-bold text-black">
                     {(card.value ?? 0).toLocaleString('tr-TR')}
@@ -218,6 +237,45 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
+          {/* SMS Sağlayıcı İstatistikleri */}
+          {stats.smsStats && stats.smsStats.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-neutral-500 mb-2">SMS Sağlayıcıları</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {stats.smsStats.map((s) => (
+                  <div key={s.provider} className="border border-neutral-200 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-black">
+                        {providerLabels[s.provider] || s.provider}
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        Bugün: {s.today}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div>
+                        <div className="text-lg font-bold text-black">{s.total}</div>
+                        <div className="text-[10px] text-neutral-500">Toplam</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-black">{s.sent}</div>
+                        <div className="text-[10px] text-neutral-500">Gönderim</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-black">{s.failed}</div>
+                        <div className="text-[10px] text-neutral-500">Başarısız</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-black">{s.fallback_count}</div>
+                        <div className="text-[10px] text-neutral-500">Fallback</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Cihaz Metrikleri */}
           <div>
             <h2 className="text-sm font-medium text-neutral-500 mb-2">Cihaz</h2>
@@ -225,7 +283,7 @@ export default function AdminDashboardPage() {
               {deviceCards.map((card) => (
                 <div
                   key={card.label}
-                  className={`border-l-4 ${card.color} border border-neutral-200 p-4`}
+                  className="border-l-4 border-black border border-neutral-200 p-4"
                 >
                   <div className="text-2xl font-bold text-black">
                     {(card.value ?? 0).toLocaleString('tr-TR')}

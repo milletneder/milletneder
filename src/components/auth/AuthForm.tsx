@@ -504,6 +504,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
     setUsingFirebase(false);
 
     // Firebase birincil sağlayıcıysa önce onu dene
+    let isFirebaseFallback = false;
     if (smsProvider === 'firebase' && firebaseConfig) {
       try {
         const firebaseSuccess = await sendFirebaseOtp(raw);
@@ -515,6 +516,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
         }
         // Firebase başarısız → sessizce Twilio fallback'e düş
         console.log('[AUTH] Firebase failed, falling back to server-side OTP');
+        isFirebaseFallback = true;
       } catch (err) {
         // Firebase bilinen kullanıcı hatası (geçersiz numara vb.)
         if (err instanceof Error) {
@@ -530,7 +532,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: raw }),
+        body: JSON.stringify({ phone: raw, ...(isFirebaseFallback && { firebaseFallback: true }) }),
       });
       const data = await res.json();
       if (!res.ok) {

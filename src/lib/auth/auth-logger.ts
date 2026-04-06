@@ -7,11 +7,13 @@ export type AuthEventType =
   | 'login_fail'      // Başarısız giriş
   | 'register'        // Başarılı kayıt
   | 'register_fail'   // Başarısız kayıt (hata)
-  | 'register_incomplete' // Doğrulama yapıldı ama DB kaydı tamamlanmadı
+  | 'register_incomplete' // Gerçekten tamamlanmamış kayıt (eski uyumluluk)
   | 'register_blocked'    // Fingerprint/IP limiti ile engellendi
   | 'password_reset'      // Şifre sıfırlama
   | 'password_change'     // Şifre değiştirme
-  | 'client_error';       // Client-side hata (reCAPTCHA, SMS, vs.)
+  | 'client_error'        // Client-side hata (reCAPTCHA, SMS, vs.)
+  | 'otp_sent'            // OTP gönderildi (SMS/email)
+  | 'otp_verified';       // OTP doğrulandı, kayıt bekleniyor
 
 interface LogAuthEventParams {
   eventType: AuthEventType;

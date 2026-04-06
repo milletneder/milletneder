@@ -3,9 +3,10 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { markPhoneAsVerified } from '@/lib/auth/phone-otp-store';
-import { checkVerification } from '@/lib/sms/provider';
+import { checkVerification, getEffectiveProviderName } from '@/lib/sms/provider';
 import { hashIdentity, loginExistingUser } from '@/lib/auth/registration';
 import { logAuthEvent } from '@/lib/auth/auth-logger';
+import { logSmsSend } from '@/lib/sms/sms-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,10 @@ export async function POST(request: NextRequest) {
 
     const fullPhone = `+90${raw}`;
 
-    // Verify OTP via Twilio Verify API
+    // Efektif sağlayıcı adını al (loglama için)
+    const providerName = await getEffectiveProviderName();
+
+    // Verify OTP via active provider
     const result = await checkVerification(fullPhone, String(code));
     if (!result.valid) {
       const errorMessages: Record<string, string> = {
@@ -33,9 +37,12 @@ export async function POST(request: NextRequest) {
         too_many_attempts: 'Çok fazla hatalı deneme. Tekrar kod gönderin.',
         invalid_code: 'Hatalı doğrulama kodu.',
       };
-      await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, request, errorCode: `otp_${result.error}` });
+      await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, request, errorCode: `otp_${result.error}`, details: { sms_provider: providerName } });
       return NextResponse.json({ error: errorMessages[result.error!] || 'Doğrulama başarısız' }, { status: 400 });
     }
+
+    // OTP doğrulandı — SMS doğrulama logla
+    await logSmsSend({ provider: providerName, phone: fullPhone, status: 'sent' });
 
     // OTP valid — mark phone as verified
     markPhoneAsVerified(fullPhone);
@@ -52,18 +59,18 @@ export async function POST(request: NextRequest) {
       const isIncomplete = !existingUser.city || existingUser.city.trim() === '';
 
       if (!existingUser.is_active && isIncomplete) {
-        // Incomplete registration — needs profile
-        await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request });
+        // OTP doğrulandı ama profil eksik — register tamamlanınca register logu düşer
+        await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, details: { sms_provider: providerName, step: 'incomplete_profile' } });
         return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
       }
 
       if (!existingUser.is_active) {
-        await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, errorCode: 'account_disabled' });
+        await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, errorCode: 'account_disabled', details: { sms_provider: providerName } });
         return NextResponse.json({ error: 'Hesabınız devre dışı bırakılmıştır' }, { status: 403 });
       }
 
       if (isIncomplete) {
-        await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request });
+        await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, userId: existingUser.id, request, details: { sms_provider: providerName, step: 'incomplete_profile' } });
         return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
       }
 
@@ -78,8 +85,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(loginResult);
     }
 
-    // New user — phone verified, needs registration
-    await logAuthEvent({ eventType: 'register_incomplete', authMethod: 'phone', identityHint: fullPhone, request, details: { step: 'otp_verified_new_user' } });
+    // Yeni kullanıcı — telefon doğrulandı, kayıt bekleniyor
+    await logAuthEvent({ eventType: 'otp_verified', authMethod: 'phone', identityHint: fullPhone, request, details: { sms_provider: providerName, step: 'new_user' } });
     return NextResponse.json({ isNewUser: true, authProvider: 'phone', verified: true });
   } catch (error) {
     console.error('Verify OTP error:', error);
