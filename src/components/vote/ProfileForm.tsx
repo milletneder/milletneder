@@ -7,9 +7,10 @@ import { CITY_DISTRICTS, SORTED_CITIES } from '@/lib/geo/city-districts';
 interface ProfileFormProps {
   onComplete: (data: { city: string; district: string }) => void;
   onBack: () => void;
+  loading?: boolean;
 }
 
-export default function ProfileForm({ onComplete, onBack }: ProfileFormProps) {
+export default function ProfileForm({ onComplete, onBack, loading = false }: ProfileFormProps) {
   const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -59,9 +60,10 @@ export default function ProfileForm({ onComplete, onBack }: ProfileFormProps) {
         </button>
         <button
           onClick={handleSubmit}
-          className="flex-1 bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
+          disabled={loading}
+          className="flex-1 bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50"
         >
-          Kayıt Ol
+          {loading ? 'Kontrol ediliyor...' : 'Devam'}
         </button>
       </div>
     </div>

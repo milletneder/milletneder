@@ -50,6 +50,7 @@ export default function VoteModal({
   const [authType, setAuthType] = useState<'email' | 'phone' | null>(null);
   const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+  const [profileData, setProfileData] = useState<{ city: string; district: string } | null>(null);
   const { fingerprint } = useFingerprint();
   const { login } = useAuth();
 
@@ -102,6 +103,7 @@ export default function VoteModal({
       setVerifiedIdentity(null);
       setAuthExtraData(undefined);
       setAuthType(null);
+      setProfileData(null);
     }
   }, [isOpen, initialParty]);
 
@@ -142,47 +144,8 @@ export default function VoteModal({
         setLoading(false);
       }
     } else {
-      // Pending registration varsa (Header'dan yönlendirme) — auth atlayıp profil'e git
-      if (verifiedIdentity) {
-        await handleAuth(verifiedIdentity, authExtraData);
-        return;
-      }
-      // Giriş yapılmamış — önce SMS bakiye kontrolü yap
-      setLoading(true);
-      try {
-        const statusRes = await fetch('/api/auth/sms-status');
-        if (statusRes.ok) {
-          const statusData = await statusRes.json();
-          if (!statusData.available) {
-            setLoading(false);
-            setStep('donation');
-            return;
-          }
-        }
-      } catch {
-        // API hatası durumunda devam et
-      }
-
-      // Fingerprint kontrolü yap
-      if (fingerprint) {
-        try {
-          const fpRes = await fetch('/api/auth/check-fingerprint', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fingerprint }),
-          });
-          const fpData = await fpRes.json();
-          if (fpData.exists) {
-            setLoading(false);
-            setStep('blocked');
-            return;
-          }
-        } catch {
-          // API hatası durumunda engelleme — devam et
-        }
-      }
-      setLoading(false);
-      setStep('auth');
+      // Giriş yapılmamış — önce il/ilçe seçimi yap, sonra telefon doğrulama
+      setStep('profile');
     }
   };
 
@@ -224,57 +187,104 @@ export default function VoteModal({
   };
 
   const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
+    const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
+    const type = isPhone ? 'phone' : 'email';
+
     setVerifiedIdentity(identityValue);
     setAuthExtraData(extraData);
+    setAuthType(type);
 
-    // Detect if this is a phone number (10 digits starting with 5) or email
-    const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
-
-    if (isPhone) {
-      setAuthType('phone');
-    } else {
-      setAuthType('email');
+    // Auth tamamlandı — parti + il/ilçe zaten seçili, direkt kayıt yap
+    if (profileData) {
+      await completeRegistration(identityValue, type, extraData, profileData);
     }
-
-    // Both phone and email: OTP already verified, user is new (existing users go through onDirectLogin)
-    setStep('profile');
   };
 
   const handleProfileComplete = async (data: { city: string; district: string }) => {
-    if (!verifiedIdentity) return;
+    setProfileData(data);
+    setError('');
+
+    // Pending registration (Header'dan yönlendirme) — telefon zaten doğrulanmış, direkt kayıt yap
+    if (verifiedIdentity) {
+      await completeRegistration(verifiedIdentity, authType, authExtraData, data);
+      return;
+    }
+
+    // Yeni kayıt — SMS bakiye ve fingerprint kontrolü yap, sonra auth'a geç
+    setLoading(true);
+    try {
+      const statusRes = await fetch('/api/auth/sms-status');
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        if (!statusData.available) {
+          setLoading(false);
+          setStep('donation');
+          return;
+        }
+      }
+    } catch {
+      // API hatası durumunda devam et
+    }
+
+    if (fingerprint) {
+      try {
+        const fpRes = await fetch('/api/auth/check-fingerprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fingerprint }),
+        });
+        const fpData = await fpRes.json();
+        if (fpData.exists) {
+          setLoading(false);
+          setStep('blocked');
+          return;
+        }
+      } catch {
+        // API hatası durumunda engelleme — devam et
+      }
+    }
+    setLoading(false);
+    setStep('auth');
+  };
+
+  // Kayıt API çağrısı — tüm bilgiler toplandıktan sonra
+  const completeRegistration = async (
+    identity: string,
+    type: 'email' | 'phone' | null,
+    extraData: { password?: string } | undefined,
+    profile: { city: string; district: string },
+  ) => {
     setLoading(true);
     setError('');
 
     try {
       let res;
-      if (authType === 'phone') {
-        // Phone registration — use register-phone endpoint
+      if (type === 'phone') {
         res = await fetch('/api/auth/register-phone', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: verifiedIdentity,
-            city: data.city,
-            district: data.district,
+            phone: identity,
+            city: profile.city,
+            district: profile.district,
             fingerprint,
             party: selectedParty,
             roundId: activeRoundId,
-            password: authExtraData?.password,
+            password: extraData?.password,
           }),
         });
       } else {
-        // Email registration — use register-email endpoint
         res = await fetch('/api/auth/register-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: verifiedIdentity,
-            city: data.city,
-            district: data.district,
+            email: identity,
+            city: profile.city,
+            district: profile.district,
             fingerprint,
             party: selectedParty,
             roundId: activeRoundId,
-            password: authExtraData?.password,
+            password: extraData?.password,
           }),
         });
       }
@@ -464,27 +474,28 @@ export default function VoteModal({
               </div>
             )}
 
+            {step === 'profile' && (
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-black mb-2">Nerelisin?</h2>
+                <p className="text-neutral-500 text-sm mb-6">
+                  Şehrini ve ilçeni seç — sonra telefonunu doğrulayacağız.
+                </p>
+                <ProfileForm
+                  onComplete={handleProfileComplete}
+                  onBack={() => setStep('party-select')}
+                  loading={loading}
+                />
+                {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
+              </div>
+            )}
+
             {step === 'auth' && (
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
                 <AuthForm
                   method={authMethod}
                   onAuthenticated={handleAuth}
                   onDirectLogin={handleDirectLogin}
-                  onBack={() => setStep('party-select')}
-                />
-                {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
-              </div>
-            )}
-
-            {step === 'profile' && (
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-black mb-2">Profil Bilgileri</h2>
-                <p className="text-neutral-500 text-sm mb-6">
-                  Son adım — şehrini ve ilçeni seç, oyun sayılsın.
-                </p>
-                <ProfileForm
-                  onComplete={handleProfileComplete}
-                  onBack={() => setStep('auth')}
+                  onBack={() => setStep('profile')}
                 />
                 {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
               </div>
