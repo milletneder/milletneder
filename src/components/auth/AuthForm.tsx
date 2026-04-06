@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-// Twilio OTP + DB password verification
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { ConfirmationResult } from 'firebase/auth';
+// Multi-provider OTP: Firebase (primary, client-side) + Twilio/VatanSMS (fallback, server-side)
 
 type AuthMethod = 'email' | 'phone';
 type EmailStep = 'email' | 'login' | 'verify-code' | 'set-password';
@@ -42,6 +43,13 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
   // Verified phone (stored after OTP verification for Twilio flow)
   const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
 
+  // Firebase Phone Auth state
+  const [smsProvider, setSmsProvider] = useState<string>('twilio');
+  const [firebaseConfig, setFirebaseConfig] = useState<{ apiKey: string; authDomain: string; projectId: string } | null>(null);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
+  const [usingFirebase, setUsingFirebase] = useState(false);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+
   // Forgot password state
   const [forgotPhase, setForgotPhase] = useState<Phase>('input');
   const [forgotEmail, setForgotEmail] = useState('');
@@ -73,6 +81,129 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       setTimeout(() => passwordInputRef.current?.focus(), 100);
     }
   }, [emailStep]);
+
+  // ========== SMS PROVIDER CONFIG ==========
+  useEffect(() => {
+    if (method !== 'phone') return;
+    fetch('/api/auth/provider-config')
+      .then((res) => res.json())
+      .then((data) => {
+        setSmsProvider(data.provider || 'twilio');
+        if (data.firebaseConfig) setFirebaseConfig(data.firebaseConfig);
+      })
+      .catch(() => setSmsProvider('twilio'));
+  }, [method]);
+
+  /**
+   * Firebase Phone Auth ile SMS gönder (istemci tarafı).
+   * Başarısız olursa false döner → Twilio fallback kullanılır.
+   */
+  const sendFirebaseOtp = useCallback(async (phoneNumber: string): Promise<boolean> => {
+    if (!firebaseConfig) return false;
+
+    try {
+      // Firebase modüllerini dinamik olarak yükle (tree-shaking)
+      const { initializeApp, getApps } = await import('firebase/app');
+      const { getAuth, signInWithPhoneNumber, RecaptchaVerifier } = await import('firebase/auth');
+
+      // Firebase app'i başlat (bir kere)
+      const app = getApps().length === 0
+        ? initializeApp(firebaseConfig)
+        : getApps()[0];
+      const auth = getAuth(app);
+      // Dili Türkçe yap
+      auth.languageCode = 'tr';
+
+      // Invisible reCAPTCHA oluştur
+      if (!recaptchaContainerRef.current) return false;
+
+      // Önceki verifier'ı temizle
+      const win = window as unknown as Record<string, unknown>;
+      if (win.__recaptchaVerifier) {
+        try {
+          (win.__recaptchaVerifier as { clear: () => void }).clear();
+        } catch { /* ignore */ }
+      }
+
+      const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        size: 'invisible',
+      });
+      win.__recaptchaVerifier = verifier;
+
+      // SMS gönder
+      const fullPhone = `+90${phoneNumber}`;
+      console.log('[FIREBASE] Sending OTP to', fullPhone);
+      const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
+      setFirebaseConfirmation(confirmation);
+      setUsingFirebase(true);
+      console.log('[FIREBASE] OTP sent successfully');
+      return true;
+    } catch (err: unknown) {
+      const firebaseError = err as { code?: string; message?: string };
+      console.error('[FIREBASE] Send OTP failed:', firebaseError.code, firebaseError.message);
+
+      // Fallback tetiklenecek hatalar
+      const fallbackErrors = [
+        'auth/error-code:-39',        // Rate limit / bölgesel blok
+        'auth/too-many-requests',     // IP rate limit
+        'auth/quota-exceeded',        // Proje kotası
+        'auth/captcha-check-failed',  // reCAPTCHA sorunu
+        'auth/internal-error',        // Firebase backend hatası
+        'auth/network-request-failed', // Ağ hatası
+        'auth/missing-client-identifier', // reCAPTCHA başarısız
+      ];
+
+      if (firebaseError.code && fallbackErrors.includes(firebaseError.code)) {
+        console.log('[FIREBASE] Falling back to server-side provider:', firebaseError.code);
+        return false; // Fallback'e düş
+      }
+
+      // Kullanıcıya gösterilecek hatalar (Twilio'ya düşmenin anlamı yok)
+      if (firebaseError.code === 'auth/invalid-phone-number') {
+        throw new Error('Geçersiz telefon numarası.');
+      }
+
+      // Bilinmeyen hata — güvenli tarafta kal, fallback'e düş
+      return false;
+    }
+  }, [firebaseConfig]);
+
+  /**
+   * Firebase ile doğrulama kodunu kontrol et.
+   * Başarılı olursa Firebase ID token'ını sunucuya gönderir.
+   */
+  const verifyFirebaseOtp = useCallback(async (code: string): Promise<{ success: boolean; data?: Record<string, unknown> }> => {
+    if (!firebaseConfirmation) return { success: false };
+
+    try {
+      const credential = await firebaseConfirmation.confirm(code);
+      const idToken = await credential.user.getIdToken();
+
+      // ID token'ı sunucuya gönder
+      const res = await fetch('/api/auth/verify-firebase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        return { success: false, data: { error: data.error || 'Doğrulama başarısız' } };
+      }
+
+      const data = await res.json();
+      return { success: true, data };
+    } catch (err: unknown) {
+      const firebaseError = err as { code?: string };
+      if (firebaseError.code === 'auth/invalid-verification-code') {
+        return { success: false, data: { error: 'Hatalı doğrulama kodu.' } };
+      }
+      if (firebaseError.code === 'auth/code-expired') {
+        return { success: false, data: { error: 'Doğrulama kodunun süresi doldu. Tekrar kod gönderin.' } };
+      }
+      return { success: false, data: { error: 'Doğrulama başarısız. Tekrar deneyin.' } };
+    }
+  }, [firebaseConfirmation]);
 
   // ========== EMAIL AUTH ==========
   const handleEmailContinue = async () => {
@@ -356,6 +487,31 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
 
     setLoading(true);
     setError('');
+    setUsingFirebase(false);
+
+    // Firebase birincil sağlayıcıysa önce onu dene
+    if (smsProvider === 'firebase' && firebaseConfig) {
+      try {
+        const firebaseSuccess = await sendFirebaseOtp(raw);
+        if (firebaseSuccess) {
+          setPhoneStep('otp');
+          setCountdown(90);
+          setLoading(false);
+          return;
+        }
+        // Firebase başarısız → sessizce Twilio fallback'e düş
+        console.log('[AUTH] Firebase failed, falling back to server-side OTP');
+      } catch (err) {
+        // Firebase bilinen kullanıcı hatası (geçersiz numara vb.)
+        if (err instanceof Error) {
+          setError(err.message);
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
+    // Sunucu tarafı OTP (Twilio/VatanSMS veya Firebase fallback)
     try {
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -384,6 +540,32 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
     }
     setLoading(true);
     setError('');
+
+    // Firebase ile doğrulama
+    if (usingFirebase && firebaseConfirmation) {
+      try {
+        const result = await verifyFirebaseOtp(otpCode);
+        if (!result.success) {
+          setError((result.data?.error as string) || 'Doğrulama başarısız');
+          setLoading(false);
+          return;
+        }
+        const data = result.data!;
+        if (data.token && !data.isNewUser) {
+          if (onDirectLogin) onDirectLogin(data.token as string);
+        } else {
+          setVerifiedPhone(getRawPhone());
+          setPhoneStep('set-credentials');
+        }
+      } catch {
+        setError('Doğrulama başarısız');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Sunucu tarafı doğrulama (Twilio/VatanSMS)
     try {
       const raw = getRawPhone();
       const res = await fetch('/api/auth/verify-otp', {
@@ -1045,6 +1227,9 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
   // --- PHONE AUTH ---
   return (
     <div className="w-full max-w-md mx-auto">
+      {/* Firebase invisible reCAPTCHA container */}
+      <div ref={recaptchaContainerRef} id="recaptcha-container" />
+
       {phoneStep === 'input' && (
         <div className="space-y-4">
           {!loginOnly && (
