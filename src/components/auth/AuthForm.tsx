@@ -123,12 +123,26 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
         try {
           (win.__recaptchaVerifier as { clear: () => void }).clear();
         } catch { /* ignore */ }
+        delete win.__recaptchaVerifier;
       }
+
+      // reCAPTCHA container'ı temizle (eski widget kalıntıları)
+      recaptchaContainerRef.current.innerHTML = '';
 
       const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
         size: 'invisible',
+        callback: () => {
+          console.log('[FIREBASE] reCAPTCHA solved');
+        },
+        'expired-callback': () => {
+          console.log('[FIREBASE] reCAPTCHA expired');
+        },
       });
       win.__recaptchaVerifier = verifier;
+
+      // reCAPTCHA'yı önceden render et
+      await verifier.render();
+      console.log('[FIREBASE] reCAPTCHA rendered');
 
       // SMS gönder
       const fullPhone = `+90${phoneNumber}`;
