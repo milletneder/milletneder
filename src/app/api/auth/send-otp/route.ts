@@ -78,10 +78,22 @@ export async function POST(request: NextRequest) {
     // Efektif SMS sağlayıcısını belirle (Firebase seçiliyse fallback'i kullanır)
     const providerName = await getEffectiveProviderName();
 
-    // Send verification via active provider
-    await sendVerification(fullPhone);
+    // Send verification via active provider — hata olsa bile logla
+    try {
+      await sendVerification(fullPhone);
+    } catch (sendErr) {
+      // Gönderim başarısız — logla ve hatayı fırlat
+      await logSmsSend({
+        provider: providerName,
+        phone: fullPhone,
+        status: 'failed',
+        isFallback: !!firebaseFallback,
+        errorMessage: sendErr instanceof Error ? sendErr.message : String(sendErr),
+      });
+      throw sendErr;
+    }
 
-    // SMS gönderim logla
+    // SMS başarıyla gönderildi — logla
     await logSmsSend({
       provider: providerName,
       phone: fullPhone,

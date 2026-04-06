@@ -52,6 +52,9 @@ export async function POST(request: NextRequest) {
     // Firebase üzerinden başarıyla SMS gönderildi ve doğrulandı — logla
     await logSmsSend({ provider: 'firebase', phone: fullPhone, status: 'sent' });
 
+    // Firebase akışı istemcide olduğu için otp_sent sunucuya gelmez — burada logla
+    await logAuthEvent({ eventType: 'otp_sent', authMethod: 'phone', identityHint: fullPhone, request, details: { sms_provider: 'firebase' } });
+
     // Telefonu doğrulanmış olarak işaretle (register-phone endpoint'i için gerekli)
     markPhoneAsVerified(fullPhone);
 

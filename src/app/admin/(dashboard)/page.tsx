@@ -33,6 +33,7 @@ interface StatData {
   uniqueDevices: number;
   multiAccountDevices: number;
   smsStats: SmsProviderStat[];
+  fallbackRescue: { total: number; today: number };
   errorBreakdown: { error_code: string | null; count: number }[];
 }
 
@@ -272,6 +273,33 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Firebase → Fallback kurtarma kartı */}
+                {stats.fallbackRescue && stats.fallbackRescue.total > 0 && (
+                  <div className="border border-neutral-200 p-4 border-l-4 border-l-black">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-black">
+                        Firebase → Fallback Kurtarma
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        Bugün: {stats.fallbackRescue.today}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <div className="text-lg font-bold text-black">{stats.fallbackRescue.total}</div>
+                        <div className="text-[10px] text-neutral-500">Toplam Kurtarma</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-black">{stats.fallbackRescue.today}</div>
+                        <div className="text-[10px] text-neutral-500">Bugün Kurtarma</div>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-neutral-400 mt-2">
+                      Firebase başarısız olup yedek sağlayıcı tarafından karşılanan SMS&apos;ler
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

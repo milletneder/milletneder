@@ -91,6 +91,14 @@ export async function GET(request: NextRequest) {
       ORDER BY total DESC
     `);
 
+    // Firebase → Twilio/VatanSMS kurtarma sayısı (Firebase başarısız, fallback karşıladı)
+    const [fallbackRescueResult] = await db.execute(sql`
+      SELECT count(*)::int as total,
+             count(*) FILTER (WHERE created_at >= ${today})::int as today
+      FROM sms_send_log
+      WHERE is_fallback = true AND status = 'sent'
+    `).then(r => r.rows as { total: number; today: number }[]);
+
     // Hata dagilimi (bugunki)
     const errorBreakdown = await db.execute(sql`
       SELECT error_code, count(*)::int as count
@@ -126,6 +134,10 @@ export async function GET(request: NextRequest) {
       multiAccountDevices: multiDevices,
       // SMS sağlayıcı istatistikleri
       smsStats: smsStats.rows ?? [],
+      fallbackRescue: {
+        total: fallbackRescueResult?.total ?? 0,
+        today: fallbackRescueResult?.today ?? 0,
+      },
       // Hata dağılımı
       errorBreakdown: errorBreakdown.rows ?? [],
     });
