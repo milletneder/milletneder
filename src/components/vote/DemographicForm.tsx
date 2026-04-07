@@ -129,19 +129,18 @@ function SelectGrid({ label, options, value, onChange }: {
       <h3 className="text-sm font-semibold mb-3">{label}</h3>
       <div className="grid grid-cols-2 gap-2">
         {options.map((b) => (
-          <button
+          <Button
             key={b.value}
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => onChange(b.value)}
             className={cn(
-              "px-3 py-2 text-sm rounded-lg transition-all",
-              value === b.value
-                ? 'ring-2 ring-ring bg-accent font-medium'
-                : 'border border-border bg-background hover:bg-accent/50'
+              value === b.value && 'ring-2 ring-ring bg-accent'
             )}
           >
             {b.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -162,15 +161,14 @@ function PartySelect2023({ parties, value, onChange }: {
         {sorted.map((party) => {
           const isSelected = value === party.id;
           return (
-            <button
+            <Button
               key={party.id}
               type="button"
+              variant="outline"
               onClick={() => onChange(party.id)}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all",
-                isSelected
-                  ? 'ring-2 ring-ring bg-accent'
-                  : 'border border-border bg-background hover:bg-accent/50'
+                "relative flex items-center gap-3 h-auto px-3 py-2.5 text-left",
+                isSelected && 'ring-2 ring-ring bg-accent'
               )}
             >
               <div
@@ -195,17 +193,16 @@ function PartySelect2023({ parties, value, onChange }: {
                   <Check className="size-3 text-primary-foreground" />
                 </div>
               )}
-            </button>
+            </Button>
           );
         })}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => onChange('yok')}
           className={cn(
-            "relative flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all",
-            value === 'yok'
-              ? 'ring-2 ring-ring bg-accent'
-              : 'border border-border bg-background hover:bg-accent/50'
+            "relative flex items-center gap-3 h-auto px-3 py-2.5 text-left",
+            value === 'yok' && 'ring-2 ring-ring bg-accent'
           )}
         >
           <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-muted rounded-full">
@@ -219,7 +216,7 @@ function PartySelect2023({ parties, value, onChange }: {
               <Check className="size-3 text-primary-foreground" />
             </div>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );

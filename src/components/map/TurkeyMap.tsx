@@ -7,6 +7,8 @@ import {
   Geography,
 } from 'react-simple-maps';
 import { AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 import CityTooltip from './CityTooltip';
 import type { ViewMode } from '@/types/map';
 
@@ -498,20 +500,20 @@ function TurkeyMap({
       {/* Overlay bar */}
       <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
         <div className="max-w-screen-2xl mx-auto px-6 pt-4 flex items-start justify-between">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleBack}
-            className="pointer-events-auto bg-background border border-border rounded-md px-3 py-1.5 text-xs font-medium hover:border-foreground/30 flex items-center gap-1.5 transition-colors"
+            className="pointer-events-auto"
             style={{
               opacity: showBackButton ? 1 : 0,
               pointerEvents: showBackButton ? 'auto' : 'none',
               transition: 'opacity 0.4s ease',
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M7.5 9L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ChevronLeft className="size-3.5" />
             Türkiye
-          </button>
+          </Button>
 
           <div
             className="text-right"

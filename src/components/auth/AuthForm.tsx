@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AlertCircle, Check, Mail, Lock, ShieldCheck, Ban } from 'lucide-react';
 // Multi-provider OTP: Firebase (primary, client-side) + Twilio/VatanSMS (fallback, server-side)
 
 type AuthMethod = 'email' | 'phone';
@@ -819,10 +823,8 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
   if (smsUnavailable) {
     return (
       <div className="w-full max-w-md mx-auto space-y-5 text-center">
-        <div className="w-14 h-14 mx-auto bg-muted flex items-center justify-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="1.5">
-            <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        <div className="w-14 h-14 mx-auto bg-muted rounded-lg flex items-center justify-center">
+          <AlertCircle className="size-7 text-muted-foreground" />
         </div>
         <div className="space-y-2">
           <h3 className="text-xl font-bold text-foreground">SMS Bakiyemiz Tükendi</h3>
@@ -836,19 +838,19 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
           </p>
         </div>
-        <button
+        <Button
           onClick={() => {
             const el = document.getElementById('bagis-yap');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors"
+          className="w-full"
         >
           Destekçimiz Ol
-        </button>
+        </Button>
         {onBack && (
-          <button onClick={onBack} className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+          <Button onClick={onBack} variant="ghost" size="sm" className="text-muted-foreground">
             Geri
-          </button>
+          </Button>
         )}
       </div>
     );
@@ -863,15 +865,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           <h3 className="text-xl font-bold text-foreground">Şifremi Unuttum</h3>
           <p className="text-sm text-muted-foreground">Telefon numaranıza doğrulama kodu göndereceğiz, ardından yeni şifre belirleyebilirsiniz.</p>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Cep Telefonu</label>
+            <Label className="mb-1.5">Cep Telefonu</Label>
             <div className="flex">
               <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input text-muted-foreground text-sm">+90</span>
-              <input
+              <Input
                 type="tel" data-clarity-mask="true"
                 value={phone}
                 onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && getRawPhone().length === 10 && handleForgotPhoneSendOtp()}
-                className="flex-1 bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+                className="flex-1"
                 placeholder="5XX XXX XX XX"
                 autoFocus
               />
@@ -879,19 +881,19 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           </div>
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={() => { setForgotPhase('input'); setError(''); }}
-              className="flex-1 bg-muted text-foreground py-3 font-medium hover:bg-accent transition-colors"
+              variant="secondary" className="flex-1"
             >
               Geri
-            </button>
-            <button
+            </Button>
+            <Button
                 onClick={handleForgotPhoneSendOtp}
                 disabled={loading || getRawPhone().length !== 10}
-                className="flex-1 bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex-1"
               >
                 {loading ? 'Gönderiliyor...' : 'SMS Kodu Gönder'}
-              </button>
+              </Button>
           </div>
         </div>
       );
@@ -903,33 +905,33 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
         <h3 className="text-xl font-bold text-foreground">Şifremi Unuttum</h3>
         <p className="text-sm text-muted-foreground">Kayıt sırasında girdiğin e-posta adresini yaz, şifre sıfırlama kodu gönderelim.</p>
         <div>
-          <label className="block text-sm text-muted-foreground mb-1">E-posta</label>
-          <input
+          <Label className="mb-1.5">E-posta</Label>
+          <Input
             type="email"
             data-clarity-mask="true"
             value={forgotEmail}
             onChange={(e) => { setForgotEmail(e.target.value); setError(''); }}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleForgotSendCode()}
-            className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+            className="w-full"
             placeholder="ornek@email.com"
             autoFocus
           />
         </div>
         {error && <p className="text-destructive text-xs">{error}</p>}
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={() => { setForgotPhase('input'); setError(''); }}
-            className="flex-1 bg-muted text-foreground py-3 font-medium hover:bg-accent transition-colors"
+            variant="secondary" className="flex-1"
           >
             Geri
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleForgotSendCode}
             disabled={loading || !forgotEmail.trim()}
-            className="flex-1 bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="flex-1"
           >
             {loading ? 'Gönderiliyor...' : 'Kod Gönder'}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -947,43 +949,43 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             </p>
           </div>
           <div>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               data-clarity-mask="true"
               value={forgotPhoneOtp}
               onChange={(e) => { setForgotPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-mono focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="text-center text-2xl tracking-[0.5em] font-mono h-12"
               placeholder="------"
               maxLength={6}
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Yeni Şifre</label>
-            <input
+            <Label className="mb-1.5">Yeni Şifre</Label>
+            <Input
               type="password" data-clarity-mask="true"
               value={forgotNewPassword}
               onChange={(e) => { setForgotNewPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && forgotPhoneOtp.length === 6 && forgotNewPassword.length >= 6 && handleForgotPhoneVerifyAndReset()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full"
               placeholder="En az 6 karakter"
             />
           </div>
           {error && <p className="text-destructive text-xs">{error}</p>}
-          <button
+          <Button
             onClick={handleForgotPhoneVerifyAndReset}
             disabled={loading || forgotPhoneOtp.length !== 6 || forgotNewPassword.length < 6}
-            className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full"
           >
             {loading ? 'Sıfırlanıyor...' : 'Şifreyi Sıfırla'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => { setForgotPhase('forgot-password'); setForgotPhoneOtp(''); setForgotNewPassword(''); setError(''); }}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            variant="ghost" className="w-full text-muted-foreground"
           >
             Numarayı Değiştir
-          </button>
+          </Button>
         </div>
       );
     }
@@ -998,43 +1000,43 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           </p>
         </div>
         <div>
-          <input
+          <Input
             type="text"
             inputMode="numeric"
             data-clarity-mask="true"
             value={forgotCode}
             onChange={(e) => { setForgotCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
-            className="w-full bg-background border border-input px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-mono focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+            className="text-center text-2xl tracking-[0.5em] font-mono h-12"
             placeholder="------"
             maxLength={6}
             autoFocus
           />
         </div>
         <div>
-          <label className="block text-sm text-muted-foreground mb-1">Yeni Şifre</label>
-          <input
+          <Label className="mb-1.5">Yeni Şifre</Label>
+          <Input
             type="password" data-clarity-mask="true"
             value={forgotNewPassword}
             onChange={(e) => { setForgotNewPassword(e.target.value); setError(''); }}
             onKeyDown={(e) => e.key === 'Enter' && forgotCode.length === 6 && forgotNewPassword.length >= 6 && handleForgotVerifyAndReset()}
-            className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+            className="w-full"
             placeholder="En az 6 karakter"
           />
         </div>
         {error && <p className="text-destructive text-xs">{error}</p>}
-        <button
+        <Button
           onClick={handleForgotVerifyAndReset}
           disabled={loading || forgotCode.length !== 6 || forgotNewPassword.length < 6}
-          className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className="w-full"
         >
           {loading ? 'Sıfırlanıyor...' : 'Şifreyi Sıfırla'}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => { setForgotPhase('forgot-password'); setForgotCode(''); setForgotNewPassword(''); setError(''); }}
-          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          variant="ghost" className="w-full text-muted-foreground"
         >
           E-postayı Değiştir
-        </button>
+        </Button>
       </div>
     );
   }
@@ -1042,19 +1044,17 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
   if (forgotPhase === 'forgot-new-password') {
     return (
       <div className="w-full max-w-md mx-auto space-y-5 text-center">
-        <div className="w-16 h-16 mx-auto bg-muted/50 flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+        <div className="w-16 h-16 mx-auto bg-muted/50 rounded-lg flex items-center justify-center">
+          <Check className="size-8 text-foreground" />
         </div>
         <h3 className="text-xl font-bold text-foreground">Şifren Güncellendi!</h3>
         <p className="text-sm text-muted-foreground">Yeni şifrenle giriş yapabilirsin.</p>
-        <button
+        <Button
           onClick={() => { setForgotPhase('input'); setForgotEmail(''); setForgotCode(''); setForgotNewPassword(''); setError(''); }}
-          className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors"
+          className="w-full"
         >
           Giriş Yap
-        </button>
+        </Button>
       </div>
     );
   }
@@ -1066,9 +1066,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
         <div className="w-full max-w-md mx-auto space-y-5">
           <div className="bg-muted/50 border border-border p-4">
             <div className="flex items-start gap-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 flex-shrink-0">
-                <path d="M8 1C5.79 1 4 2.79 4 5V6H3C2.45 6 2 6.45 2 7V14C2 14.55 2.45 15 3 15H13C13.55 15 14 14.55 14 14V7C14 6.45 13.55 6 13 6H12V5C12 2.79 10.21 1 8 1ZM8 2.5C9.38 2.5 10.5 3.62 10.5 5V6H5.5V5C5.5 3.62 6.62 2.5 8 2.5Z" fill="#404040"/>
-              </svg>
+              <Lock className="size-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground mb-1">Bilgilerin güvende</p>
                 <ul className="text-xs text-muted-foreground space-y-1">
@@ -1080,14 +1078,14 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             </div>
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">E-posta</label>
-            <input
+            <Label className="mb-1.5">E-posta</Label>
+            <Input
               type="email"
               data-clarity-mask="true"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && !loading && handleEmailContinue()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full"
               placeholder="ornek@email.com"
               autoFocus
             />
@@ -1095,15 +1093,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex gap-3">
             {onBack && (
-              <button onClick={onBack} className="flex-1 bg-muted text-foreground py-3 font-medium hover:bg-accent transition-colors">Geri</button>
+              <Button onClick={onBack} variant="secondary" className="flex-1">Geri</Button>
             )}
-            <button
+            <Button
               onClick={handleEmailContinue}
               disabled={loading || !email.trim()}
-              className="flex-1 bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               {loading ? 'Kontrol ediliyor...' : 'Devam Et'}
-            </button>
+            </Button>
           </div>
           {!loginOnly && (
             <p className="text-[11px] text-muted-foreground text-center">Hesabın yoksa otomatik oluşturulur.</p>
@@ -1122,31 +1120,31 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 <p className="text-xs text-muted-foreground">E-posta</p>
                 <p className="text-sm font-medium text-foreground">{email}</p>
               </div>
-              <button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Değiştir</button>
+              <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} variant="ghost" size="xs" className="text-muted-foreground">Değiştir</Button>
             </div>
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Şifre</label>
-            <input
+            <Label className="mb-1.5">Şifre</Label>
+            <Input
               ref={passwordInputRef}
               type="password" data-clarity-mask="true"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full"
               placeholder="Şifrenizi girin"
             />
           </div>
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex gap-3">
-            <button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} className="flex-1 bg-muted text-foreground py-3 font-medium hover:bg-accent transition-colors">Geri</button>
-            <button
+            <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} variant="secondary" className="flex-1">Geri</Button>
+            <Button
               onClick={handleEmailLogin}
               disabled={loading || password.length < 6}
-              className="flex-1 bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -1156,40 +1154,37 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       return (
         <div className="w-full max-w-md mx-auto space-y-5">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-muted flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
+            <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-lg flex items-center justify-center">
+              <Mail className="size-8 text-foreground" />
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">Doğrulama Kodu</h3>
             <p className="text-sm text-muted-foreground"><strong>{email}</strong> adresine 6 haneli kod gönderdik.</p>
           </div>
           <div>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               data-clarity-mask="true"
               value={verifyCode}
               onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && verifyCode.length === 6 && handleVerifyCode()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-mono focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="text-center text-2xl tracking-[0.5em] font-mono h-12"
               placeholder="------"
               maxLength={6}
               autoFocus
             />
           </div>
           {error && <p className="text-destructive text-xs text-center">{error}</p>}
-          <button
+          <Button
             onClick={handleVerifyCode}
             disabled={loading || verifyCode.length !== 6}
-            className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full"
           >
             {loading ? 'Doğrulanıyor...' : 'Doğrula'}
-          </button>
+          </Button>
           <div className="flex items-center justify-between text-sm">
-            <button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); setVerifyCode(''); }} className="text-muted-foreground hover:text-foreground transition-colors">E-postayı Değiştir</button>
-            <button onClick={handleResendCode} disabled={loading} className="text-foreground font-medium hover:underline disabled:opacity-50">Tekrar Gönder</button>
+            <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); setVerifyCode(''); }} variant="ghost" className="text-muted-foreground">E-postayı Değiştir</Button>
+            <Button onClick={handleResendCode} disabled={loading} variant="link">Tekrar Gönder</Button>
           </div>
         </div>
       );
@@ -1207,33 +1202,33 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 <p className="text-sm font-medium text-foreground">{email}</p>
               </div>
               <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                <Check className="size-3" />
                 Doğrulandı
               </span>
             </div>
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Şifre belirle</label>
-            <input
+            <Label className="mb-1.5">Şifre belirle</Label>
+            <Input
               ref={passwordInputRef}
               type="password" data-clarity-mask="true"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && password.length >= 6 && handleSetPassword()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full"
               placeholder="En az 6 karakter"
             />
           </div>
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex gap-3">
-            <button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); setVerifyCode(''); }} className="flex-1 bg-muted text-foreground py-3 font-medium hover:bg-accent transition-colors">Geri</button>
-            <button
+            <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); setVerifyCode(''); }} variant="secondary" className="flex-1">Geri</Button>
+            <Button
               onClick={handleSetPassword}
               disabled={loading || password.length < 6}
-              className="flex-1 bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="flex-1"
             >
               {loading ? 'Hesap oluşturuluyor...' : 'Kayıt Ol'}
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -1253,24 +1248,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             <p className="text-xs font-bold text-foreground">Numaran bizde saklanmaz</p>
             <div className="space-y-1.5">
               <div className="flex items-start gap-2">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="mt-px flex-shrink-0">
-                  <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="#525252" strokeWidth="1.2" fill="none"/>
-                  <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="#525252" strokeWidth="1.2" fill="none"/>
-                </svg>
+                <Lock className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
                 <p className="text-[11px] text-muted-foreground leading-snug">Numaran sadece doğrulama kodu göndermek için kullanılır</p>
               </div>
               <div className="flex items-start gap-2">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="mt-px flex-shrink-0">
-                  <circle cx="8" cy="8" r="3" stroke="#525252" strokeWidth="1.2" fill="none"/>
-                  <line x1="2" y1="14" x2="14" y2="2" stroke="#525252" strokeWidth="1.2"/>
-                </svg>
+                <Ban className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
                 <p className="text-[11px] text-muted-foreground leading-snug">Numaranı kaydetmiyoruz — sistemimizde telefon numarası tutulmaz</p>
               </div>
               <div className="flex items-start gap-2">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="mt-px flex-shrink-0">
-                  <path d="M8 1.5L2 4v4c0 3.5 2.5 6.2 6 7 3.5-.8 6-3.5 6-7V4L8 1.5z" stroke="#525252" strokeWidth="1.2" fill="none"/>
-                  <polyline points="5.5 8 7 9.5 10.5 6" stroke="#525252" strokeWidth="1.2" fill="none"/>
-                </svg>
+                <ShieldCheck className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
                 <p className="text-[11px] text-muted-foreground leading-snug">Oyun tamamen anonim, kimliğinle eşleştirilemez</p>
               </div>
             </div>
@@ -1278,15 +1264,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           )}
 
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Cep Telefonu</label>
+            <Label className="mb-1.5">Cep Telefonu</Label>
             <div className="flex">
               <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input text-muted-foreground text-sm">+90</span>
-              <input
+              <Input
                 type="tel" data-clarity-mask="true"
                 value={phone}
                 onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); setExistingUserDetected(false); setShowRegisterHint(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && (loginOnly || existingUserDetected) && getRawPhone().length === 10 && phonePassword.length >= 6 && handlePhonePasswordLogin()}
-                className="flex-1 bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+                className="flex-1"
                 placeholder="5XX XXX XX XX"
                 autoFocus
               />
@@ -1295,13 +1281,13 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
 
           {(loginOnly || existingUserDetected) && (
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Şifre</label>
-              <input
+              <Label className="mb-1.5">Şifre</Label>
+              <Input
                 type="password" data-clarity-mask="true"
                 value={phonePassword}
                 onChange={(e) => { setPhonePassword(e.target.value); setError(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && getRawPhone().length === 10 && phonePassword.length >= 6 && handlePhonePasswordLogin()}
-                className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+                className="w-full"
                 placeholder="Şifrenizi girin"
               />
             </div>
@@ -1316,54 +1302,54 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           {error && <p className="text-destructive text-xs">{error}</p>}
 
           {needsPasswordSetup && (
-            <div className="bg-amber-50 border border-amber-200 p-4 space-y-3">
-              <p className="text-sm text-amber-800 font-medium">Şifre belirlemeniz gerekiyor</p>
-              <p className="text-xs text-amber-700">
+            <div className="bg-muted/50 border border-border p-4 rounded-lg space-y-3">
+              <p className="text-sm text-foreground font-medium">Şifre belirlemeniz gerekiyor</p>
+              <p className="text-xs text-muted-foreground">
                 Hesabınızda henüz şifre tanımlı değil. Telefonunuza doğrulama kodu göndereceğiz, ardından bir şifre belirleyebilirsiniz.
               </p>
-              <button
+              <Button
                 onClick={handleMigrationOtp}
                 disabled={loading}
-                className="w-full bg-primary text-primary-foreground py-2.5 text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="w-full"
               >
                 {loading ? 'Gönderiliyor...' : 'Doğrulama Kodu Gönder'}
-              </button>
+              </Button>
             </div>
           )}
 
           {!needsPasswordSetup && (
             <div className="flex gap-2">
               {onBack && (
-                <button onClick={onBack} className="shrink-0 bg-muted text-foreground px-5 py-3 text-sm font-medium hover:bg-accent transition-colors">Geri</button>
+                <Button onClick={onBack} variant="secondary" className="shrink-0 px-5">Geri</Button>
               )}
-              <button
+              <Button
                 onClick={(loginOnly || existingUserDetected) ? handlePhonePasswordLogin : handlePhoneCheck}
                 disabled={loading || getRawPhone().length !== 10 || ((loginOnly || existingUserDetected) && phonePassword.length < 6)}
-                className="flex-1 bg-primary text-primary-foreground py-3 text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex-1"
               >
                 {loading ? 'Gönderiliyor...' : (loginOnly || existingUserDetected) ? 'Giriş Yap' : 'Devam Et'}
-              </button>
+              </Button>
             </div>
           )}
 
           {(loginOnly || existingUserDetected) && (
-            <button
+            <Button
               onClick={() => { setForgotPhase('forgot-password'); setError(''); }}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              variant="ghost" className="w-full text-muted-foreground"
             >
               Şifremi Unuttum
-            </button>
+            </Button>
           )}
 
           {showRegisterHint && onRegistrationNeeded && (
             <div className="bg-muted/50 border border-border p-3 text-center space-y-2">
               <p className="text-xs text-muted-foreground">Henüz hesabınız yok mu?</p>
-              <button
+              <Button
                 onClick={() => { setShowRegisterHint(false); onRegistrationNeeded(); }}
-                className="w-full bg-primary text-primary-foreground py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="w-full"
               >
                 Oy Ver &amp; Kayıt Ol
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -1376,46 +1362,46 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             <p className="text-xs text-muted-foreground mt-1">+90 {phone}</p>
           </div>
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Doğrulama Kodu</label>
-            <input
+            <Label className="mb-1.5">Doğrulama Kodu</Label>
+            <Input
               ref={otpInputRef}
               type="text"
               inputMode="numeric"
               data-clarity-mask="true"
               value={otpCode}
               onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-mono focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="text-center text-2xl tracking-[0.5em] font-mono h-12"
               placeholder="------"
               maxLength={6}
             />
             {error && <p className="text-destructive text-xs mt-1">{error}</p>}
           </div>
           <div className="flex items-center justify-between text-sm">
-            <button
+            <Button
               onClick={() => { setPhoneStep('input'); setOtpCode(''); setError(''); setCountdown(0); }}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              variant="ghost" className="text-muted-foreground"
             >
               Numarayı Değiştir
-            </button>
+            </Button>
             {countdown > 0 ? (
               <span className="text-muted-foreground">Tekrar gönder ({countdown}s)</span>
             ) : (
-              <button
+              <Button
                 onClick={() => { setOtpCode(''); setError(''); setPhoneStep('input'); }}
                 disabled={loading}
-                className="text-foreground font-medium hover:underline disabled:opacity-50"
+                variant="link"
               >
                 Tekrar Gönder
-              </button>
+              </Button>
             )}
           </div>
-          <button
+          <Button
             onClick={handleVerifyOtp}
             disabled={loading || otpCode.length !== 6}
-            className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full"
           >
             {loading ? 'Doğrulanıyor...' : 'Doğrula'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -1433,20 +1419,20 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 <p className="text-sm font-medium text-foreground">+90 {phone}</p>
               </div>
               <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                <Check className="size-3" />
                 Doğrulandı
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-muted-foreground mb-1">Şifre</label>
-            <input
+            <Label className="mb-1.5">Şifre</Label>
+            <Input
               type="password" data-clarity-mask="true"
               value={credPassword}
               onChange={(e) => { setCredPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && credPassword.length >= 6 && handleSetCredentials()}
-              className="w-full bg-background border border-input px-4 py-3 text-foreground focus-visible:ring-2 focus-visible:ring-ring focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full"
               placeholder="En az 6 karakter"
               autoFocus
             />
@@ -1455,13 +1441,13 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
 
           {error && <p className="text-destructive text-xs">{error}</p>}
 
-          <button
+          <Button
             onClick={handleSetCredentials}
             disabled={loading || credPassword.length < 6}
-            className="w-full bg-primary text-primary-foreground py-3 font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="w-full"
           >
             Devam Et
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface Party {
@@ -46,14 +47,13 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
       {filtered.map((party) => {
         const isSelected = selectedParty === party.id;
         return (
-          <button
+          <Button
             key={party.id}
+            variant="outline"
             onClick={() => onSelect(party.id)}
             className={cn(
-              "relative flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all",
-              isSelected
-                ? 'ring-2 ring-ring bg-accent'
-                : 'border border-border bg-background hover:bg-accent/50'
+              "relative flex items-center gap-3 h-auto px-3 py-2.5 text-left",
+              isSelected && 'ring-2 ring-ring bg-accent'
             )}
           >
             <div
@@ -80,7 +80,7 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
                 <Check className="size-3 text-primary-foreground" />
               </div>
             )}
-          </button>
+          </Button>
         );
       })}
     </div>

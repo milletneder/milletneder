@@ -354,17 +354,18 @@ export default function VoteModal({
                   {!searchQuery && (
                     <>
                       <Separator className="my-3" />
-                      <button
+                      <Button
+                        variant="outline"
                         onClick={() => handlePartySelect('karasizim')}
                         className={cn(
-                          "w-full py-3 text-sm font-medium rounded-lg transition-all",
+                          "w-full",
                           selectedParty === 'karasizim'
                             ? 'ring-2 ring-ring bg-accent'
-                            : 'border border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                            : 'text-muted-foreground'
                         )}
                       >
                         Kararsızım — Henüz karar vermedim
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
