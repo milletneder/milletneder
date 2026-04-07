@@ -127,15 +127,34 @@
     @apply font-sans;
   }
 
-  /* Autofill arka plan rengini tema ile uyumlu yap */
+  /* Tarayıcı autofill stilini sıfırla */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
-    -webkit-text-fill-color: var(--foreground) !important;
-    caret-color: var(--foreground) !important;
-    transition: background-color 5000s ease-in-out 0s;
+    -webkit-box-shadow: 0 0 0 9999px #ffffff inset !important;
+    -webkit-text-fill-color: #171717 !important;
+    caret-color: #171717 !important;
+    transition: background-color 9999s ease-in-out 0s !important;
+    background-color: transparent !important;
+  }
+
+  /* InputGroup içindeki input'un kendi focus stilini göstermesini engelle */
+  [data-slot="input-group"] [data-slot="input-group-control"],
+  [data-slot="input-group"] [data-slot="input-group-control"]:focus,
+  [data-slot="input-group"] [data-slot="input-group-control"]:focus-visible {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 9999px #262626 inset !important;
+    -webkit-text-fill-color: #fafafa !important;
+    caret-color: #fafafa !important;
   }
 }
 
