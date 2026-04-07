@@ -76,8 +76,7 @@ export default function RecoveryCodesTopbar({ codes: initialCodes }: RecoveryCod
           </p>
           <Button
             variant="secondary"
-            size="xs"
-            onClick={() => setShowModal(true)}
+                       onClick={() => setShowModal(true)}
           >
             Oyumu Korumaya Al
           </Button>

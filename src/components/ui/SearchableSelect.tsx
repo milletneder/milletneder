@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
 
 interface SearchableSelectProps {
   options: string[];
@@ -20,100 +22,48 @@ export default function SearchableSelect({
   placeholder = 'Seçin...',
   disabled = false,
 }: SearchableSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const filtered = search
-    ? options.filter((o) => o.toLowerCase().includes(search.toLowerCase()))
-    : options;
-
-  const handleSelect = useCallback(
-    (item: string) => {
-      onChange(item);
-      setSearch('');
-      setIsOpen(false);
-    },
-    [onChange]
-  );
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const [open, setOpen] = useState(false);
 
   return (
-    <div ref={containerRef} className="relative">
-      <InputGroup
-        className={cn(
-          'cursor-pointer',
-          disabled && 'opacity-50 pointer-events-none'
-        )}
-        onClick={() => {
-          if (!disabled) {
-            setIsOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 0);
-          }
-        }}
-      >
-        {isOpen ? (
-          <InputGroupInput
-            ref={inputRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={value || placeholder}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setIsOpen(false);
-                setSearch('');
-              }
-              if (e.key === 'Enter' && filtered.length === 1) {
-                handleSelect(filtered[0]);
-              }
-            }}
-          />
-        ) : (
-          <span className={cn('flex flex-1 items-center px-2.5 text-sm', value ? '' : 'text-muted-foreground')}>
-            {value || placeholder}
-          </span>
-        )}
-        <InputGroupAddon align="inline-end">
-          <InputGroupText>
-            <ChevronDown className={cn('size-4 transition-transform', isOpen && 'rotate-180')} />
-          </InputGroupText>
-        </InputGroupAddon>
-      </InputGroup>
-
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-popover border border-border shadow-lg rounded-lg max-h-48 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="px-3 py-2 text-muted-foreground text-sm">Sonuç bulunamadı</div>
-          ) : (
-            filtered.map((item) => (
-              <div
-                key={item}
-                className={cn(
-                  'px-3 py-1.5 cursor-pointer text-sm transition-colors rounded-md mx-1 my-0.5',
-                  item === value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-accent'
-                )}
-                onClick={() => handleSelect(item)}
-              >
-                {item}
-              </div>
-            ))
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled}
+          className={cn(
+            'w-full justify-between font-normal',
+            !value && 'text-muted-foreground'
           )}
-        </div>
-      )}
-    </div>
+        >
+          {value || placeholder}
+          <ChevronDown className={cn('size-4 shrink-0 opacity-50 transition-transform', open && 'rotate-180')} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder={placeholder} />
+          <CommandList>
+            <CommandEmpty>Sonuç bulunamadı</CommandEmpty>
+            <CommandGroup>
+              {options.map((item) => (
+                <CommandItem
+                  key={item}
+                  value={item}
+                  onSelect={() => {
+                    onChange(item);
+                    setOpen(false);
+                  }}
+                  data-checked={value === item ? true : undefined}
+                >
+                  {item}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

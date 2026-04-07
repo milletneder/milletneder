@@ -38,8 +38,7 @@ function ToggleButton({
 }) {
   return (
     <Button
-      size="sm"
-      variant={active ? 'default' : 'ghost'}
+           variant={active ? 'default' : 'ghost'}
       onClick={onClick}
     >
       {children}
@@ -88,7 +87,7 @@ export default function MapToolbar({
       <div className="bg-background border border-border shadow-lg rounded-lg flex items-center gap-2 px-2 h-12">
         {/* Login olmamış kullanıcı için Oy Ver butonu */}
         {!isLoggedIn && onVoteClick && (
-          <Button size="sm" onClick={onVoteClick}>
+          <Button onClick={onVoteClick}>
             Sonuçları görmek için Oy Ver
           </Button>
         )}

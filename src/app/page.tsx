@@ -610,15 +610,13 @@ export default function Home() {
           {isLoggedIn && !selectedCity && weightedResults && weightedResults.methodology.length > 0 && (
             <div data-slot="button-group" className="flex items-center mb-6 w-fit">
               <Button
-                size="sm"
-                variant={!showWeighted ? 'default' : 'ghost'}
+                               variant={!showWeighted ? 'default' : 'ghost'}
                 onClick={() => handleShowWeightedChange(false)}
               >
                 Ham Sonuçlar
               </Button>
               <Button
-                size="sm"
-                variant={showWeighted ? 'default' : 'ghost'}
+                               variant={showWeighted ? 'default' : 'ghost'}
                 onClick={() => handleShowWeightedChange(true)}
               >
                 Ağırlıklı Sonuçlar

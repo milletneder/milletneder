@@ -105,12 +105,12 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
       </Button>
       <div className="flex gap-3 mt-3">
         {step > 1 && (
-          <Button variant="ghost" size="sm" className="flex-1" onClick={handleBack}>
+          <Button variant="ghost" className="flex-1" onClick={handleBack}>
             <ArrowLeft className="size-3.5" data-icon="inline-start" />
             Geri
           </Button>
         )}
-        <Button variant="ghost" size="sm" className="flex-1 text-muted-foreground" onClick={onSkip}>
+        <Button variant="ghost" className="flex-1 text-muted-foreground" onClick={onSkip}>
           {currentValue ? 'Atla' : 'Şimdi değil'}
         </Button>
       </div>
@@ -133,8 +133,7 @@ function SelectGrid({ label, options, value, onChange }: {
             key={b.value}
             type="button"
             variant="outline"
-            size="sm"
-            onClick={() => onChange(b.value)}
+                       onClick={() => onChange(b.value)}
             className={cn(
               value === b.value && 'ring-2 ring-ring bg-accent'
             )}

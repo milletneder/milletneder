@@ -48,7 +48,7 @@ export default function ParticipationLeaderboard({ entries, title, subtitle }: P
         </h2>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+            <Button variant="ghost" size="icon" className="text-muted-foreground">
               <HelpCircle className="size-4" />
             </Button>
           </TooltipTrigger>

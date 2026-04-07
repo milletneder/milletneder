@@ -170,7 +170,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
           <h2 className="text-lg font-bold">
             {step === 'explain' ? 'Oy Koruma' : step === 'codes' ? 'Kurtarma Kodlarınız' : 'Onay'}
           </h2>
-          <Button variant="ghost" size="icon-sm" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="size-4" />
           </Button>
         </div>
