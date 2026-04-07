@@ -322,7 +322,7 @@ export default function Header() {
                 </a>
               </Button>
 
-              <Separator orientation="vertical" className="mx-1 h-4" />
+              <div className="mx-1 w-px h-4 bg-border" />
 
               <Button onClick={handleVoteClick}>
                 Katıl
