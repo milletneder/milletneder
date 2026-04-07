@@ -514,8 +514,8 @@ export default function Home() {
     <main className="min-h-screen overflow-x-hidden">
       <Header />
 
-      {/* MAP — viewport yüksekliği header hariç */}
-      <section className="relative w-full overflow-hidden md:h-[calc(100dvh-var(--header-height,48px))]">
+      {/* MAP — viewport yüksekliği header hariç, alt/üst padding simetrik */}
+      <section className="relative w-full overflow-hidden pb-10 md:h-[calc(100dvh-var(--header-height,48px))]">
         <TurkeyMap
           cityData={cityData}
           isActiveRound={!!isActiveRound}
@@ -545,7 +545,7 @@ export default function Home() {
 
         {/* Tur bilgileri — harita section'ı içinde, altta */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground tabular-nums">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 text-xs text-muted-foreground tabular-nums">
             <span>
               Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
             </span>
