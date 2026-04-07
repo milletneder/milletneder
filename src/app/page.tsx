@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
+import Counter from '@/components/ui/Counter';
 import MapToolbar from '@/components/map/MapToolbar';
 import type { ViewMode, DataMode } from '@/types/map';
 import PartyBars from '@/components/results/PartyBars';
@@ -371,6 +372,22 @@ export default function Home() {
 
   // Header yüksekliği artık Header bileşenindeki spacer div tarafından yönetiliyor
 
+  // 'open-vote-modal' event'ini dinle (Header'daki Katıl butonu için)
+  useEffect(() => {
+    const handler = () => setIsVoteModalOpen(true);
+    window.addEventListener('open-vote-modal', handler);
+    return () => window.removeEventListener('open-vote-modal', handler);
+  }, []);
+
+  // URL'den ?vote=true parametresini kontrol et (diğer sayfalardan yönlendirme)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('vote') === 'true') {
+      setIsVoteModalOpen(true);
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   // selectedCity ref'ini senkronize et ve şeffaflık verisini güncelle
   useEffect(() => {
     selectedCityRef.current = selectedCity;
@@ -495,13 +512,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden">
-      <Header
-        totalVotes={totalVotes}
-        daysRemaining={daysRemaining}
-        currentMonth={currentMonth}
-        onVoteClick={() => setIsVoteModalOpen(true)}
-        userHasVoted={userHasVoted}
-      />
+      <Header />
 
       {/* MAP — true fullscreen, no padding */}
       <section className="md:h-screen w-full overflow-hidden">
@@ -532,6 +543,16 @@ export default function Home() {
           onVoteClick={() => setIsVoteModalOpen(true)}
         />
       </section>
+
+      {/* Tur bilgileri — harita altı */}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground tabular-nums">
+        <span>
+          {currentMonth} turunun tamamlanmasına <span className="text-foreground font-medium">{daysRemaining} gün</span> kaldı.
+        </span>
+        <span>
+          Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
+        </span>
+      </div>
 
       {/* BELOW THE FOLD — content sections */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-24 py-24">
