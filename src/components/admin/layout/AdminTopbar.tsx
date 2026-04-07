@@ -1,18 +1,10 @@
 'use client';
 
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { usePathname } from 'next/navigation';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
-const BREADCRUMB_MAP: Record<string, string> = {
+const PAGE_TITLES: Record<string, string> = {
   '/admin': 'Genel Bakış',
   '/admin/users': 'Kullanıcılar',
   '/admin/votes': 'Oylar',
@@ -27,49 +19,32 @@ const BREADCRUMB_MAP: Record<string, string> = {
   '/admin/audit-log': 'Denetim Kaydı',
 };
 
-export default function AdminTopbar() {
+export function SiteHeader() {
   const pathname = usePathname();
 
+  // Find matching title — try exact match first, then parent path
   const segments = pathname.split('/').filter(Boolean);
-  const breadcrumbs: { label: string; href?: string }[] = [];
-
-  if (segments.length >= 2) {
-    breadcrumbs.push({ label: 'Admin', href: '/admin' });
-
-    if (segments.length === 2) {
-      const path = `/${segments.join('/')}`;
-      breadcrumbs.push({ label: BREADCRUMB_MAP[path] || segments[1] });
-    } else if (segments.length >= 3) {
-      const parentPath = `/${segments[0]}/${segments[1]}`;
-      breadcrumbs.push({
-        label: BREADCRUMB_MAP[parentPath] || segments[1],
-        href: parentPath,
-      });
-      breadcrumbs.push({ label: `#${segments[2]}` });
-    }
+  let title = PAGE_TITLES[pathname];
+  if (!title && segments.length >= 3) {
+    const parentPath = `/${segments[0]}/${segments[1]}`;
+    title = PAGE_TITLES[parentPath];
+    if (title) title += ` #${segments[2]}`;
   }
+  if (!title) title = 'Admin';
 
   return (
-    <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
-      <Breadcrumb>
-        <BreadcrumbList>
-          {breadcrumbs.map((crumb, i) => {
-            const isLast = i === breadcrumbs.length - 1;
-            return (
-              <BreadcrumbItem key={i}>
-                {i > 0 && <BreadcrumbSeparator />}
-                {isLast ? (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            );
-          })}
-        </BreadcrumbList>
-      </Breadcrumb>
+    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+        <SidebarTrigger className="-ml-1" />
+        <Separator
+          orientation="vertical"
+          className="mx-2 data-[orientation=vertical]:h-4"
+        />
+        <h1 className="text-base font-medium">{title}</h1>
+      </div>
     </header>
   );
 }
+
+// Keep default export for backward compat
+export default SiteHeader;

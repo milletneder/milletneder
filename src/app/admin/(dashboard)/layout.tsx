@@ -2,7 +2,7 @@
 
 import { useAdminAuth } from '@/lib/admin/hooks';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
-import AdminTopbar from '@/components/admin/layout/AdminTopbar';
+import { SiteHeader } from '@/components/admin/layout/AdminTopbar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,11 +27,22 @@ export default function DashboardLayout({
   if (!admin) return null;
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      style={{
+        '--sidebar-width': 'calc(var(--spacing) * 72)',
+        '--header-height': 'calc(var(--spacing) * 12)',
+      } as React.CSSProperties}
+    >
       <AdminSidebar adminName={admin.name} adminEmail={admin.email} onLogout={logout} />
       <SidebarInset>
-        <AdminTopbar />
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <div className="px-4 lg:px-6">
+              {children}
+            </div>
+          </div>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
