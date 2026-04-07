@@ -126,6 +126,7 @@ export default function Header() {
     { href: '/', label: 'Keşfet' },
     { href: '/raporlar', label: 'Raporlar' },
     { href: '/islemler', label: 'İşlemler' },
+    { href: '/ucretler', label: 'Ücretler' },
   ];
 
   const moreLinks = [
