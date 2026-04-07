@@ -515,7 +515,7 @@ export default function Home() {
       <Header />
 
       {/* MAP — viewport yüksekliği header hariç */}
-      <section className="w-full overflow-hidden md:h-[calc(100dvh-var(--header-height,48px))]">
+      <section className="relative w-full overflow-hidden md:h-[calc(100dvh-var(--header-height,48px))]">
         <TurkeyMap
           cityData={cityData}
           isActiveRound={!!isActiveRound}
@@ -542,17 +542,19 @@ export default function Home() {
           isLoggedIn={isLoggedIn}
           onVoteClick={() => setIsVoteModalOpen(true)}
         />
-      </section>
 
-      {/* Tur bilgileri — harita altı */}
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground tabular-nums">
-        <span>
-          {currentMonth} turunun tamamlanmasına <span className="text-foreground font-medium">{daysRemaining} gün</span> kaldı.
-        </span>
-        <span>
-          Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
-        </span>
-      </div>
+        {/* Tur bilgileri — harita section'ı içinde, altta */}
+        <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground tabular-nums">
+            <span>
+              Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
+            </span>
+            <span>
+              {currentMonth} turunun tamamlanmasına <span className="text-foreground font-medium">{daysRemaining} gün</span> kaldı.
+            </span>
+          </div>
+        </div>
+      </section>
 
       {/* BELOW THE FOLD — content sections */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-24 py-24">
