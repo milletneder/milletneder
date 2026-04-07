@@ -5,7 +5,6 @@ import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Check } from 'lucide-react';
@@ -96,12 +95,30 @@ export default function UcretlerPage() {
             <span className={yearly ? 'font-medium' : 'text-muted-foreground'}>
               Yıllık
             </span>
-            {yearly && <Badge variant="outline">Tasarruf</Badge>}
+            <Badge variant="outline">Tasarruf</Badge>
           </div>
         </div>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start mb-24">
+
+          {/* Ücretsiz */}
+          <Card>
+            <CardContent className="pt-6">
+              <p className="font-semibold">Ücretsiz</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Oy kullanan herkes için.
+              </p>
+
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-bold tabular-nums">₺0</span>
+                <span className="text-muted-foreground"> /ay</span>
+              </div>
+
+              <Button variant="outline" className="w-full mb-6">Katıl</Button>
+              <FeatureList features={UCRETSIZ_FEATURES} />
+            </CardContent>
+          </Card>
 
           {/* Vatandaş */}
           <Card>
@@ -184,12 +201,12 @@ export default function UcretlerPage() {
                 <Slider
                   value={[members]}
                   onValueChange={([v]) => setMembers(v)}
-                  min={50000}
+                  min={100000}
                   max={12000000}
                   step={50000}
                 />
                 <div className="flex justify-between text-sm text-muted-foreground tabular-nums">
-                  <span>50.000</span>
+                  <span>100.000</span>
                   <span>12.000.000</span>
                 </div>
               </div>
@@ -200,14 +217,11 @@ export default function UcretlerPage() {
           </Card>
         </div>
 
-        {/* Ücretsiz */}
-        <Separator className="mb-12" />
-        <div className="max-w-lg mx-auto">
-          <div className="text-center mb-8">
-            <p className="font-semibold">Ücretsiz</p>
-            <p className="text-sm text-muted-foreground mt-1">Oy kullanan herkes için.</p>
-          </div>
-          <FeatureList features={UCRETSIZ_FEATURES} />
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Tüm planlar aylık olarak faturalandırılır. Yıllık ödeme seçeneğinde indirimli fiyat uygulanır.
+          </p>
         </div>
       </main>
     </>
