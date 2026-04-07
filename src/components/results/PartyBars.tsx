@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface PartyResult {
   partyId: string;
@@ -29,7 +30,7 @@ export default function PartyBars({ results, isActiveRound, onPartyClick, title 
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-bold text-black mb-6">
+      <h2 className="text-lg font-bold mb-6">
         {title || (isActiveRound ? 'Katılım Durumu' : 'Genel Sonuçlar')}
       </h2>
       {sorted.map((party, index) => (
@@ -38,28 +39,28 @@ export default function PartyBars({ results, isActiveRound, onPartyClick, title 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.05 }}
-          className={`group ${onPartyClick ? 'cursor-pointer' : ''}`}
+          className={cn("group", onPartyClick && 'cursor-pointer')}
           onClick={() => onPartyClick?.(party)}
         >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <div
-                className="w-3 h-3"
+                className="w-3 h-3 rounded-sm"
                 style={{ backgroundColor: party.color }}
               />
-              <span className="text-black font-medium text-sm">
+              <span className="font-medium text-sm">
                 {party.partyName}
               </span>
             </div>
             {!isActiveRound && (
-              <span className="text-black font-bold text-sm tabular-nums">
+              <span className="font-bold text-sm tabular-nums">
                 %{(party.percentage ?? 0).toFixed(1)}
               </span>
             )}
           </div>
-          <div className="w-full bg-neutral-100 h-3 overflow-hidden">
+          <div className="w-full bg-muted h-3 rounded-sm overflow-hidden">
             <motion.div
-              className="h-full relative group-hover:brightness-110 transition-all"
+              className="h-full rounded-sm group-hover:brightness-110 transition-all"
               style={{ backgroundColor: party.color }}
               initial={{ width: 0 }}
               animate={{ width: `${(hasWeighted ? party.percentage / maxValue : party.voteCount / maxValue) * 100}%` }}

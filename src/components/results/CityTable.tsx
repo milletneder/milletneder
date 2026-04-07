@@ -2,6 +2,16 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CityData {
   cityId: string;
@@ -27,66 +37,77 @@ export default function CityTable({ cities, isActiveRound, onCityClick, title, c
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-black mb-1">
+      <h2 className="text-lg font-bold mb-1">
         {title || 'İl Bazlı Sıralama'}
       </h2>
-      <p className="text-xs text-neutral-400 mb-6">
+      <p className="text-xs text-muted-foreground mb-6">
         Toplam {sorted.length} {columnLabel === 'İlçe' ? 'ilçe' : 'il'} — {sorted.reduce((s, c) => s + c.voteCount, 0).toLocaleString('tr-TR')} oy
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-neutral-200">
-              <th className="text-left text-neutral-400 text-[11px] py-3 px-2">#</th>
-              <th className="text-left text-neutral-400 text-[11px] py-3 px-2">{columnLabel || 'İl'}</th>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">#</TableHead>
+              <TableHead>{columnLabel || 'İl'}</TableHead>
               {!isActiveRound && (
-                <th className="text-left text-neutral-400 text-[11px] py-3 px-2">Önde Olan</th>
+                <TableHead>Önde Olan</TableHead>
               )}
-              <th className="text-right text-neutral-400 text-[11px] py-3 px-2">
+              <TableHead className="text-right">
                 {isActiveRound ? 'Katılım' : 'Toplam Oy'}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {displayData.map((city, index) => (
               <motion.tr
                 key={city.cityId}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: index < 15 ? index * 0.03 : 0 }}
-                className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer transition-colors"
+                className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => onCityClick?.(city.cityId)}
               >
-                <td className="py-3 px-2 text-neutral-400 text-sm tabular-nums">{index + 1}</td>
-                <td className="py-3 px-2 text-black font-medium text-sm">{city.cityName}</td>
+                <TableCell className="text-muted-foreground tabular-nums">{index + 1}</TableCell>
+                <TableCell className="font-medium">{city.cityName}</TableCell>
                 {!isActiveRound && (
-                  <td className="py-3 px-2">
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-2 h-2"
+                        className="w-2 h-2 rounded-sm"
                         style={{ backgroundColor: city.partyColor || '#d4d4d4' }}
                       />
-                      <span className="text-neutral-600 text-sm">
+                      <span className="text-muted-foreground text-sm">
                         {city.leadingParty || '-'}
                       </span>
                     </div>
-                  </td>
+                  </TableCell>
                 )}
-                <td className="py-3 px-2 text-right text-black tabular-nums text-sm">
+                <TableCell className="text-right tabular-nums">
                   {(city.voteCount ?? 0).toLocaleString('tr-TR')}
-                </td>
+                </TableCell>
               </motion.tr>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {hasMore && (
-        <button
+        <Button
+          variant="outline"
+          className="w-full mt-4"
           onClick={() => setShowAll(!showAll)}
-          className="mt-4 w-full py-3 text-xs font-medium text-neutral-500 hover:text-black border border-neutral-200 hover:border-neutral-400 transition-colors"
         >
-          {showAll ? 'Daha az göster' : `Tümünü göster (${sorted.length})`}
-        </button>
+          {showAll ? (
+            <>
+              <ChevronUp className="size-3.5" data-icon="inline-start" />
+              Daha az göster
+            </>
+          ) : (
+            <>
+              <ChevronDown className="size-3.5" data-icon="inline-start" />
+              Tümünü göster ({sorted.length})
+            </>
+          )}
+        </Button>
       )}
     </div>
   );

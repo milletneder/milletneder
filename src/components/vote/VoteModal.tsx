@@ -9,6 +9,18 @@ import ProfileForm from './ProfileForm';
 import Confetti from '@/components/ui/Confetti';
 import { useFingerprint } from '@/hooks/useFingerprint';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import {
+  X,
+  Lock,
+  AlertCircle,
+  Copy,
+  Check,
+  Share2,
+} from 'lucide-react';
 
 interface Party {
   id: string;
@@ -51,22 +63,19 @@ export default function VoteModal({
   const [authExtraData, setAuthExtraData] = useState<{ password?: string } | undefined>();
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const [profileData, setProfileData] = useState<{ city: string; district: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const { fingerprint } = useFingerprint();
   const { login } = useAuth();
 
-  // Auth method'u al
   useEffect(() => {
     fetch('/api/auth/config')
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.method) setAuthMethod(data.method);
-      })
+      .then(data => { if (data?.method) setAuthMethod(data.method); })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      // Pending registration kontrolü (Header'dan yönlendirme)
       const pending = sessionStorage.getItem('pendingRegistration');
       if (pending) {
         try {
@@ -104,6 +113,7 @@ export default function VoteModal({
       setAuthExtraData(undefined);
       setAuthType(null);
       setProfileData(null);
+      setCopied(false);
     }
   }, [isOpen, initialParty]);
 
@@ -116,7 +126,6 @@ export default function VoteModal({
     if (!selectedParty) return;
 
     if (isLoggedIn) {
-      // Mevcut kullanici — direkt oy ver
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
@@ -144,18 +153,15 @@ export default function VoteModal({
         setLoading(false);
       }
     } else {
-      // Giriş yapılmamış — önce il/ilçe seçimi yap, sonra telefon doğrulama
       setStep('profile');
     }
   };
 
-  // Phone+password ile direkt login (SMS göndermeden, mevcut kullanıcılar için)
   const handleDirectLogin = async (token: string) => {
     setLoading(true);
     setError('');
     try {
       login(token);
-
       const voteRes = await fetch('/api/vote', {
         method: 'POST',
         headers: {
@@ -189,12 +195,9 @@ export default function VoteModal({
   const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
     const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
     const type = isPhone ? 'phone' : 'email';
-
     setVerifiedIdentity(identityValue);
     setAuthExtraData(extraData);
     setAuthType(type);
-
-    // Auth tamamlandı — parti + il/ilçe zaten seçili, direkt kayıt yap
     if (profileData) {
       await completeRegistration(identityValue, type, extraData, profileData);
     }
@@ -204,13 +207,11 @@ export default function VoteModal({
     setProfileData(data);
     setError('');
 
-    // Pending registration (Header'dan yönlendirme) — telefon zaten doğrulanmış, direkt kayıt yap
     if (verifiedIdentity) {
       await completeRegistration(verifiedIdentity, authType, authExtraData, data);
       return;
     }
 
-    // Yeni kayıt — SMS bakiye ve fingerprint kontrolü yap, sonra auth'a geç
     setLoading(true);
     try {
       const statusRes = await fetch('/api/auth/sms-status');
@@ -222,9 +223,7 @@ export default function VoteModal({
           return;
         }
       }
-    } catch {
-      // API hatası durumunda devam et
-    }
+    } catch { /* devam et */ }
 
     if (fingerprint) {
       try {
@@ -239,15 +238,12 @@ export default function VoteModal({
           setStep('blocked');
           return;
         }
-      } catch {
-        // API hatası durumunda engelleme — devam et
-      }
+      } catch { /* devam et */ }
     }
     setLoading(false);
     setStep('auth');
   };
 
-  // Kayıt API çağrısı — tüm bilgiler toplandıktan sonra
   const completeRegistration = async (
     identity: string,
     type: 'email' | 'phone' | null,
@@ -309,6 +305,8 @@ export default function VoteModal({
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!isOpen) return null;
@@ -325,23 +323,24 @@ export default function VoteModal({
         >
           <div className="absolute inset-0 bg-black/50" onClick={onClose} />
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="relative bg-white border border-neutral-200 shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="relative bg-background border border-border shadow-lg rounded-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
           >
             {step === 'party-select' && (
               <>
-                <div className="sticky top-0 bg-white z-10 p-6 pb-3 border-b border-neutral-100">
-                  <button onClick={onClose} className="absolute top-4 right-4 text-neutral-400 hover:text-black text-xl">{'×'}</button>
-                  <h2 className="text-2xl font-bold text-black mb-2">Oyunu Kullan</h2>
-                  <p className="text-neutral-500 text-sm mb-4">Hangi partiye oy vermek istiyorsun? Tek tıkla seç!</p>
-                  <input
+                <div className="sticky top-0 bg-background z-10 p-6 pb-3 border-b border-border">
+                  <Button variant="ghost" size="icon-sm" onClick={onClose} className="absolute top-3 right-3">
+                    <X className="size-4" />
+                  </Button>
+                  <h2 className="text-xl font-bold mb-1">Oyunu Kullan</h2>
+                  <p className="text-muted-foreground text-sm mb-4">Hangi partiye oy vermek istiyorsun? Tek tıkla seç!</p>
+                  <Input
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Parti ara..."
-                    className="w-full border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-black placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -353,106 +352,102 @@ export default function VoteModal({
                     searchQuery={searchQuery}
                   />
                   {!searchQuery && (
-                    <div className="mt-3 pt-3 border-t border-neutral-100">
+                    <>
+                      <Separator className="my-3" />
                       <button
                         onClick={() => handlePartySelect('karasizim')}
-                        className={`w-full py-3 text-sm font-medium transition-all ${
+                        className={cn(
+                          "w-full py-3 text-sm font-medium rounded-lg transition-all",
                           selectedParty === 'karasizim'
-                            ? 'border-2 border-black bg-neutral-50 text-black'
-                            : 'border border-neutral-200 text-neutral-500 hover:border-black hover:text-black'
-                        }`}
+                            ? 'ring-2 ring-ring bg-accent'
+                            : 'border border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                        )}
                       >
                         Kararsızım — Henüz karar vermedim
                       </button>
-                    </div>
+                    </>
                   )}
                 </div>
 
-                <div className="sticky bottom-0 bg-white border-t border-neutral-100 p-4">
+                <div className="sticky bottom-0 bg-background border-t border-border p-4">
                   {(showSelectWarning || error) && (
-                    <p className="text-red-600 text-xs mb-2 text-center">
+                    <p className="text-destructive text-xs mb-2 text-center flex items-center justify-center gap-1">
+                      <AlertCircle className="size-3" />
                       {showSelectWarning ? 'Önce bir parti seçmelisin' : error}
                     </p>
                   )}
-                  <button
+                  <Button
+                    className="w-full h-12 text-base font-bold"
                     onClick={() => {
                       if (!selectedParty) { setShowSelectWarning(true); return; }
                       handleVoteConfirm();
                     }}
-                    disabled={loading}
-                    className={`w-full py-4 font-bold text-lg transition-colors disabled:opacity-50 ${
-                      selectedParty ? 'bg-black text-white hover:bg-neutral-800' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                    }`}
+                    disabled={loading || !selectedParty}
                   >
                     {loading ? 'Kaydediliyor...' : 'Oyumu Onayla'}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
 
             {step !== 'party-select' && (
-              <button onClick={onClose} className="absolute top-4 right-4 text-neutral-400 hover:text-black text-xl z-10">{'×'}</button>
+              <Button variant="ghost" size="icon-sm" onClick={onClose} className="absolute top-3 right-3 z-10">
+                <X className="size-4" />
+              </Button>
             )}
 
             {step === 'blocked' && (
               <div className="p-6 text-center space-y-5">
-                <div className="w-14 h-14 mx-auto bg-neutral-100 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#404040" strokeWidth="1.5">
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
+                <div className="w-14 h-14 mx-auto bg-muted rounded-xl flex items-center justify-center">
+                  <Lock className="size-6 text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-black">Daha önce kayıt oldun</h2>
-                  <p className="text-sm text-neutral-500">
+                  <h2 className="text-xl font-bold">Daha önce kayıt oldun</h2>
+                  <p className="text-sm text-muted-foreground">
                     Bu cihazdan zaten bir hesap açılmış. Oyların adil sayılması
                     için her kişi yalnızca bir hesap kullanabilir.
                   </p>
                 </div>
-                <div className="bg-neutral-50 border border-neutral-200 p-4">
-                  <p className="text-sm text-neutral-700">
+                <div className="bg-muted rounded-lg p-4">
+                  <p className="text-sm">
                     Mevcut hesabınla giriş yap ve oyunu kullan.
                   </p>
                 </div>
                 <div className="pt-1 space-y-3">
-                  <button
+                  <Button
+                    className="w-full"
                     onClick={() => { onClose(); setTimeout(() => window.dispatchEvent(new Event('open-login')), 100); }}
-                    className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
                   >
                     Hesabıma Giriş Yap
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="w-full text-neutral-500 text-sm hover:text-black transition-colors"
-                  >
+                  </Button>
+                  <Button variant="ghost" className="w-full" onClick={onClose}>
                     Kapat
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {step === 'donation' && (
               <div className="p-6 text-center space-y-5">
-                <div className="w-14 h-14 mx-auto bg-neutral-100 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#525252" strokeWidth="1.5">
-                    <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <div className="w-14 h-14 mx-auto bg-muted rounded-xl flex items-center justify-center">
+                  <AlertCircle className="size-6 text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-black">SMS Bakiyemiz Tükendi</h2>
-                  <p className="text-sm text-neutral-600 leading-relaxed">
+                  <h2 className="text-xl font-bold">SMS Bakiyemiz Tükendi</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Oy kullanabilmen için sana SMS ile doğrulama kodu göndermemiz gerekiyor.
                     Ancak bağımsız bir platform olarak SMS gönderim bakiyemiz şu an tükenmiş durumda.
                   </p>
                 </div>
-                <div className="bg-neutral-50 border border-neutral-200 p-4 text-left">
-                  <p className="text-sm text-neutral-700 leading-relaxed">
+                <div className="bg-muted rounded-lg p-4 text-left">
+                  <p className="text-sm leading-relaxed">
                     <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
                     Platformun devam edebilmesi tamamen bireysel bağışlara bağlıdır.
                   </p>
                 </div>
                 <div className="pt-1 space-y-3">
-                  <button
+                  <Button
+                    className="w-full"
                     onClick={() => {
                       onClose();
                       setTimeout(() => {
@@ -460,24 +455,20 @@ export default function VoteModal({
                         if (el) el.scrollIntoView({ behavior: 'smooth' });
                       }, 200);
                     }}
-                    className="w-full bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors"
                   >
                     Destekçimiz Ol
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="w-full text-neutral-500 text-sm hover:text-black transition-colors"
-                  >
+                  </Button>
+                  <Button variant="ghost" className="w-full" onClick={onClose}>
                     Kapat
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {step === 'profile' && (
               <div className="p-6">
-                <h2 className="text-2xl font-bold text-black mb-2">Nerelisin?</h2>
-                <p className="text-neutral-500 text-sm mb-6">
+                <h2 className="text-xl font-bold mb-1">Nerelisin?</h2>
+                <p className="text-muted-foreground text-sm mb-6">
                   Şehrini ve ilçeni seç — sonra telefonunu doğrulayacağız.
                 </p>
                 <ProfileForm
@@ -485,7 +476,7 @@ export default function VoteModal({
                   onBack={() => setStep('party-select')}
                   loading={loading}
                 />
-                {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
+                {error && <p className="text-destructive text-sm mt-3 text-center">{error}</p>}
               </div>
             )}
 
@@ -497,32 +488,46 @@ export default function VoteModal({
                   onDirectLogin={handleDirectLogin}
                   onBack={() => setStep('profile')}
                 />
-                {error && <p className="text-red-600 text-sm mt-3 text-center">{error}</p>}
+                {error && <p className="text-destructive text-sm mt-3 text-center">{error}</p>}
               </div>
             )}
 
             {step === 'success' && (
               <div className="text-center py-8 px-6 overflow-y-auto max-h-[85vh]">
-                <h2 className="text-2xl font-bold text-black mb-2">Oyun Sayıldı!</h2>
-                <p className="text-neutral-500 mb-6">Sesin duyuldu. Her paylaşım daha doğru sonuçlar demek!</p>
+                <h2 className="text-xl font-bold mb-1">Oyun Sayıldı!</h2>
+                <p className="text-muted-foreground text-sm mb-6">Sesin duyuldu. Her paylaşım daha doğru sonuçlar demek!</p>
 
                 {referralLink && (
-                  <div className="bg-neutral-50 border border-neutral-200 p-4 mb-4">
-                    <p className="text-sm text-neutral-500 mb-2">Davet Linkin:</p>
+                  <div className="bg-muted rounded-lg p-4 mb-4 text-left">
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Share2 className="size-3.5" />
+                      Davet Linkin:
+                    </p>
                     <div className="flex gap-2">
-                      <input readOnly value={referralLink} className="flex-1 bg-neutral-100 text-black text-sm px-3 py-2 border border-neutral-200" />
-                      <button onClick={copyReferralLink} className="bg-black text-white px-4 py-2 text-sm font-medium hover:bg-neutral-800 transition-colors">Kopyala</button>
+                      <Input readOnly value={referralLink} className="flex-1 text-sm" />
+                      <Button variant="outline" size="default" onClick={copyReferralLink}>
+                        {copied ? <Check className="size-3.5" data-icon="inline-start" /> : <Copy className="size-3.5" data-icon="inline-start" />}
+                        {copied ? 'Kopyalandı' : 'Kopyala'}
+                      </Button>
                     </div>
                     <div className="flex gap-2 mt-3">
-                      <a href={`https://x.com/intent/tweet?text=Ben+oyumu+kullandım!+Sen+de+sesini+duyur:&url=${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-black text-white py-2 text-sm text-center hover:bg-neutral-800 transition-all">X</a>
-                      <a href={`https://wa.me/?text=${encodeURIComponent(`Ben oyumu kullandım! Sen de sesini duyur: ${referralLink}`)}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[#25D366] text-white py-2 text-sm text-center hover:brightness-110 transition-all">WhatsApp</a>
+                      <Button variant="secondary" className="flex-1" asChild>
+                        <a href={`https://x.com/intent/tweet?text=Ben+oyumu+kullandım!+Sen+de+sesini+duyur:&url=${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer">
+                          X
+                        </a>
+                      </Button>
+                      <Button className="flex-1" style={{ backgroundColor: '#25D366' }} asChild>
+                        <a href={`https://wa.me/?text=${encodeURIComponent(`Ben oyumu kullandım! Sen de sesini duyur: ${referralLink}`)}`} target="_blank" rel="noopener noreferrer">
+                          WhatsApp
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                <button
+                <Button
+                  variant="secondary"
                   onClick={async () => {
-                    // Demografik bilgiler doluysa modalı kapat, değilse formu göster
                     try {
                       const t = localStorage.getItem('token');
                       if (t) {
@@ -539,10 +544,9 @@ export default function VoteModal({
                     } catch { /* devam et */ }
                     setStep('demographic');
                   }}
-                  className="bg-neutral-100 text-black px-6 py-3 hover:bg-neutral-200 transition-colors"
                 >
                   Devam
-                </button>
+                </Button>
               </div>
             )}
 

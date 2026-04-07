@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 interface SearchableSelectProps {
   options: string[];
@@ -35,7 +36,6 @@ export default function SearchableSelect({
     [onChange]
   );
 
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -50,8 +50,8 @@ export default function SearchableSelect({
   return (
     <div ref={containerRef} className="relative">
       <div
-        className={`w-full bg-white border px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
-          isOpen ? 'border-black' : 'border-neutral-300'
+        className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background transition-colors cursor-pointer ${
+          isOpen ? 'border-ring ring-2 ring-ring ring-offset-2' : 'border-input'
         } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
         onClick={() => {
           if (!disabled) {
@@ -66,7 +66,7 @@ export default function SearchableSelect({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full outline-none text-black placeholder-neutral-400 bg-transparent"
+            className="w-full outline-none bg-transparent placeholder:text-muted-foreground"
             placeholder={value || placeholder}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
@@ -79,32 +79,25 @@ export default function SearchableSelect({
             }}
           />
         ) : (
-          <span className={value ? 'text-black' : 'text-neutral-400'}>
+          <span className={`flex items-center ${value ? '' : 'text-muted-foreground'}`}>
             {value || placeholder}
           </span>
         )}
-        <svg
-          className={`w-4 h-4 text-neutral-400 flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown className={`size-4 text-muted-foreground flex-shrink-0 ml-2 self-center transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-neutral-300 shadow-lg max-h-48 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-popover border border-border shadow-lg rounded-md max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="px-4 py-3 text-neutral-400 text-sm">Sonuç bulunamadı</div>
+            <div className="px-4 py-3 text-muted-foreground text-sm">Sonuç bulunamadı</div>
           ) : (
             filtered.map((item) => (
               <div
                 key={item}
-                className={`px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                className={`px-4 py-2.5 cursor-pointer text-sm transition-colors rounded-sm mx-1 my-0.5 ${
                   item === value
-                    ? 'bg-black text-white'
-                    : 'text-black hover:bg-neutral-100'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent'
                 }`}
                 onClick={() => handleSelect(item)}
               >

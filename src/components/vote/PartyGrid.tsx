@@ -1,5 +1,8 @@
 'use client';
 
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 interface Party {
   id: string;
   name: string;
@@ -32,7 +35,7 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
 
   if (filtered.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-neutral-400">
+      <div className="py-8 text-center text-sm text-muted-foreground">
         Sonuç bulunamadı
       </div>
     );
@@ -46,14 +49,15 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
           <button
             key={party.id}
             onClick={() => onSelect(party.id)}
-            className={`relative flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
+            className={cn(
+              "relative flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all",
               isSelected
-                ? 'border-2 border-black bg-neutral-50'
-                : 'border border-neutral-200 bg-white hover:border-black'
-            }`}
+                ? 'ring-2 ring-ring bg-accent'
+                : 'border border-border bg-background hover:bg-accent/50'
+            )}
           >
             <div
-              className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+              className="w-8 h-8 shrink-0 flex items-center justify-center"
               style={{
                 backgroundColor: party.logoUrl ? 'transparent' : party.color,
                 borderRadius: party.logoUrl ? '0' : '50%',
@@ -67,13 +71,13 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <span className={`text-sm font-medium block truncate ${isSelected ? 'text-black' : 'text-neutral-700'}`}>
+              <span className={cn("text-sm font-medium block truncate", isSelected ? 'text-foreground' : 'text-foreground/80')}>
                 {party.name}
               </span>
             </div>
             {isSelected && (
-              <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs">{'\u2713'}</span>
+              <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
+                <Check className="size-3 text-primary-foreground" />
               </div>
             )}
           </button>

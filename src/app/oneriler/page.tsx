@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Header from '@/components/layout/Header';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Loader2, Plus } from 'lucide-react';
 
 interface FeatureRequest {
   id: number;
@@ -111,7 +118,6 @@ export default function OnerilerPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Eski ve yeni oy durumuna gore vote_count'u hesapla
         setItems((prev) =>
           prev.map((item) => {
             if (item.id !== id) return item;
@@ -157,13 +163,11 @@ export default function OnerilerPage() {
       });
       if (res.ok) {
         setCommentText('');
-        // Yorumlari yeniden yukle
         const res2 = await fetch(`/api/features/${selectedId}/comments`, { headers });
         if (res2.ok) {
           const data = await res2.json();
           setComments(data.comments);
         }
-        // Yorum sayisini guncelle
         setItems((prev) =>
           prev.map((item) =>
             item.id === selectedId ? { ...item, comment_count: item.comment_count + 1 } : item
@@ -183,60 +187,66 @@ export default function OnerilerPage() {
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-black">Özellik Önerileri</h1>
-            <p className="text-sm text-neutral-500 mt-1">
+            <h1 className="text-xl font-bold">Özellik Önerileri</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Platformu birlikte geliştirelim. Öneri yap, oyla, tartış.
             </p>
           </div>
           {isLoggedIn && !selectedId && (
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 text-sm font-medium bg-black text-white hover:bg-neutral-800 transition-colors"
-            >
-              {showForm ? 'İptal' : 'Yeni Öneri'}
-            </button>
+            <Button onClick={() => setShowForm(!showForm)}>
+              {showForm ? 'İptal' : (
+                <>
+                  <Plus className="size-4 mr-1.5" />
+                  Yeni Öneri
+                </>
+              )}
+            </Button>
           )}
         </div>
 
         {/* Yeni Oneri Formu */}
         {showForm && (
-          <div className="border border-neutral-200 p-5 mb-6">
-            <h2 className="text-sm font-bold text-black mb-3">Yeni Öneri</h2>
-            {formError && (
-              <p className="text-sm text-neutral-700 bg-neutral-50 border border-neutral-200 p-2 mb-3">{formError}</p>
-            )}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Başlık</label>
-                <input
-                  type="text"
+          <Card className="mb-6">
+            <CardContent className="pt-5 space-y-4">
+              <h2 className="text-sm font-bold">Yeni Öneri</h2>
+              {formError && (
+                <p className="text-sm bg-muted border border-border rounded-lg p-2">{formError}</p>
+              )}
+              <div className="space-y-1.5">
+                <Label htmlFor="title">Başlık</Label>
+                <Input
+                  id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={200}
                   placeholder="Kısa ve net bir başlık"
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Açıklama</label>
+              <div className="space-y-1.5">
+                <Label htmlFor="desc">Açıklama</Label>
                 <textarea
+                  id="desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={2000}
                   rows={4}
                   placeholder="Önerinizi detaylı açıklayın..."
-                  className="w-full px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none resize-none"
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
                 />
               </div>
-              <button
+              <Button
                 onClick={handleSubmit}
                 disabled={submitting || !title.trim() || !description.trim()}
-                className="px-5 py-2 text-sm font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-colors"
               >
-                {submitting ? 'Gönderiliyor...' : 'Gönder'}
-              </button>
-            </div>
-          </div>
+                {submitting ? (
+                  <>
+                    <Loader2 className="size-4 mr-1.5 animate-spin" />
+                    Gönderiliyor...
+                  </>
+                ) : 'Gönder'}
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {/* Detay Gorunumu */}
@@ -244,68 +254,66 @@ export default function OnerilerPage() {
           <div className="mb-6">
             <button
               onClick={() => setSelectedId(null)}
-              className="text-sm text-neutral-500 hover:text-black mb-4 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
             >
-              ← Tüm öneriler
+              <ArrowLeft className="size-4" />
+              Tüm öneriler
             </button>
 
-            <div className="border border-neutral-200 p-5">
-              <div>
-                <h2 className="text-lg font-bold text-black">{selectedItem.title}</h2>
-                <p className="text-sm text-neutral-600 mt-2 whitespace-pre-wrap">{selectedItem.description}</p>
-                <p className="text-xs text-neutral-400 mt-3">
+            <Card>
+              <CardContent className="pt-5">
+                <h2 className="text-lg font-bold">{selectedItem.title}</h2>
+                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{selectedItem.description}</p>
+                <p className="text-xs text-muted-foreground mt-3">
                   {selectedItem.author_city} · {timeAgo(selectedItem.created_at)}
                 </p>
 
                 {/* Evet / Hayir oy butonlari */}
-                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-neutral-100">
-                  <span className="text-xs font-medium text-neutral-500">Bu öneriyi destekliyor musun?</span>
+                <Separator className="my-4" />
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-muted-foreground">Bu öneriyi destekliyor musun?</span>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      size="sm"
+                      variant={selectedItem.user_vote === 'up' ? 'default' : 'outline'}
                       onClick={() => handleVote(selectedItem.id, true)}
                       disabled={!isLoggedIn}
-                      className={`px-4 py-1.5 text-sm font-bold border-2 transition-colors ${
-                        selectedItem.user_vote === 'up'
-                          ? 'border-black bg-black text-white'
-                          : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
-                      } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
+                      <ThumbsUp className="size-3.5 mr-1" />
                       Evet
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={selectedItem.user_vote === 'down' ? 'default' : 'outline'}
                       onClick={() => handleVote(selectedItem.id, false)}
                       disabled={!isLoggedIn}
-                      className={`px-4 py-1.5 text-sm font-bold border-2 transition-colors ${
-                        selectedItem.user_vote === 'down'
-                          ? 'border-black bg-black text-white'
-                          : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
-                      } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
+                      <ThumbsDown className="size-3.5 mr-1" />
                       Hayır
-                    </button>
+                    </Button>
                   </div>
-                  <span className="text-sm font-bold text-black">{selectedItem.vote_count}</span>
-                  <span className="text-xs text-neutral-400">puan</span>
+                  <span className="text-sm font-bold tabular-nums">{selectedItem.vote_count}</span>
+                  <span className="text-xs text-muted-foreground">puan</span>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Yorumlar */}
             <div className="mt-4">
-              <h3 className="text-sm font-bold text-black mb-3">
+              <h3 className="text-sm font-bold mb-3">
                 Yorumlar ({selectedItem.comment_count})
               </h3>
 
               {commentsLoading ? (
-                <p className="text-sm text-neutral-400">Yükleniyor...</p>
+                <p className="text-sm text-muted-foreground">Yükleniyor...</p>
               ) : comments.length === 0 ? (
-                <p className="text-sm text-neutral-400">Henüz yorum yok.</p>
+                <p className="text-sm text-muted-foreground">Henüz yorum yok.</p>
               ) : (
                 <div className="space-y-3">
                   {comments.map((c) => (
-                    <div key={c.id} className="border border-neutral-100 p-3">
-                      <p className="text-sm text-black">{c.content}</p>
-                      <p className="text-xs text-neutral-400 mt-1">
+                    <div key={c.id} className="border border-border rounded-lg p-3">
+                      <p className="text-sm">{c.content}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {c.author_city} · {timeAgo(c.created_at)}
                       </p>
                     </div>
@@ -316,26 +324,25 @@ export default function OnerilerPage() {
               {/* Yorum yaz */}
               {isLoggedIn && (
                 <div className="mt-4 flex gap-2">
-                  <input
-                    type="text"
+                  <Input
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Yorumunuzu yazın..."
                     maxLength={1000}
                     onKeyDown={(e) => e.key === 'Enter' && !commentSubmitting && handleComment()}
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
                   />
-                  <button
+                  <Button
                     onClick={handleComment}
                     disabled={commentSubmitting || !commentText.trim()}
-                    className="px-4 py-2 text-sm font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-colors"
                   >
-                    {commentSubmitting ? '...' : 'Gönder'}
-                  </button>
+                    {commentSubmitting ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : 'Gönder'}
+                  </Button>
                 </div>
               )}
               {!isLoggedIn && (
-                <p className="text-xs text-neutral-400 mt-3">Yorum yapmak için giriş yapın.</p>
+                <p className="text-xs text-muted-foreground mt-3">Yorum yapmak için giriş yapın.</p>
               )}
             </div>
           </div>
@@ -346,87 +353,88 @@ export default function OnerilerPage() {
           <>
             {/* Siralama */}
             <div className="flex gap-2 mb-4">
-              <button
+              <Button
+                size="sm"
+                variant={sort === 'votes' ? 'default' : 'outline'}
                 onClick={() => setSort('votes')}
-                className={`px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  sort === 'votes' ? 'bg-black text-white border-black' : 'bg-white text-neutral-500 border-neutral-200 hover:border-black'
-                }`}
               >
                 En Çok Oylanan
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant={sort === 'new' ? 'default' : 'outline'}
                 onClick={() => setSort('new')}
-                className={`px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  sort === 'new' ? 'bg-black text-white border-black' : 'bg-white text-neutral-500 border-neutral-200 hover:border-black'
-                }`}
               >
                 En Yeni
-              </button>
+              </Button>
             </div>
 
             {loading ? (
-              <p className="text-sm text-neutral-400 py-8 text-center">Yükleniyor...</p>
-            ) : items.length === 0 ? (
-              <div className="text-center py-12 border border-neutral-200">
-                <p className="text-sm text-neutral-500">Henüz öneri yok.</p>
-                {isLoggedIn && (
-                  <button
-                    onClick={() => setShowForm(true)}
-                    className="mt-3 px-4 py-2 text-sm font-medium bg-black text-white hover:bg-neutral-800 transition-colors"
-                  >
-                    İlk öneriyi sen yap
-                  </button>
-                )}
+              <div className="flex justify-center py-8">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
               </div>
+            ) : items.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-sm text-muted-foreground">Henüz öneri yok.</p>
+                  {isLoggedIn && (
+                    <Button className="mt-3" onClick={() => setShowForm(true)}>
+                      İlk öneriyi sen yap
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-2">
                 {items.map((item) => (
-                  <div key={item.id} className="border border-neutral-200 p-4 hover:border-neutral-300 transition-colors">
-                    {/* Icerik */}
-                    <div className="cursor-pointer" onClick={() => openDetail(item.id)}>
-                      <h3 className="text-sm font-bold text-black truncate">{item.title}</h3>
-                      <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{item.description}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-neutral-400">
-                        <span>{item.author_city}</span>
-                        <span>{timeAgo(item.created_at)}</span>
-                        <span>{item.comment_count} yorum</span>
+                  <Card key={item.id} className="hover:border-foreground/20 transition-colors">
+                    <CardContent className="pt-4 pb-3">
+                      {/* Icerik */}
+                      <div className="cursor-pointer" onClick={() => openDetail(item.id)}>
+                        <h3 className="text-sm font-bold truncate">{item.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          <span>{item.author_city}</span>
+                          <span>{timeAgo(item.created_at)}</span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="size-3" />
+                            {item.comment_count}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Evet / Hayir oy butonlari */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleVote(item.id, true); }}
-                        disabled={!isLoggedIn}
-                        className={`px-3 py-1 text-xs font-bold border-2 transition-colors ${
-                          item.user_vote === 'up'
-                            ? 'border-black bg-black text-white'
-                            : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
-                        } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        Evet
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleVote(item.id, false); }}
-                        disabled={!isLoggedIn}
-                        className={`px-3 py-1 text-xs font-bold border-2 transition-colors ${
-                          item.user_vote === 'down'
-                            ? 'border-black bg-black text-white'
-                            : 'border-neutral-300 text-neutral-500 hover:border-black hover:text-black'
-                        } ${!isLoggedIn ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        Hayır
-                      </button>
-                      <span className="text-sm font-bold text-black ml-1">{item.vote_count}</span>
-                      <span className="text-xs text-neutral-400">puan</span>
-                    </div>
-                  </div>
+                      {/* Evet / Hayir oy butonlari */}
+                      <Separator className="my-3" />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="xs"
+                          variant={item.user_vote === 'up' ? 'default' : 'outline'}
+                          onClick={(e) => { e.stopPropagation(); handleVote(item.id, true); }}
+                          disabled={!isLoggedIn}
+                        >
+                          <ThumbsUp className="size-3 mr-1" />
+                          Evet
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant={item.user_vote === 'down' ? 'default' : 'outline'}
+                          onClick={(e) => { e.stopPropagation(); handleVote(item.id, false); }}
+                          disabled={!isLoggedIn}
+                        >
+                          <ThumbsDown className="size-3 mr-1" />
+                          Hayır
+                        </Button>
+                        <span className="text-sm font-bold tabular-nums ml-1">{item.vote_count}</span>
+                        <span className="text-xs text-muted-foreground">puan</span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
 
             {!isLoggedIn && items.length > 0 && (
-              <p className="text-xs text-neutral-400 text-center mt-4">
+              <p className="text-xs text-muted-foreground text-center mt-4">
                 Öneri yapmak ve oy vermek için giriş yapın.
               </p>
             )}

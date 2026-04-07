@@ -31,7 +31,6 @@ export default function CityTooltip({
   const offsetX = 20;
   const offsetY = -80;
 
-  // Sort by percentage descending for logged-in users
   const sorted = [...(partyDistribution ?? [])].sort((a, b) => (b.percentage ?? b.count) - (a.percentage ?? a.count));
   const top4 = sorted.slice(0, 4);
 
@@ -47,10 +46,10 @@ export default function CityTooltip({
         top: position.y + offsetY,
       }}
     >
-      <div className="bg-black text-white px-4 py-3 min-w-[180px] shadow-xl">
+      <div className="bg-popover text-popover-foreground border border-border px-4 py-3 min-w-[180px] shadow-lg rounded-lg">
         <div className="flex items-center justify-between gap-4">
           <h3 className="font-semibold text-sm tracking-wide">{cityName}</h3>
-          <span className="text-neutral-500 text-xs tabular-nums">
+          <span className="text-muted-foreground text-xs tabular-nums">
             {(voteCount ?? 0).toLocaleString('tr-TR')} oy
           </span>
         </div>
@@ -60,16 +59,16 @@ export default function CityTooltip({
             {top4.map((p) => (
               <div key={p.party} className="flex items-center gap-2">
                 <span
-                  className="w-2 h-2 flex-shrink-0"
+                  className="w-2 h-2 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: p.color }}
                 />
-                <span className="text-neutral-300 text-xs flex-1">{p.party}</span>
+                <span className="text-muted-foreground text-xs flex-1">{p.party}</span>
                 {isLoggedIn ? (
-                  <span className="text-neutral-500 text-xs tabular-nums">
+                  <span className="text-muted-foreground text-xs tabular-nums">
                     %{(p.percentage ?? 0).toFixed(1)}
                   </span>
                 ) : (
-                  <span className="text-neutral-500 text-xs tabular-nums">
+                  <span className="text-muted-foreground text-xs tabular-nums">
                     {p.count.toLocaleString('tr-TR')}
                   </span>
                 )}
@@ -77,7 +76,7 @@ export default function CityTooltip({
             ))}
           </div>
         ) : isActiveRound ? null : (
-          <p className="text-neutral-500 text-xs mt-1">Veri yok</p>
+          <p className="text-muted-foreground text-xs mt-1">Veri yok</p>
         )}
       </div>
     </motion.div>

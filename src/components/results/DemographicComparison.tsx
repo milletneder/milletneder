@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
 import { useAuth } from '@/lib/auth/AuthContext';
-// Parti isim ve renkleri API'den gelir (partyName, color alanları)
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 interface PartyVote {
   partyId: string;
@@ -75,7 +78,6 @@ export default function DemographicComparison({
     ? userBracketData.totalVotes >= MIN_VOTES
     : false;
 
-  // CTA message logic
   const ctaMessage = !isLoggedIn
     ? 'Giriş yap ve oyunu kullan'
     : !hasVoted
@@ -90,7 +92,6 @@ export default function DemographicComparison({
       ? 'Oy Ver'
       : 'Bilgi Ekle';
 
-  // Fake preview data for blur state
   const previewBrackets = brackets.slice(0, 4).map((b) => ({
     code: b.value,
     label: b.label,
@@ -105,10 +106,10 @@ export default function DemographicComparison({
   if (loading) {
     return (
       <div className="py-8">
-        <div className="h-6 w-64 bg-neutral-100 mb-6" />
+        <div className="h-6 w-64 bg-muted rounded mb-6" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-neutral-50" />
+            <div key={i} className="h-12 bg-muted/50 rounded" />
           ))}
         </div>
       </div>
@@ -117,7 +118,7 @@ export default function DemographicComparison({
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-black mb-6">{title}</h2>
+      <h2 className="text-lg font-bold mb-6">{title}</h2>
 
       {!canView ? (
         /* BLURRED PREVIEW */
@@ -127,16 +128,16 @@ export default function DemographicComparison({
               {previewBrackets.map((bracket) => (
                 <div key={bracket.code}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-black">
+                    <span className="text-sm font-medium">
                       {bracket.label}
                     </span>
-                    <span className="text-xs text-neutral-400 tabular-nums">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {bracket.totalVotes.toLocaleString('tr-TR')} oy
                     </span>
                   </div>
-                  <div className="w-full bg-neutral-100 h-3 overflow-hidden">
+                  <div className="w-full bg-muted h-3 rounded-sm overflow-hidden">
                     <div
-                      className="h-full bg-neutral-400"
+                      className="h-full bg-muted-foreground/40 rounded-sm"
                       style={{ width: `${bracket.parties[0].percentage}%` }}
                     />
                   </div>
@@ -146,15 +147,13 @@ export default function DemographicComparison({
           </div>
 
           {/* Overlay */}
-          <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-4">
-            <p className="text-sm text-black font-medium text-center px-4">
+          <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center gap-4">
+            <p className="text-sm font-medium text-center px-4">
               {ctaMessage}
             </p>
-            <button className="bg-black text-white px-6 h-10 text-sm font-medium hover:bg-neutral-800 transition-colors inline-flex items-center justify-center">
-              {ctaButtonLabel}
-            </button>
+            <Button>{ctaButtonLabel}</Button>
             {data && data.totalResponders > 0 && (
-              <p className="text-neutral-400 text-sm mt-2">
+              <p className="text-muted-foreground text-sm mt-2">
                 {data.totalResponders.toLocaleString('tr-TR')} kişi bu raporu görüntüledi
               </p>
             )}
@@ -163,11 +162,11 @@ export default function DemographicComparison({
       ) : !hasEnoughData ? (
         /* NOT ENOUGH DATA */
         <div className="py-8 text-center">
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-muted-foreground">
             Henüz yeterli veri yok (minimum 10 oy gerekli)
           </p>
           {userBracketData && (
-            <p className="text-xs text-neutral-400 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Grubunda şu an{' '}
               {userBracketData.totalVotes.toLocaleString('tr-TR')} oy var
             </p>
@@ -178,102 +177,105 @@ export default function DemographicComparison({
         <div className="space-y-8">
           {/* User's bracket - highlighted */}
           {userBracketData && (
-            <div className="border border-black p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="inline-block px-2 py-0.5 text-xs font-medium bg-black text-white">
-                  Senin Grubun
-                </span>
-                <span className="text-sm font-medium text-black">
-                  {brackets.find((b) => b.value === userBracket)?.label}
-                </span>
-                <span className="text-xs text-neutral-400 ml-auto tabular-nums">
-                  {userBracketData.totalVotes.toLocaleString('tr-TR')} oy
-                </span>
-              </div>
-              <div className="space-y-3">
-                {userBracketData.parties.map((party, index) => {
-                  const maxVotes = userBracketData.parties[0]?.voteCount || 1;
-                  const isUserParty = userParty === party.partyId;
-                  return (
-                    <motion.div
-                      key={party.partyId}
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3"
+            <Card className="border-2 border-foreground/20">
+              <CardContent className="pt-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge>Senin Grubun</Badge>
+                  <span className="text-sm font-medium">
+                    {brackets.find((b) => b.value === userBracket)?.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-auto tabular-nums">
+                    {userBracketData.totalVotes.toLocaleString('tr-TR')} oy
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {userBracketData.parties.map((party, index) => {
+                    const maxVotes = userBracketData.parties[0]?.voteCount || 1;
+                    const isUserParty = userParty === party.partyId;
+                    return (
+                      <motion.div
+                        key={party.partyId}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-sm"
+                              style={{
+                                backgroundColor: party.color || '#555555',
+                              }}
+                            />
+                            <span
+                              className={`text-sm ${isUserParty ? 'font-bold' : 'font-medium'}`}
+                            >
+                              {party.partyName || party.partyId}
+                              {isUserParty && ' (Senin Oyun)'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-sm tabular-nums">
+                              %{party.percentage.toFixed(1)}
+                            </span>
+                            <span className="text-muted-foreground text-xs tabular-nums">
+                              {party.voteCount.toLocaleString('tr-TR')} oy
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-muted h-3 rounded-sm overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-sm"
                             style={{
                               backgroundColor: party.color || '#555555',
                             }}
+                            initial={{ width: 0 }}
+                            animate={{
+                              width: `${(party.voteCount / maxVotes) * 100}%`,
+                            }}
+                            transition={{
+                              duration: 0.8,
+                              delay: index * 0.05,
+                              ease: 'easeOut',
+                            }}
                           />
-                          <span
-                            className={`text-sm ${isUserParty ? 'font-bold text-black' : 'font-medium text-black'}`}
-                          >
-                            {party.partyName || party.partyId}
-                            {isUserParty && ' (Senin Oyun)'}
-                          </span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-black font-bold text-sm tabular-nums">
-                            %{party.percentage.toFixed(1)}
-                          </span>
-                          <span className="text-neutral-400 text-xs tabular-nums">
-                            {party.voteCount.toLocaleString('tr-TR')} oy
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-neutral-100 h-3 overflow-hidden">
-                        <motion.div
-                          className="h-full"
-                          style={{
-                            backgroundColor: party.color || '#555555',
-                          }}
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${(party.voteCount / maxVotes) * 100}%`,
-                          }}
-                          transition={{
-                            duration: 0.8,
-                            delay: index * 0.05,
-                            ease: 'easeOut',
-                          }}
-                        />
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
 
-              {/* User's party match info */}
-              {userParty && (() => {
-                const match = userBracketData.parties.find(
-                  (p) => p.partyId === userParty
-                );
-                if (!match) return null;
-                return (
-                  <p className="text-sm text-neutral-600 mt-4 pt-4 border-t border-neutral-100">
-                    Sen{' '}
-                    <span className="font-bold text-black">
-                      {match.partyName || userParty}
-                    </span>
-                    &apos;ne oy verdin —{' '}
-                    {config.groupLabel.toLowerCase()} grubunun{' '}
-                    <span className="font-bold text-black">
-                      %{match.percentage.toFixed(1)}
-                    </span>
-                    &apos;i de aynı tercihte
-                  </p>
-                );
-              })()}
-            </div>
+                {/* User's party match info */}
+                {userParty && (() => {
+                  const match = userBracketData.parties.find(
+                    (p) => p.partyId === userParty
+                  );
+                  if (!match) return null;
+                  return (
+                    <>
+                      <Separator className="my-4" />
+                      <p className="text-sm text-muted-foreground">
+                        Sen{' '}
+                        <span className="font-bold text-foreground">
+                          {match.partyName || userParty}
+                        </span>
+                        &apos;ne oy verdin —{' '}
+                        {config.groupLabel.toLowerCase()} grubunun{' '}
+                        <span className="font-bold text-foreground">
+                          %{match.percentage.toFixed(1)}
+                        </span>
+                        &apos;i de aynı tercihte
+                      </p>
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
           )}
 
           {/* All brackets comparison */}
           <div>
-            <h3 className="text-sm font-bold text-black mb-4">
+            <h3 className="text-sm font-bold mb-4">
               Tüm {config.groupLabel} Grupları
             </h3>
             <div className="space-y-4">
@@ -282,28 +284,27 @@ export default function DemographicComparison({
                 .map((bracket) => {
                   const isUserBracket = bracket.code === userBracket;
                   const topParty = bracket.parties[0];
-                  const maxVotes = bracket.parties[0]?.voteCount || 1;
                   return (
                     <div
                       key={bracket.code}
                       className={
                         isUserBracket
-                          ? 'border-l-2 border-black pl-3'
+                          ? 'border-l-2 border-foreground pl-3'
                           : 'pl-3'
                       }
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span
-                          className={`text-sm ${isUserBracket ? 'font-bold text-black' : 'font-medium text-neutral-600'}`}
+                          className={`text-sm ${isUserBracket ? 'font-bold' : 'font-medium text-muted-foreground'}`}
                         >
                           {bracket.label}
                           {isUserBracket && ' (Sen)'}
                         </span>
-                        <span className="text-xs text-neutral-400 tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {bracket.totalVotes.toLocaleString('tr-TR')} oy
                         </span>
                       </div>
-                      <div className="flex gap-0 w-full h-3 overflow-hidden bg-neutral-100">
+                      <div className="flex gap-0 w-full h-3 overflow-hidden bg-muted rounded-sm">
                         {bracket.parties.slice(0, 5).map((party) => (
                           <div
                             key={party.partyId}
@@ -316,7 +317,7 @@ export default function DemographicComparison({
                         ))}
                       </div>
                       {topParty && (
-                        <p className="text-xs text-neutral-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           1. {topParty.partyName || topParty.partyId} %
                           {topParty.percentage.toFixed(1)}
                         </p>

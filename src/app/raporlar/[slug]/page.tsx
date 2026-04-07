@@ -6,14 +6,24 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import PageHero from '@/components/layout/PageHero';
-import { table } from '@/lib/ui';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Loader2 } from 'lucide-react';
 import type { PartyInfo } from '@/lib/parties';
 
 const StaticTurkeyMap = dynamic(() => import('@/components/map/StaticTurkeyMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full bg-neutral-50 flex items-center justify-center" style={{ aspectRatio: '2.5 / 1' }}>
-      <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+    <div className="w-full bg-muted flex items-center justify-center rounded-lg" style={{ aspectRatio: '2.5 / 1' }}>
+      <Loader2 className="size-5 animate-spin text-muted-foreground" />
     </div>
   ),
 });
@@ -40,7 +50,6 @@ export default function ReportDetailPage() {
   useEffect(() => {
     if (!slug) return;
 
-    // Rapor ve parti bilgilerini paralel çek
     Promise.all([
       fetch(`/api/reports/${slug}`).then((r) => {
         if (!r.ok) throw new Error('not found');
@@ -50,7 +59,6 @@ export default function ReportDetailPage() {
     ])
       .then(([reportData, partiesData]) => {
         setReport(reportData.report);
-        // DB formatını PartyInfo formatına çevir
         const mapped = (partiesData.parties || []).map((p: any) => ({
           id: p.slug,
           name: p.name,
@@ -68,9 +76,9 @@ export default function ReportDetailPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-white">
-          <div className="max-w-3xl mx-auto px-6 pb-16 text-sm text-neutral-400">
-            Yükleniyor...
+        <main className="min-h-screen">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 flex justify-center py-12">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         </main>
       </>
@@ -81,10 +89,10 @@ export default function ReportDetailPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-white">
-          <div className="max-w-3xl mx-auto px-6 pb-16">
-            <p className="text-sm text-neutral-500 mb-4">Rapor bulunamadı</p>
-            <Link href="/raporlar" className="text-sm text-black underline">
+        <main className="min-h-screen">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
+            <p className="text-sm text-muted-foreground mb-4">Rapor bulunamadı</p>
+            <Link href="/raporlar" className="text-sm underline">
               Raporlara dön
             </Link>
           </div>
@@ -95,7 +103,6 @@ export default function ReportDetailPage() {
 
   const d = report.report_data;
 
-  // DB'den gelen parti bilgileri ile slug → kısa ad eşleştirmesi
   const slugToShortName: Record<string, string> = {};
   const slugToColor: Record<string, string> = {};
   for (const p of dbParties) {
@@ -103,47 +110,31 @@ export default function ReportDetailPage() {
     slugToColor[p.id] = p.color;
   }
 
-  // Slug → display name çözümleme (DB'den gelen kısa adları kullanır)
   const resolvePartyName = (raw: string): string => {
     if (!raw || raw === '-') return raw;
-    // DB'den gelen kısa adı kullan
     if (slugToShortName[raw]) return slugToShortName[raw];
-    return raw; // Zaten çözümlenmiş isim
+    return raw;
   };
 
-  // Parti verileri — seed data formatı: { party, shortName, votes, percentage, color }
   const parties = (d.parties || []) as any[];
   const sortedParties = [...parties].sort((a: any, b: any) => (b.votes || 0) - (a.votes || 0));
   const maxVotes = sortedParties[0]?.votes || 1;
 
-  // Şehir verileri — seed data formatı: { city, total_votes, first_party, first_pct, second_party, second_pct }
   const cities = (d.cities || []) as any[];
-
-  // Yaş verileri — seed data formatı: { bracket, total_votes, distribution: [{ party, pct }] }
   const ageGroups = (d.age_groups || []) as any[];
-
-  // Gelir verileri — aynı format
   const incomeGroups = (d.income_groups || []) as any[];
 
-  // Oy değişim — seed data formatı: { total_changers, change_rate_pct, flows: [{ from, to, count }] }
   const voteChanges = d.vote_changes || {};
   const flows = (voteChanges.flows || []) as any[];
-
-  // Şeffaflık — seed data formatı: { total_votes, valid_votes, invalid_votes, clean_rate_pct }
   const transparency = d.transparency || {};
-
-  // Özet — seed data formatı: { total_votes, valid_votes, invalid_votes, participating_cities }
   const summary = d.summary || {};
 
-  // Parti renkleri lookup — slug, kısa ad ve uzun isim hepsiyle eşle
   const partyColorMap: Record<string, string> = {};
-  // Önce DB'den gelen renkler
   for (const p of dbParties) {
-    partyColorMap[p.id] = p.color;        // slug: 'ak-parti'
-    partyColorMap[p.shortName] = p.color;  // kısa ad: 'AK Parti'
-    partyColorMap[p.name] = p.color;       // uzun ad: 'AK Parti'
+    partyColorMap[p.id] = p.color;
+    partyColorMap[p.shortName] = p.color;
+    partyColorMap[p.name] = p.color;
   }
-  // Rapor JSONB'sindeki renkleri de ekle
   parties.forEach((p: any) => {
     if (p.party) partyColorMap[p.party] = p.color;
     if (p.shortName) partyColorMap[p.shortName] = p.color;
@@ -154,8 +145,8 @@ export default function ReportDetailPage() {
   return (
     <>
       <Header />
-      <main className="pt-12 min-h-screen bg-white">
-        <div className="max-w-3xl mx-auto px-6 py-12">
+      <main className="pt-12 min-h-screen">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
           <PageHero
             title={report.title}
             subtitle={report.summary || undefined}
@@ -170,8 +161,8 @@ export default function ReportDetailPage() {
 
           {/* Harita */}
           {cities.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-4">İl Bazlı Harita</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-4">İl Bazlı Harita</h2>
               <StaticTurkeyMap
                 cityColors={cities.map((city: any) => ({
                   cityName: city.city,
@@ -182,8 +173,8 @@ export default function ReportDetailPage() {
               />
               <div className="flex flex-wrap gap-3 mt-8">
                 {sortedParties.slice(0, 8).map((p: any) => (
-                  <div key={p.shortName || p.party} className="flex items-center gap-1.5 text-xs text-neutral-600">
-                    <div className="w-2.5 h-2.5" style={{ backgroundColor: p.color }} />
+                  <div key={p.shortName || p.party} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
                     {resolvePartyName(p.shortName || p.party)}
                   </div>
                 ))}
@@ -193,30 +184,30 @@ export default function ReportDetailPage() {
 
           {/* 2. Parti Sonuçları */}
           {sortedParties.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-6">Parti Sonuçları</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-6">Parti Sonuçları</h2>
               <div className="space-y-3">
                 {sortedParties.map((party: any) => (
                   <div key={party.party || party.shortName}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3" style={{ backgroundColor: party.color }} />
-                        <span className="text-black font-medium text-sm">
+                        <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: party.color }} />
+                        <span className="font-medium text-sm">
                           {resolvePartyName(party.shortName || party.party)}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-black font-bold text-sm tabular-nums">
+                        <span className="font-bold text-sm tabular-nums">
                           %{(party.percentage || 0).toFixed(1)}
                         </span>
-                        <span className="text-neutral-400 text-xs tabular-nums">
+                        <span className="text-muted-foreground text-xs tabular-nums">
                           {(party.votes || 0).toLocaleString('tr-TR')} oy
                         </span>
                       </div>
                     </div>
-                    <div className="w-full bg-neutral-100 h-5 overflow-hidden">
+                    <div className="w-full bg-muted h-5 rounded-sm overflow-hidden">
                       <div
-                        className="h-full transition-all duration-700"
+                        className="h-full rounded-sm transition-all duration-700"
                         style={{
                           backgroundColor: party.color,
                           width: `${((party.votes || 0) / maxVotes) * 100}%`,
@@ -231,9 +222,9 @@ export default function ReportDetailPage() {
 
           {/* Ağırlıklı Sonuçlar */}
           {d.weighted && d.weighted.parties?.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-2">Ağırlıklı Sonuçlar</h2>
-              <p className="text-xs text-neutral-400 mb-6">
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-2">Ağırlıklı Sonuçlar</h2>
+              <p className="text-xs text-muted-foreground mb-6">
                 Demografik ağırlıklandırma uygulanmış sonuçlar. Hata payı: ±{(d.weighted.confidence?.marginOfError || 0).toFixed(1)} puan
               </p>
               <div className="space-y-3 mb-6">
@@ -246,23 +237,23 @@ export default function ReportDetailPage() {
                       <div key={wp.party}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3" style={{ backgroundColor: color }} />
-                            <span className="text-black font-medium text-sm">{name}</span>
+                            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
+                            <span className="font-medium text-sm">{name}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-black font-bold text-sm tabular-nums">
+                            <span className="font-bold text-sm tabular-nums">
                               %{(wp.weightedPct || 0).toFixed(1)}
                             </span>
                             {wp.delta != null && wp.delta !== 0 && (
-                              <span className={`text-xs tabular-nums ${wp.delta > 0 ? 'text-neutral-600' : 'text-neutral-400'}`}>
+                              <span className="text-xs tabular-nums text-muted-foreground">
                                 {wp.delta > 0 ? '+' : ''}{wp.delta.toFixed(1)}
                               </span>
                             )}
                           </div>
                         </div>
-                        <div className="w-full bg-neutral-100 h-5 overflow-hidden">
+                        <div className="w-full bg-muted h-5 rounded-sm overflow-hidden">
                           <div
-                            className="h-full"
+                            className="h-full rounded-sm"
                             style={{
                               backgroundColor: color,
                               width: `${(wp.weightedPct || 0)}%`,
@@ -275,22 +266,30 @@ export default function ReportDetailPage() {
               </div>
               {d.weighted.confidence && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-neutral-200 p-3 text-center">
-                    <div className="text-xl font-bold text-black">{d.weighted.confidence.overall?.toFixed(0) || '-'}/100</div>
-                    <div className="text-[11px] text-neutral-400 mt-1">Güven Skoru</div>
-                  </div>
-                  <div className="border border-neutral-200 p-3 text-center">
-                    <div className="text-xl font-bold text-black">±{(d.weighted.confidence.marginOfError || 0).toFixed(1)}</div>
-                    <div className="text-[11px] text-neutral-400 mt-1">Hata Payı</div>
-                  </div>
-                  <div className="border border-neutral-200 p-3 text-center">
-                    <div className="text-xl font-bold text-black">{(d.weighted.sampleSize || 0).toLocaleString('tr-TR')}</div>
-                    <div className="text-[11px] text-neutral-400 mt-1">Ham Örneklem</div>
-                  </div>
-                  <div className="border border-neutral-200 p-3 text-center">
-                    <div className="text-xl font-bold text-black">{(d.weighted.effectiveSampleSize || 0).toLocaleString('tr-TR')}</div>
-                    <div className="text-[11px] text-neutral-400 mt-1">Efektif Örneklem</div>
-                  </div>
+                  <Card>
+                    <CardContent className="pt-4 pb-3 text-center">
+                      <div className="text-xl font-bold tabular-nums">{d.weighted.confidence.overall?.toFixed(0) || '-'}/100</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">Güven Skoru</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3 text-center">
+                      <div className="text-xl font-bold tabular-nums">±{(d.weighted.confidence.marginOfError || 0).toFixed(1)}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">Hata Payı</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3 text-center">
+                      <div className="text-xl font-bold tabular-nums">{(d.weighted.sampleSize || 0).toLocaleString('tr-TR')}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">Ham Örneklem</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3 text-center">
+                      <div className="text-xl font-bold tabular-nums">{(d.weighted.effectiveSampleSize || 0).toLocaleString('tr-TR')}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">Efektif Örneklem</div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </section>
@@ -298,53 +297,53 @@ export default function ReportDetailPage() {
 
           {/* 3. İl Bazlı Kırılım */}
           {cities.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-6">İl Bazlı Kırılım</h2>
-              <div className={table.container}>
-                <table className="w-full">
-                  <thead className={table.head}>
-                    <tr>
-                      <th className={table.th}>İl</th>
-                      <th className={table.th}>1. Parti</th>
-                      <th className={table.th}>Oran</th>
-                      <th className={table.th}>2. Parti</th>
-                      <th className={table.th}>Toplam Oy</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-6">İl Bazlı Kırılım</h2>
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>İl</TableHead>
+                      <TableHead>1. Parti</TableHead>
+                      <TableHead>Oran</TableHead>
+                      <TableHead>2. Parti</TableHead>
+                      <TableHead>Toplam Oy</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {cities.slice(0, 20).map((city: any) => (
-                      <tr key={city.city} className={table.row}>
-                        <td className={`${table.td} font-medium`}>{city.city}</td>
-                        <td className={table.td}>{resolvePartyName(city.first_party)}</td>
-                        <td className={`${table.td} tabular-nums`}>%{(city.first_pct || 0).toFixed(1)}</td>
-                        <td className={table.td}>{resolvePartyName(city.second_party)}</td>
-                        <td className={`${table.td} tabular-nums`}>
+                      <TableRow key={city.city}>
+                        <TableCell className="font-medium">{city.city}</TableCell>
+                        <TableCell>{resolvePartyName(city.first_party)}</TableCell>
+                        <TableCell className="tabular-nums">%{(city.first_pct || 0).toFixed(1)}</TableCell>
+                        <TableCell>{resolvePartyName(city.second_party)}</TableCell>
+                        <TableCell className="tabular-nums">
                           {(city.total_votes || 0).toLocaleString('tr-TR')}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </section>
           )}
 
           {/* 4. Yaş Grubu Analizi */}
           {ageGroups.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-6">Yaş Grubu Analizi</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-6">Yaş Grubu Analizi</h2>
               <div className="space-y-4">
                 {ageGroups.map((group: any) => {
                   const dist = (group.distribution || group.parties || []) as any[];
                   return (
                     <div key={group.bracket}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-black">{group.bracket}</span>
-                        <span className="text-xs text-neutral-400">
+                        <span className="text-sm font-medium">{group.bracket}</span>
+                        <span className="text-xs text-muted-foreground">
                           {(group.total_votes || 0).toLocaleString('tr-TR')} oy
                         </span>
                       </div>
-                      <div className="flex h-5 overflow-hidden bg-neutral-100">
+                      <div className="flex h-5 overflow-hidden bg-muted rounded-sm">
                         {dist.map((p: any, i: number) => (
                           <div
                             key={i}
@@ -359,8 +358,8 @@ export default function ReportDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-3 mt-1">
                         {dist.map((p: any, i: number) => (
-                          <div key={i} className="flex items-center gap-1 text-[11px] text-neutral-500">
-                            <div className="w-2 h-2" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
+                          <div key={i} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
                             {resolvePartyName(p.party || p.name)} %{(p.pct || p.percentage || 0).toFixed(1)}
                           </div>
                         ))}
@@ -374,20 +373,20 @@ export default function ReportDetailPage() {
 
           {/* 5. Gelir Grubu Analizi */}
           {incomeGroups.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-6">Gelir Grubu Analizi</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-6">Gelir Grubu Analizi</h2>
               <div className="space-y-4">
                 {incomeGroups.map((group: any) => {
                   const dist = (group.distribution || group.parties || []) as any[];
                   return (
                     <div key={group.bracket}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-black">{group.bracket}</span>
-                        <span className="text-xs text-neutral-400">
+                        <span className="text-sm font-medium">{group.bracket}</span>
+                        <span className="text-xs text-muted-foreground">
                           {(group.total_votes || 0).toLocaleString('tr-TR')} oy
                         </span>
                       </div>
-                      <div className="flex h-5 overflow-hidden bg-neutral-100">
+                      <div className="flex h-5 overflow-hidden bg-muted rounded-sm">
                         {dist.map((p: any, i: number) => (
                           <div
                             key={i}
@@ -402,8 +401,8 @@ export default function ReportDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-3 mt-1">
                         {dist.map((p: any, i: number) => (
-                          <div key={i} className="flex items-center gap-1 text-[11px] text-neutral-500">
-                            <div className="w-2 h-2" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
+                          <div key={i} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
                             {resolvePartyName(p.party || p.name)} %{(p.pct || p.percentage || 0).toFixed(1)}
                           </div>
                         ))}
@@ -417,70 +416,78 @@ export default function ReportDetailPage() {
 
           {/* 6. Oy Değişim Akışları */}
           {flows.length > 0 && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-2">Oy Değişim Akışları</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-2">Oy Değişim Akışları</h2>
               {voteChanges.total_changers && (
-                <p className="text-sm text-neutral-500 mb-6">
+                <p className="text-sm text-muted-foreground mb-6">
                   Toplam {voteChanges.total_changers.toLocaleString('tr-TR')} kişi oy değiştirdi
                   (oyların %{(voteChanges.change_rate_pct || 0).toFixed(1)}&apos;i)
                 </p>
               )}
-              <div className={table.container}>
-                <table className="w-full">
-                  <thead className={table.head}>
-                    <tr>
-                      <th className={table.th}>Kimden</th>
-                      <th className={table.th}></th>
-                      <th className={table.th}>Kime</th>
-                      <th className={table.th}>Kişi Sayısı</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kimden</TableHead>
+                      <TableHead></TableHead>
+                      <TableHead>Kime</TableHead>
+                      <TableHead>Kişi Sayısı</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {flows.map((flow: any, i: number) => (
-                      <tr key={i} className={table.row}>
-                        <td className={`${table.td} font-medium`}>{resolvePartyName(flow.from)}</td>
-                        <td className={`${table.td} text-neutral-400`}>&rarr;</td>
-                        <td className={`${table.td} font-medium`}>{resolvePartyName(flow.to)}</td>
-                        <td className={`${table.td} tabular-nums`}>
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{resolvePartyName(flow.from)}</TableCell>
+                        <TableCell className="text-muted-foreground">&rarr;</TableCell>
+                        <TableCell className="font-medium">{resolvePartyName(flow.to)}</TableCell>
+                        <TableCell className="tabular-nums">
                           {(flow.count || 0).toLocaleString('tr-TR')}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </section>
           )}
 
           {/* 7. Şeffaflık Raporu */}
           {transparency.total_votes && (
-            <section className="border-t border-neutral-100 py-8">
-              <h2 className="text-lg font-bold text-black mb-6">Şeffaflık Raporu</h2>
+            <section className="border-t border-border py-8">
+              <h2 className="text-lg font-bold mb-6">Şeffaflık Raporu</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="border border-neutral-200 p-4 text-center">
-                  <div className="text-2xl font-bold tabular-nums text-black">
-                    {(transparency.total_votes || 0).toLocaleString('tr-TR')}
-                  </div>
-                  <div className="text-neutral-400 text-[11px] mt-1">Toplam Oy</div>
-                </div>
-                <div className="border border-neutral-200 p-4 text-center">
-                  <div className="text-2xl font-bold tabular-nums text-black">
-                    {(transparency.valid_votes || 0).toLocaleString('tr-TR')}
-                  </div>
-                  <div className="text-neutral-400 text-[11px] mt-1">Geçerli Oy</div>
-                </div>
-                <div className="border border-neutral-200 p-4 text-center">
-                  <div className="text-2xl font-bold tabular-nums text-black">
-                    {(transparency.invalid_votes || 0).toLocaleString('tr-TR')}
-                  </div>
-                  <div className="text-neutral-400 text-[11px] mt-1">Geçersiz Oy</div>
-                </div>
-                <div className="border border-neutral-200 p-4 text-center">
-                  <div className="text-2xl font-bold tabular-nums text-black">
-                    %{(transparency.clean_rate_pct || 100).toFixed(1)}
-                  </div>
-                  <div className="text-neutral-400 text-[11px] mt-1">Temiz Oy Oranı</div>
-                </div>
+                <Card>
+                  <CardContent className="pt-4 pb-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">
+                      {(transparency.total_votes || 0).toLocaleString('tr-TR')}
+                    </div>
+                    <div className="text-muted-foreground text-[11px] mt-1">Toplam Oy</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">
+                      {(transparency.valid_votes || 0).toLocaleString('tr-TR')}
+                    </div>
+                    <div className="text-muted-foreground text-[11px] mt-1">Geçerli Oy</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">
+                      {(transparency.invalid_votes || 0).toLocaleString('tr-TR')}
+                    </div>
+                    <div className="text-muted-foreground text-[11px] mt-1">Geçersiz Oy</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">
+                      %{(transparency.clean_rate_pct || 100).toFixed(1)}
+                    </div>
+                    <div className="text-muted-foreground text-[11px] mt-1">Temiz Oy Oranı</div>
+                  </CardContent>
+                </Card>
               </div>
             </section>
           )}
