@@ -37,6 +37,7 @@ import {
   ScrollText,
   LogOut,
   MoreVertical,
+  CreditCard,
 } from 'lucide-react';
 
 const navMain = [
@@ -44,6 +45,7 @@ const navMain = [
   { href: '/admin/users', label: 'Kullanıcılar', icon: Users },
   { href: '/admin/votes', label: 'Oylar', icon: Vote },
   { href: '/admin/rounds', label: 'Turlar', icon: CalendarDays },
+  { href: '/admin/subscriptions', label: 'Abonelikler', icon: CreditCard },
 ];
 
 const navData = [

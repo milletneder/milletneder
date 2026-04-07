@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       vp: payload.vp,
       vk: payload.vk,
+      st: user.subscription_tier || 'free',
     });
 
     return NextResponse.json({ success: true, token: newToken });
