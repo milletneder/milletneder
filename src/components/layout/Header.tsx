@@ -37,6 +37,7 @@ import {
   User,
   ChevronDown,
   Stamp,
+  XIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -174,70 +175,83 @@ export default function Header() {
                   <span className="sr-only">Menü</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72">
-                <SheetHeader>
-                  <SheetTitle className="text-left text-base">#MilletNeDer</SheetTitle>
+              <SheetContent
+                side="top"
+                showCloseButton={false}
+                className="h-full w-full bg-background/80 supports-backdrop-filter:bg-background/60 supports-backdrop-filter:backdrop-blur-xl border-0 shadow-none p-6"
+              >
+                <SheetHeader className="p-0">
+                  <div className="flex items-center justify-between">
+                    <SheetTitle className="text-base font-bold">#MilletNeDer</SheetTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                      <XIcon className="size-5" />
+                      <span className="sr-only">Kapat</span>
+                    </Button>
+                  </div>
                 </SheetHeader>
 
-                <div className="flex flex-col gap-1 mt-4">
+                <nav className="flex flex-col gap-1 mt-8">
                   {mainNavLinks.map((link) => (
-                    <Button key={link.href} variant="ghost" className="justify-start" asChild>
-                      <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
-                        {link.label}
-                      </Link>
-                    </Button>
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-2xl font-bold py-2 text-foreground hover:text-foreground/70 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
                   ))}
 
                   {/* Daha fazla — mobilde akordiyon */}
-                  <Button
-                    variant="ghost"
-                    className="justify-between"
+                  <button
+                    className="flex items-center justify-between text-2xl font-bold py-2 text-foreground hover:text-foreground/70 transition-colors text-left"
                     onClick={() => setMobileMoreOpen(!mobileMoreOpen)}
                   >
                     Daha fazla
-                    <ChevronDown className={cn('size-3 transition-transform', mobileMoreOpen && 'rotate-180')} />
-                  </Button>
+                    <ChevronDown className={cn('size-5 transition-transform', mobileMoreOpen && 'rotate-180')} />
+                  </button>
                   {mobileMoreOpen && (
                     <div className="flex flex-col gap-1 pl-4">
                       {moreLinks.map((link) => (
-                        <Button key={link.href} variant="ghost" className="justify-start text-muted-foreground" asChild>
-                          <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
-                            {link.label}
-                          </Link>
-                        </Button>
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-lg font-medium py-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {link.label}
+                        </Link>
                       ))}
                     </div>
                   )}
-                </div>
+                </nav>
 
-                <Separator className="my-3" />
-
-                <div className="flex flex-col gap-1">
+                <div className="mt-auto flex flex-col gap-3">
                   {isLoggedIn && (
-                    <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/profil" onClick={() => setMobileMenuOpen(false)}>
-                        <User className="size-4" data-icon="inline-start" />
-                        Hesabım
-                      </Link>
-                    </Button>
+                    <Link
+                      href="/profil"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Hesabım
+                    </Link>
                   )}
-                  <Button variant="ghost" className="justify-start" asChild>
-                    <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer">
-                      <GithubIcon className="size-4" />
-                      GitHub
-                    </a>
-                  </Button>
-                </div>
-
-                {isLoggedIn && (
-                  <>
-                    <Separator className="my-3" />
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                  <a
+                    href="https://github.com/milletneder/milletneder"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                  >
+                    <GithubIcon className="size-4" />
+                    GitHub
+                  </a>
+                  {isLoggedIn && (
+                    <Button variant="outline" className="w-full mt-2" onClick={handleLogout}>
                       <LogOut className="size-4" data-icon="inline-start" />
                       Çıkış Yap
                     </Button>
-                  </>
-                )}
+                  )}
+                </div>
               </SheetContent>
             </Sheet>
 
@@ -261,7 +275,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop navigasyon linkleri */}
-            <nav className="hidden md:flex items-center gap-1 ml-4">
+            <nav className="hidden md:flex items-center ml-4">
               {mainNavLinks.map((link) => (
                 <Button key={link.href} variant="ghost" asChild>
                   <Link href={link.href}>{link.label}</Link>
