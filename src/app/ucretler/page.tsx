@@ -5,9 +5,10 @@ import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Check } from 'lucide-react';
+import { Check, GraduationCap } from 'lucide-react';
 
 const VATANDAS_FEATURES = [
   'Aylık raporlara anında erişim',
@@ -100,25 +101,7 @@ export default function UcretlerPage() {
         </div>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start mb-24">
-
-          {/* Ücretsiz */}
-          <Card>
-            <CardContent className="pt-6">
-              <p className="font-semibold">Ücretsiz</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Oy kullanan herkes için.
-              </p>
-
-              <div className="mt-5 mb-6">
-                <span className="text-4xl font-bold tabular-nums">₺0</span>
-                <span className="text-muted-foreground"> /ay</span>
-              </div>
-
-              <Button variant="outline" className="w-full mb-6">Katıl</Button>
-              <FeatureList features={UCRETSIZ_FEATURES} />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-16">
 
           {/* Vatandaş */}
           <Card>
@@ -217,8 +200,59 @@ export default function UcretlerPage() {
           </Card>
         </div>
 
+        {/* Alt bölüm: Ücretsiz + Öğrenci */}
+        <Separator className="mb-12" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Ücretsiz */}
+          <Card>
+            <CardContent className="pt-6">
+              <p className="font-semibold">Ücretsiz</p>
+              <p className="text-sm text-muted-foreground mt-1">Oy kullanan herkes için.</p>
+
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-bold tabular-nums">₺0</span>
+              </div>
+
+              <Button variant="outline" className="w-full mb-6">Katıl</Button>
+              <FeatureList features={UCRETSIZ_FEATURES} />
+            </CardContent>
+          </Card>
+
+          {/* Öğrenci */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold">Öğrenci</p>
+                <GraduationCap className="size-4 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                .edu.tr uzantılı e-posta ile doğrulama gerekir.
+              </p>
+
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-bold tabular-nums">
+                  ₺{yearly ? '2.499' : '249'}
+                </span>
+                <span className="text-muted-foreground">
+                  {yearly ? ' /yıl' : ' /ay'}
+                </span>
+                {yearly && (
+                  <p className="text-sm text-muted-foreground mt-1">aylık ₺208 — yılda ₺489 tasarruf</p>
+                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Araştırmacı paketinin tüm özellikleri, %50 indirimli.
+                </p>
+              </div>
+
+              <Button variant="outline" className="w-full mb-6">Başla</Button>
+              <FeatureList features={ARASTIRMACI_FEATURES} />
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Footer */}
-        <div className="text-center">
+        <div className="text-center mt-12">
           <p className="text-sm text-muted-foreground">
             Tüm planlar aylık olarak faturalandırılır. Yıllık ödeme seçeneğinde indirimli fiyat uygulanır.
           </p>
