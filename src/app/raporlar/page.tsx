@@ -68,7 +68,7 @@ export default function RaporlarPage() {
                           {report.summary}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         {report.total_votes != null && (
                           <span>{report.total_votes.toLocaleString('tr-TR')} oy</span>
                         )}

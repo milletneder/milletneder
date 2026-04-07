@@ -551,7 +551,7 @@ export default function Home() {
                   <div key={d.name}>
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-xs font-medium">{d.name}</span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">{d.totalVotes.toLocaleString('tr-TR')} oy</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{d.totalVotes.toLocaleString('tr-TR')} oy</span>
                     </div>
                     {userHasVoted && d.parties.length > 0 ? (
                       <div className="flex gap-0.5 h-3">
@@ -820,17 +820,17 @@ export default function Home() {
           <Separator className="mb-12" />
           <div className="text-center space-y-4">
             <p className="text-xs font-bold tracking-wide">#MilletNeDer</p>
-            <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
+            <p className="text-xs text-muted-foreground max-w-md mx-auto">
               Herhangi bir siyasi parti, kurum veya kuruluşla bağlantımız yoktur. Tamamen bağımsız ve şeffaf bir platformuz.
             </p>
-            <div className="flex items-center justify-center gap-4 text-[11px]">
+            <div className="flex items-center justify-center gap-4 text-xs">
               <a href="/gizlilik" className="text-muted-foreground hover:text-foreground transition-colors">Gizlilik Politikası</a>
               <Separator orientation="vertical" className="h-3" />
               <a href="/kullanim-kosullari" className="text-muted-foreground hover:text-foreground transition-colors">Kullanım Koşulları</a>
               <Separator orientation="vertical" className="h-3" />
               <a href="/metodoloji" className="text-muted-foreground hover:text-foreground transition-colors">Metodoloji</a>
             </div>
-            <p className="text-[10px] text-muted-foreground/60">
+            <p className="text-xs text-muted-foreground/60">
               &copy; 2026 MilletNeDer. Bağımsız seçim nabzı platformu. Tüm veriler anonimdir.
             </p>
           </div>

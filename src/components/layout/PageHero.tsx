@@ -30,7 +30,7 @@ export default function PageHero({ title, subtitle, backLink, stats }: PageHeroP
               <div key={stat.label} className="flex items-center gap-6">
                 {i > 0 && <Separator orientation="vertical" className="h-8" />}
                 <div>
-                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground block">{stat.label}</span>
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground block">{stat.label}</span>
                   <span className="text-2xl font-bold tabular-nums">{stat.value}</span>
                 </div>
               </div>

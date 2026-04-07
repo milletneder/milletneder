@@ -89,7 +89,7 @@ export default function ConfidenceIndicator({
                 </span>
               </div>
               <Progress value={Math.min(100, f.value)} className="h-2" />
-              <p className="text-[11px] text-muted-foreground mt-1">{f.desc}</p>
+              <p className="text-xs text-muted-foreground mt-1">{f.desc}</p>
             </div>
           ))}
         </div>
@@ -101,12 +101,12 @@ export default function ConfidenceIndicator({
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Ham örneklem</p>
             <p className="text-lg font-bold tabular-nums">{totalSampleSize.toLocaleString('tr-TR')}</p>
-            <p className="text-[11px] text-muted-foreground">Toplam geçerli oy sayısı</p>
+            <p className="text-xs text-muted-foreground">Toplam geçerli oy sayısı</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground mb-0.5">Efektif örneklem</p>
             <p className="text-lg font-bold tabular-nums">{effectiveSampleSize.toLocaleString('tr-TR')}</p>
-            <p className="text-[11px] text-muted-foreground">Ağırlıklandırma sonrası etkin sayı</p>
+            <p className="text-xs text-muted-foreground">Ağırlıklandırma sonrası etkin sayı</p>
           </div>
         </div>
       </CardContent>

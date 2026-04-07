@@ -117,7 +117,7 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                       <div>
                         <div className="flex justify-between mb-0.5">
                           <span className="text-xs text-muted-foreground">Ham</span>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">%{rawPct.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">%{rawPct.toFixed(1)}</span>
                         </div>
                         <div className="w-full bg-background h-3 rounded-sm overflow-hidden">
                           <motion.div
@@ -132,7 +132,7 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                       <div>
                         <div className="flex justify-between mb-0.5">
                           <span className="text-xs text-muted-foreground">Ağırlıklı</span>
-                          <span className="text-[11px] text-muted-foreground tabular-nums">%{party.percentage.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground tabular-nums">%{party.percentage.toFixed(1)}</span>
                         </div>
                         <div className="w-full bg-background h-3 rounded-sm overflow-hidden">
                           <motion.div

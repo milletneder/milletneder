@@ -339,7 +339,7 @@ export default function ProfilPage() {
 
   const nextBadge = getNextBadgeInfo();
 
-  const selectClass = "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  const selectClass = "flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
   // Editable field row helper
   const renderEditableRow = (
@@ -500,7 +500,7 @@ export default function ProfilPage() {
                                 {party.logoUrl ? (
                                   <img src={party.logoUrl} alt="" className="max-w-full max-h-full object-contain" />
                                 ) : (
-                                  <span className="text-[7px] font-bold text-white">{party.shortName}</span>
+                                  <span className="text-xs font-bold text-white">{party.shortName}</span>
                                 )}
                               </span>
                               {party.name}
@@ -593,7 +593,7 @@ export default function ProfilPage() {
                                 {party.logoUrl ? (
                                   <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
                                 ) : (
-                                  <span className="text-[10px] font-bold">{party.shortName}</span>
+                                  <span className="text-xs font-bold">{party.shortName}</span>
                                 )}
                               </div>
                               <span className="text-sm font-medium">
@@ -640,7 +640,7 @@ export default function ProfilPage() {
                 <span className="text-xs text-muted-foreground">{referralCount} davet</span>
               </div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 bg-muted border border-border rounded-md px-3 py-2 text-sm font-mono">
+                <code className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm font-mono">
                   {profile.referral_code}
                 </code>
                 <Button variant="outline" size="sm" onClick={copyReferralCode}>

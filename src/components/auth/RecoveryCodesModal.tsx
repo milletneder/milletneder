@@ -197,7 +197,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
 
               <div className="space-y-5">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-md">1</div>
+                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-lg">1</div>
                   <div>
                     <h4 className="text-sm font-bold mb-1">Neden koruma?</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -208,7 +208,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-md">2</div>
+                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-lg">2</div>
                   <div>
                     <h4 className="text-sm font-bold mb-1">Kurtarma kodları ne işe yarar?</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -219,7 +219,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-md">3</div>
+                  <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 rounded-lg">3</div>
                   <div>
                     <h4 className="text-sm font-bold mb-1">Korumazsam ne olur?</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -275,7 +275,7 @@ export default function RecoveryCodesModal({ codes: initialCodes, onConfirm, onC
                 {codes.map((code, i) => (
                   <div
                     key={i}
-                    className="bg-muted border border-border rounded-md px-3 py-2.5 font-mono text-sm text-center tracking-wider"
+                    className="bg-muted border border-border rounded-lg px-3 py-2.5 font-mono text-sm text-center tracking-wider"
                   >
                     <span className="text-muted-foreground mr-1">{i + 1}.</span>
                     {code}
