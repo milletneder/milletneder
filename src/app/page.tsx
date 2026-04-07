@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const TurkeyMap = dynamic(() => import('@/components/map/TurkeyMap'), {
   ssr: false,
@@ -546,12 +547,21 @@ export default function Home() {
         {/* Tur bilgileri — harita section'ı içinde, altta */}
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 text-xs text-muted-foreground tabular-nums">
-            <span>
-              Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
-            </span>
-            <span>
-              {currentMonth} turunun tamamlanmasına <span className="text-foreground font-medium">{daysRemaining} gün</span> kaldı.
-            </span>
+            {totalVotes > 0 ? (
+              <>
+                <span>
+                  Toplam geçerli oy: <Counter value={totalVotes} className="text-foreground text-xs font-medium" />
+                </span>
+                <span>
+                  {currentMonth} turunun tamamlanmasına <span className="text-foreground font-medium">{daysRemaining} gün</span> kaldı.
+                </span>
+              </>
+            ) : (
+              <>
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -629,6 +639,25 @@ export default function Home() {
         )}
 
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          {/* Skeleton — veri henüz yüklenmedi */}
+          {partyResults.length === 0 && !selectedCity && (
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-48 mb-6" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-3 w-3 rounded-sm" />
+                      <Skeleton className="h-3" style={{ width: `${60 + Math.random() * 40}px` }} />
+                    </div>
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-3 w-full" style={{ maxWidth: `${90 - i * 10}%` }} />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Ham / Ağırlıklı toggle — sadece login kullanıcılar */}
           {isLoggedIn && !selectedCity && weightedResults && weightedResults.methodology.length > 0 && (
             <div data-slot="button-group" className="flex items-center mb-6 w-fit">

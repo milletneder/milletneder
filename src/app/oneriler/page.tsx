@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, Loader2, Plus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FeatureRequest {
   id: number;
@@ -367,8 +368,27 @@ export default function OnerilerPage() {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="pt-4 pb-3">
+                      <Skeleton className="h-4 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-full mb-1" />
+                      <Skeleton className="h-3 w-2/3 mb-3" />
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-3 w-12" />
+                        <Skeleton className="h-3 w-10" />
+                      </div>
+                      <Separator className="my-3" />
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-4 w-10 ml-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             ) : items.length === 0 ? (
               <Card>
