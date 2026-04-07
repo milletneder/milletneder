@@ -1,7 +1,11 @@
 'use client';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { btn, input } from '@/lib/ui';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 
 function getDefaultDates() {
   const now = new Date();
@@ -44,76 +48,64 @@ export default function NewRoundPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Tur oluşturulamadı');
+        setError(data.error || 'Tur olusturulamadi');
         setLoading(false);
         return;
       }
 
       router.push('/admin/rounds');
     } catch {
-      setError('Bir hata oluştu');
+      setError('Bir hata olustu');
       setLoading(false);
     }
   }
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-lg font-bold text-black mb-6">Yeni Tur Oluştur</h1>
+      <h1 className="text-lg font-bold text-black mb-6">Yeni Tur Olustur</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="startDate"
-            className="block text-sm font-medium text-black mb-1"
-          >
-            Başlangıç Tarihi
-          </label>
-          <input
-            id="startDate"
-            type="datetime-local"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            className={input.text}
-          />
-        </div>
+      <Card>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Baslangic Tarihi</Label>
+              <Input
+                id="startDate"
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+            </div>
 
-        <div>
-          <label
-            htmlFor="endDate"
-            className="block text-sm font-medium text-black mb-1"
-          >
-            Bitiş Tarihi
-          </label>
-          <input
-            id="endDate"
-            type="datetime-local"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            className={input.text}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Bitis Tarihi</Label>
+              <Input
+                id="endDate"
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+              />
+            </div>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className={btn.primary}
-          >
-            {loading ? 'Oluşturuluyor...' : 'Oluştur'}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/rounds')}
-            className={btn.secondary}
-          >
-            İptal
-          </button>
-        </div>
-      </form>
+            <div className="flex gap-3">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Olusturuluyor...' : 'Olustur'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/admin/rounds')}
+              >
+                Iptal
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,12 @@
 'use client';
+
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { btn, input } from '@/lib/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -25,7 +30,7 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'giriş başarısız');
+        setError(data.error || 'Giriş başarısız');
         setLoading(false);
         return;
       }
@@ -34,69 +39,56 @@ export default function AdminLoginPage() {
       localStorage.setItem('admin_data', JSON.stringify(data.admin));
       router.push('/admin');
     } catch {
-      setError('bir hata oluştu. lütfen tekrar deneyin.');
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="border border-neutral-200 p-8">
-          <h1 className="text-lg font-bold text-black text-center mb-6">
-            Admin Giriş
-          </h1>
-
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-sm font-bold">milletneder</span>
+            <Badge variant="outline">Admin</Badge>
+          </div>
+          <CardTitle className="text-lg">Yönetici Girişi</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-black mb-1"
-              >
-                E-posta
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">E-posta</Label>
+              <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={input.text}
                 placeholder="admin@milletneder.com"
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-black mb-1"
-              >
-                Şifre
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="password">Şifre</Label>
+              <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={input.text}
               />
             </div>
 
             {error && (
-              <p className="text-red-600 text-sm text-center">{error}</p>
+              <p className="text-destructive text-sm text-center">{error}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`${btn.primary} w-full`}
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

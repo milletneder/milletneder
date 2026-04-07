@@ -1,7 +1,33 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { badge, btn, input, table } from '@/lib/ui';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Search } from 'lucide-react';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 
 interface User {
   id: number;
@@ -22,8 +48,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [city, setCity] = useState('');
-  const [flagFilter, setFlagFilter] = useState('');
-  const [dummyFilter, setDummyFilter] = useState('');
+  const [flagFilter, setFlagFilter] = useState('all');
+  const [dummyFilter, setDummyFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,20 +61,17 @@ export default function UsersPage() {
       params.set('page', String(page));
       if (search) params.set('search', search);
       if (city) params.set('city', city);
-      if (flagFilter) params.set('flagged', flagFilter);
-      if (dummyFilter) params.set('dummy', dummyFilter);
+      if (flagFilter !== 'all') params.set('flagged', flagFilter);
+      if (dummyFilter !== 'all') params.set('dummy', dummyFilter);
 
       try {
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        const res = await fetch(`/api/admin/users?${params.toString()}`, { headers });
+        const res = await fetch(`/api/admin/users?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setUsers(data.users || []);
           setTotalPages(data.pagination?.totalPages || 1);
         }
-      } catch {
-        // ignore
-      } finally {
+      } catch { /* ignore */ } finally {
         setLoading(false);
       }
     }
@@ -65,131 +88,133 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-black">Kullanıcılar</h1>
+      <h1 className="text-lg font-bold">Kullanıcılar</h1>
 
+      {/* Filtreler */}
       <div className="flex flex-wrap gap-3">
-        <input
-          type="text"
-          placeholder="il veya referans kodu ara..."
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className={`${input.select} w-64`}
-        />
-        <input
-          type="text"
-          placeholder="il filtrele..."
+        <InputGroup className="w-64">
+          <InputGroupAddon align="inline-start">
+            <InputGroupText>
+              <Search className="size-4" />
+            </InputGroupText>
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="İl veya referans kodu ara..."
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </InputGroup>
+
+        <Input
+          placeholder="İl filtrele..."
           value={city}
-          onChange={(e) => {
-            setCity(e.target.value);
-            setPage(1);
-          }}
-          className={`${input.select} w-40`}
+          onChange={(e) => { setCity(e.target.value); setPage(1); }}
+          className="w-40"
         />
-        <select
-          value={dummyFilter}
-          onChange={(e) => {
-            setDummyFilter(e.target.value);
-            setPage(1);
-          }}
-          className={input.select}
-        >
-          <option value="">Tümü</option>
-          <option value="false">Gerçek</option>
-          <option value="true">Sentetik</option>
-        </select>
-        <select
-          value={flagFilter}
-          onChange={(e) => {
-            setFlagFilter(e.target.value);
-            setPage(1);
-          }}
-          className={input.select}
-        >
-          <option value="">Tümü</option>
-          <option value="true">Şüpheli</option>
-          <option value="false">Normal</option>
-        </select>
+
+        <Select value={dummyFilter} onValueChange={(v) => { setDummyFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Tür" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tümü</SelectItem>
+            <SelectItem value="false">Gerçek</SelectItem>
+            <SelectItem value="true">Sentetik</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={flagFilter} onValueChange={(v) => { setFlagFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Durum" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tümü</SelectItem>
+            <SelectItem value="true">Şüpheli</SelectItem>
+            <SelectItem value="false">Normal</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
+      {/* Tablo */}
       {loading ? (
-        <div className="text-neutral-500 text-sm">Yükleniyor...</div>
+        <div className="space-y-2">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
       ) : (
         <>
-          <div className={table.container}>
-            <table className="w-full text-sm">
-              <thead className={table.head}>
-                <tr>
-                  <th className={table.th}>Kimlik Hash</th>
-                  <th className={table.th}>Tür</th>
-                  <th className={table.th}>İl</th>
-                  <th className={table.th}>Kayıt Tarihi</th>
-                  <th className={table.th}>Şüpheli</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Kimlik Hash</TableHead>
+                  <TableHead>Tür</TableHead>
+                  <TableHead>İl</TableHead>
+                  <TableHead>Kayıt Tarihi</TableHead>
+                  <TableHead>Durum</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      onClick={() => router.push(`/admin/users/${user.id}`)}
-                      className={table.row}
-                    >
-                      <td className="px-4 py-3 font-mono text-xs text-black">
-                        {user.identity_hash ? user.identity_hash.substring(0, 12) + '...' : <span className="text-neutral-300">—</span>}
-                      </td>
-                      <td className={table.td}>
-                        {user.is_dummy ? (
-                          <span className="text-xs text-neutral-400">Sentetik</span>
-                        ) : (
-                          <span className="text-xs font-medium text-black">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</span>
-                        )}
-                      </td>
-                      <td className={table.td}>{user.city}</td>
-                      <td className={table.td}>
-                        {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {user.is_flagged ? (
-                          <span className={badge.negative}>
-                            Evet
-                          </span>
-                        ) : (
-                          <span className="text-neutral-300 text-xs">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  <TableRow
+                    key={user.id}
+                    onClick={() => router.push(`/admin/users/${user.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {user.identity_hash ? user.identity_hash.substring(0, 12) + '...' : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {user.is_dummy ? (
+                        <Badge variant="secondary">Sentetik</Badge>
+                      ) : (
+                        <Badge variant="outline">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{user.city}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {user.is_flagged ? (
+                        <Badge variant="destructive">Şüpheli</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
                 {users.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className={table.empty}
-                    >
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       Kullanıcı bulunamadı.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
+          {/* Pagination */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-neutral-500">
+            <span className="text-sm text-muted-foreground">
               Sayfa {page} / {totalPages}
-            </div>
+            </span>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className={btn.small}
               >
                 Önceki
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className={btn.small}
               >
                 Sonraki
-              </button>
+              </Button>
             </div>
           </div>
         </>

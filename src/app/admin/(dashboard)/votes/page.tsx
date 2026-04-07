@@ -1,6 +1,24 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { badge, btn, input, table } from '@/lib/ui';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Vote {
   id: number;
@@ -85,90 +103,122 @@ export default function VotesPage() {
       <h1 className="text-lg font-bold text-black">Oylar</h1>
 
       <div className="flex flex-wrap gap-3">
-        <input type="text" placeholder="tur id..." value={roundFilter}
+        <Input
+          type="text"
+          placeholder="tur id..."
+          value={roundFilter}
           onChange={(e) => { setRoundFilter(e.target.value); setPage(1); }}
-          className={`${input.select} w-32`} />
-        <input type="text" placeholder="parti..." value={partyFilter}
+          className="w-32"
+        />
+        <Input
+          type="text"
+          placeholder="parti..."
+          value={partyFilter}
           onChange={(e) => { setPartyFilter(e.target.value); setPage(1); }}
-          className={`${input.select} w-32`} />
-        <input type="text" placeholder="il..." value={cityFilter}
+          className="w-32"
+        />
+        <Input
+          type="text"
+          placeholder="il..."
+          value={cityFilter}
           onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
-          className={`${input.select} w-32`} />
-        <select value={validFilter}
-          onChange={(e) => { setValidFilter(e.target.value); setPage(1); }}
-          className={input.select}>
-          <option value="">Tüm Oylar</option>
-          <option value="true">Geçerli</option>
-          <option value="false">Geçersiz</option>
-        </select>
+          className="w-32"
+        />
+        <Select
+          value={validFilter}
+          onValueChange={(value) => { setValidFilter(value === 'all' ? '' : value); setPage(1); }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Tüm Oylar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tüm Oylar</SelectItem>
+            <SelectItem value="true">Geçerli</SelectItem>
+            <SelectItem value="false">Geçersiz</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {loading ? (
-        <div className="text-neutral-500 text-sm">Yükleniyor...</div>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
       ) : (
         <>
-          <div className={table.container}>
-            <table className="w-full text-sm">
-              <thead className={table.head}>
-                <tr>
-                  <th className={table.th}>ID</th>
-                  <th className={table.th}>Kullanıcı</th>
-                  <th className={table.th}>Parti</th>
-                  <th className={table.th}>İl</th>
-                  <th className={table.th}>Tur</th>
-                  <th className={table.th}>Durum</th>
-                  <th className={table.th}>Tarih</th>
-                  <th className={`${table.th} text-right`}>İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {votes.map((vote) => (
-                  <tr key={vote.id} className={table.row}>
-                    <td className={table.td}>#{vote.id}</td>
-                    <td className={table.td}>{vote.user_name || '-'}</td>
-                    <td className={table.td}>{vote.party}</td>
-                    <td className={table.td}>{vote.city}</td>
-                    <td className={table.td}>#{vote.round_id}</td>
-                    <td className="px-4 py-3">
-                      <span className={vote.is_valid ? badge.positive : badge.negative}>
-                        {vote.is_valid ? 'Geçerli' : 'Geçersiz'}
-                      </span>
-                    </td>
-                    <td className={table.td}>
-                      {vote.created_at ? new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => handleToggleValid(vote.id, vote.is_valid)}
-                        className={btn.small}
-                      >
-                        {vote.is_valid ? 'Geçersiz Kıl' : 'Geçerli Yap'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {votes.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className={table.empty}>
-                      Oy bulunamadı.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Kullanıcı</TableHead>
+                <TableHead>Parti</TableHead>
+                <TableHead>İl</TableHead>
+                <TableHead>Tur</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Tarih</TableHead>
+                <TableHead className="text-right">İşlem</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {votes.map((vote) => (
+                <TableRow key={vote.id}>
+                  <TableCell>#{vote.id}</TableCell>
+                  <TableCell>{vote.user_name || '-'}</TableCell>
+                  <TableCell>{vote.party}</TableCell>
+                  <TableCell>{vote.city}</TableCell>
+                  <TableCell>#{vote.round_id}</TableCell>
+                  <TableCell>
+                    <Badge variant={vote.is_valid ? 'default' : 'destructive'}>
+                      {vote.is_valid ? 'Geçerli' : 'Geçersiz'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {vote.created_at ? new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleValid(vote.id, vote.is_valid)}
+                    >
+                      {vote.is_valid ? 'Geçersiz Kıl' : 'Geçerli Yap'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {votes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    Oy bulunamadı.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
 
           <div className="flex items-center justify-between">
             <div className="text-sm text-neutral-500">Sayfa {page} / {totalPages}</div>
             <div className="flex gap-2">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                className={btn.small}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+              >
                 Önceki
-              </button>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-                className={btn.small}>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
                 Sonraki
-              </button>
+              </Button>
             </div>
           </div>
         </>
