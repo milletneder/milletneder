@@ -333,7 +333,7 @@ export default function Header() {
               )}
               <Button onClick={handleVoteClick}>
                 <Stamp className="size-3.5" data-icon="inline-start" />
-                Katıl
+                Ücretsiz Katıl
               </Button>
             </div>
 
@@ -379,7 +379,7 @@ export default function Header() {
 
               <Button onClick={handleVoteClick}>
                 <Stamp className="size-3.5" data-icon="inline-start" />
-                Katıl
+                Ücretsiz Katıl
               </Button>
             </div>
           </div>
