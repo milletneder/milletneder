@@ -1,6 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type SmsProvider = 'twilio' | 'vatansms' | 'firebase';
 
@@ -230,728 +237,758 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-bold text-black mb-4">Ayarlar</h1>
-        <p className="text-neutral-500 text-sm">Yukleniyor...</p>
+      <div className="p-6 max-w-2xl space-y-6">
+        <div>
+          <Skeleton className="h-7 w-32 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-72 mt-1" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-3">
+              <Skeleton className="h-20 flex-1" />
+              <Skeleton className="h-20 flex-1" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-56 mt-1" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-36" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-6 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="p-6 max-w-2xl">
-      <h1 className="text-xl font-bold text-black mb-1">Ayarlar</h1>
-      <p className="text-neutral-500 text-sm mb-6">Kimlik dogrulama ve servis ayarlari</p>
+      <h1 className="text-xl font-bold text-foreground mb-1">Ayarlar</h1>
+      <p className="text-muted-foreground text-sm mb-6">Kimlik dogrulama ve servis ayarlari</p>
 
       {message && (
-        <div className="bg-neutral-50 border border-neutral-200 p-3 mb-4 text-sm text-black">
-          {message}
-        </div>
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       )}
 
       <div className="space-y-6">
         {/* Dogrulama Yontemi */}
-        <div className="border border-neutral-200 p-5">
-          <h2 className="text-sm font-bold text-black mb-3">Kullanici Dogrulama Yontemi</h2>
-          <p className="text-xs text-neutral-500 mb-4">
-            Kullanicilarin giris ve kayit olurken kullanacagi dogrulama yontemi.
-          </p>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setSelectedMethod('email')}
-              className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                selectedMethod === 'email'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-              }`}
-            >
-              <div className="text-center">
-                <span className="block text-lg mb-1">E-posta</span>
-                <span className="block text-[11px] opacity-70">E-posta + sifre ile giris</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setSelectedMethod('phone')}
-              className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                selectedMethod === 'phone'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-              }`}
-            >
-              <div className="text-center">
-                <span className="block text-lg mb-1">SMS</span>
-                <span className="block text-[11px] opacity-70">Telefon + OTP ile giris</span>
-              </div>
-            </button>
-          </div>
-
-          {methodChanged && (
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-xs text-amber-600">
-                Yontem degistirildi, kaydetmek icin onaylayin.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedMethod(authMethod)}
-                  className="px-4 py-2 text-xs font-medium text-neutral-500 border border-neutral-200 hover:border-black hover:text-black transition-colors"
-                >
-                  Iptal
-                </button>
-                <button
-                  onClick={handleSaveAuthMethod}
-                  disabled={saving}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                >
-                  {saving ? 'Kaydediliyor...' : 'Kaydet'}
-                </button>
-              </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Kullanici Dogrulama Yontemi</CardTitle>
+            <CardDescription className="text-xs">
+              Kullanicilarin giris ve kayit olurken kullanacagi dogrulama yontemi.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedMethod('email')}
+                className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
+                  selectedMethod === 'email'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="text-center">
+                  <span className="block text-lg mb-1">E-posta</span>
+                  <span className="block text-[11px] opacity-70">E-posta + sifre ile giris</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setSelectedMethod('phone')}
+                className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
+                  selectedMethod === 'phone'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                }`}
+              >
+                <div className="text-center">
+                  <span className="block text-lg mb-1">SMS</span>
+                  <span className="block text-[11px] opacity-70">Telefon + OTP ile giris</span>
+                </div>
+              </button>
             </div>
-          )}
-        </div>
+
+            {methodChanged && (
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Yontem degistirildi, kaydetmek icin onaylayin.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedMethod(authMethod)}
+                  >
+                    Iptal
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveAuthMethod}
+                    disabled={saving}
+                  >
+                    {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* SMS Saglayici Secimi (sadece SMS modu seciliyken) */}
         {selectedMethod === 'phone' && (
-          <div className="border border-neutral-200 p-5">
-            <h2 className="text-sm font-bold text-black mb-3">Birincil SMS Saglayici</h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              SMS dogrulama kodlari icin kullanilacak servis saglayicisini secin.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setSelectedProvider('firebase')}
-                className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                  selectedProvider === 'firebase'
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-                }`}
-              >
-                <div className="text-center">
-                  <span className="block text-lg mb-1">Firebase</span>
-                  <span className="block text-[11px] opacity-70">Google (ucuz, istemci tarafli)</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setSelectedProvider('twilio')}
-                className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                  selectedProvider === 'twilio'
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-                }`}
-              >
-                <div className="text-center">
-                  <span className="block text-lg mb-1">Twilio</span>
-                  <span className="block text-[11px] opacity-70">Uluslararasi (Verify API)</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setSelectedProvider('vatansms')}
-                className={`flex-1 py-3 px-4 text-sm font-medium border transition-colors ${
-                  selectedProvider === 'vatansms'
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-                }`}
-              >
-                <div className="text-center">
-                  <span className="block text-lg mb-1">VatanSMS</span>
-                  <span className="block text-[11px] opacity-70">Yerli saglayici (XML API)</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Yedek saglayici (Firebase seciliyken) */}
-            {selectedProvider === 'firebase' && (
-              <div className="mt-4 pt-4 border-t border-neutral-100">
-                <h3 className="text-xs font-bold text-black mb-2">Yedek SMS Saglayici</h3>
-                <p className="text-[10px] text-neutral-500 mb-3">
-                  Firebase hata verdiginde (Error 39, reCAPTCHA sorunu vb.) kullanici fark etmeden bu saglayiciya duser.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setSelectedFallback('twilio')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium border transition-colors ${
-                      selectedFallback === 'twilio'
-                        ? 'bg-neutral-800 text-white border-neutral-800'
-                        : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-                    }`}
-                  >
-                    Twilio (Yedek)
-                  </button>
-                  <button
-                    onClick={() => setSelectedFallback('vatansms')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium border transition-colors ${
-                      selectedFallback === 'vatansms'
-                        ? 'bg-neutral-800 text-white border-neutral-800'
-                        : 'bg-white text-neutral-500 border-neutral-200 hover:border-black hover:text-black'
-                    }`}
-                  >
-                    VatanSMS (Yedek)
-                  </button>
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Birincil SMS Saglayici</CardTitle>
+              <CardDescription className="text-xs">
+                SMS dogrulama kodlari icin kullanilacak servis saglayicisini secin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSelectedProvider('firebase')}
+                  className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
+                    selectedProvider === 'firebase'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                  }`}
+                >
+                  <div className="text-center">
+                    <span className="block text-lg mb-1">Firebase</span>
+                    <span className="block text-[11px] opacity-70">Google (ucuz, istemci tarafli)</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedProvider('twilio')}
+                  className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
+                    selectedProvider === 'twilio'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                  }`}
+                >
+                  <div className="text-center">
+                    <span className="block text-lg mb-1">Twilio</span>
+                    <span className="block text-[11px] opacity-70">Uluslararasi (Verify API)</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedProvider('vatansms')}
+                  className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
+                    selectedProvider === 'vatansms'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                  }`}
+                >
+                  <div className="text-center">
+                    <span className="block text-lg mb-1">VatanSMS</span>
+                    <span className="block text-[11px] opacity-70">Yerli saglayici (XML API)</span>
+                  </div>
+                </button>
               </div>
-            )}
 
-            {providerChanged && (
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-xs text-neutral-600">
-                  Saglayici degistirildi, kaydetmek icin onaylayin.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}
-                    className="px-4 py-2 text-xs font-medium text-neutral-500 border border-neutral-200 hover:border-black hover:text-black transition-colors"
-                  >
-                    Iptal
-                  </button>
-                  <button
-                    onClick={handleSaveProvider}
-                    disabled={saving}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    {saving ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
+              {/* Yedek saglayici (Firebase seciliyken) */}
+              {selectedProvider === 'firebase' && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <h3 className="text-xs font-bold text-foreground mb-2">Yedek SMS Saglayici</h3>
+                  <p className="text-[10px] text-muted-foreground mb-3">
+                    Firebase hata verdiginde (Error 39, reCAPTCHA sorunu vb.) kullanici fark etmeden bu saglayiciya duser.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedFallback('twilio')}
+                      className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-colors ${
+                        selectedFallback === 'twilio'
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Twilio (Yedek)
+                    </button>
+                    <button
+                      onClick={() => setSelectedFallback('vatansms')}
+                      className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-colors ${
+                        selectedFallback === 'vatansms'
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+                      }`}
+                    >
+                      VatanSMS (Yedek)
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {providerChanged && (
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Saglayici degistirildi, kaydetmek icin onaylayin.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}
+                    >
+                      Iptal
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveProvider}
+                      disabled={saving}
+                    >
+                      {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Twilio Ayarlari */}
         {showTwilioSettings && (
-          <div className="border border-neutral-200 p-5">
-            <h2 className="text-sm font-bold text-black mb-1">Twilio Ayarlari</h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              {selectedMethod === 'email'
-                ? 'E-posta OTP dogrulama icin Twilio Verify API bilgilerini girin.'
-                : 'SMS dogrulama icin Twilio API bilgilerini girin.'}
-              <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 ml-1 underline">
-                Twilio Console
-              </a>
-            </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Twilio Ayarlari</CardTitle>
+              <CardDescription className="text-xs">
+                {selectedMethod === 'email'
+                  ? 'E-posta OTP dogrulama icin Twilio Verify API bilgilerini girin.'
+                  : 'SMS dogrulama icin Twilio API bilgilerini girin.'}
+                {' '}
+                <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="underline">
+                  Twilio Console
+                </a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {twilioMessage && (
+                <Alert className="mb-4">
+                  <AlertDescription className="text-xs">{twilioMessage}</AlertDescription>
+                </Alert>
+              )}
 
-            {twilioMessage && (
-              <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
-                {twilioMessage}
-              </div>
-            )}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Account SID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={twilioSid}
+                      onChange={(e) => setTwilioSid(e.target.value)}
+                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('twilio_account_sid', twilioSid, setTwilioMessage, setTwilioSaving)}
+                      disabled={twilioSaving || !twilioSid}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Account SID</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={twilioSid}
-                    onChange={(e) => setTwilioSid(e.target.value)}
-                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Auth Token</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      value={twilioToken}
+                      onChange={(e) => setTwilioToken(e.target.value)}
+                      placeholder="Twilio Auth Token"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('twilio_auth_token', twilioToken, setTwilioMessage, setTwilioSaving)}
+                      disabled={twilioSaving || !twilioToken}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Verify Service SID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={twilioVerifySid}
+                      onChange={(e) => setTwilioVerifySid(e.target.value)}
+                      placeholder="VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('twilio_verify_service_sid', twilioVerifySid, setTwilioMessage, setTwilioSaving)}
+                      disabled={twilioSaving || !twilioVerifySid}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Twilio Console &gt; Verify &gt; Services &gt; Service SID</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <div>
+                    <Label className="text-xs">Test Modu</Label>
+                    <p className="text-[10px] text-muted-foreground">Acikken dogrulama kodu gonderilmez, sunucu loglarinda gosterilir.</p>
+                  </div>
+                  <Switch
+                    checked={twilioTestMode}
+                    disabled={twilioSaving}
+                    onCheckedChange={(checked) => {
+                      setTwilioTestMode(checked);
+                      handleSaveSetting('twilio_test_mode', String(checked), setTwilioMessage, setTwilioSaving);
+                    }}
                   />
-                  <button
-                    onClick={() => handleSaveSetting('twilio_account_sid', twilioSid, setTwilioMessage, setTwilioSaving)}
-                    disabled={twilioSaving || !twilioSid}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Auth Token</label>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={twilioToken}
-                    onChange={(e) => setTwilioToken(e.target.value)}
-                    placeholder="Twilio Auth Token"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('twilio_auth_token', twilioToken, setTwilioMessage, setTwilioSaving)}
-                    disabled={twilioSaving || !twilioToken}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
-                </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Verify Service SID</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={twilioVerifySid}
-                    onChange={(e) => setTwilioVerifySid(e.target.value)}
-                    placeholder="VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('twilio_verify_service_sid', twilioVerifySid, setTwilioMessage, setTwilioSaving)}
-                    disabled={twilioSaving || !twilioVerifySid}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
-                </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Twilio Console &gt; Verify &gt; Services &gt; Service SID</p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-                <div>
-                  <span className="text-xs font-medium text-neutral-600">Test Modu</span>
-                  <p className="text-[10px] text-neutral-400">Acikken dogrulama kodu gonderilmez, sunucu loglarinda gosterilir.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    const newVal = !twilioTestMode;
-                    setTwilioTestMode(newVal);
-                    handleSaveSetting('twilio_test_mode', String(newVal), setTwilioMessage, setTwilioSaving);
-                  }}
-                  disabled={twilioSaving}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    twilioTestMode ? 'bg-green-500' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      twilioTestMode ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* VatanSMS Ayarlari */}
         {showVatanSettings && (
-          <div className="border border-neutral-200 p-5">
-            <h2 className="text-sm font-bold text-black mb-1">VatanSMS Ayarlari</h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              Yerli SMS saglayici API bilgilerini girin. Bilgilere{' '}
-              <a href="https://panel.vatansms.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                VatanSMS Panel
-              </a>
-              {' '}&gt; Hesap Ayarlari &gt; SMS API bolumunden ulasabilirsiniz.
-            </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">VatanSMS Ayarlari</CardTitle>
+              <CardDescription className="text-xs">
+                Yerli SMS saglayici API bilgilerini girin. Bilgilere{' '}
+                <a href="https://panel.vatansms.com" target="_blank" rel="noopener noreferrer" className="underline">
+                  VatanSMS Panel
+                </a>
+                {' '}&gt; Hesap Ayarlari &gt; SMS API bolumunden ulasabilirsiniz.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {vatanMessage && (
+                <Alert className="mb-4">
+                  <AlertDescription className="text-xs">{vatanMessage}</AlertDescription>
+                </Alert>
+              )}
 
-            {vatanMessage && (
-              <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
-                {vatanMessage}
-              </div>
-            )}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">API Kullanici ID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={vatanApiId}
+                      onChange={(e) => setVatanApiId(e.target.value)}
+                      placeholder="12345"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('vatansms_api_id', vatanApiId, setVatanMessage, setVatanSaving)}
+                      disabled={vatanSaving || !vatanApiId}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">API Kullanici ID</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={vatanApiId}
-                    onChange={(e) => setVatanApiId(e.target.value)}
-                    placeholder="12345"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
+                <div className="space-y-1.5">
+                  <Label className="text-xs">API Kullanici Adi</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={vatanApiUser}
+                      onChange={(e) => setVatanApiUser(e.target.value)}
+                      placeholder="905XXXXXXXXX"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('vatansms_api_user', vatanApiUser, setVatanMessage, setVatanSaving)}
+                      disabled={vatanSaving || !vatanApiUser}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">API Sifre</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="password"
+                      value={vatanApiPass}
+                      onChange={(e) => setVatanApiPass(e.target.value)}
+                      placeholder="VatanSMS API sifresi"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('vatansms_api_pass', vatanApiPass, setVatanMessage, setVatanSaving)}
+                      disabled={vatanSaving || !vatanApiPass}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Gonderen Basligi (Originator)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={vatanSender}
+                      onChange={(e) => setVatanSender(e.target.value)}
+                      placeholder="MILLETNEDER"
+                      maxLength={11}
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('vatansms_sender', vatanSender, setVatanMessage, setVatanSaving)}
+                      disabled={vatanSaving || !vatanSender}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Maks 11 karakter, Turkce karakter kullanilamaz. VatanSMS panelinden tanimlanmis olmali.</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <div>
+                    <Label className="text-xs">Test Modu</Label>
+                    <p className="text-[10px] text-muted-foreground">Acikken SMS gonderilmez, OTP kodu sunucu loglarinda gosterilir.</p>
+                  </div>
+                  <Switch
+                    checked={vatanTestMode}
+                    disabled={vatanSaving}
+                    onCheckedChange={(checked) => {
+                      setVatanTestMode(checked);
+                      handleSaveSetting('vatansms_test_mode', String(checked), setVatanMessage, setVatanSaving);
+                    }}
                   />
-                  <button
-                    onClick={() => handleSaveSetting('vatansms_api_id', vatanApiId, setVatanMessage, setVatanSaving)}
-                    disabled={vatanSaving || !vatanApiId}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">API Kullanici Adi</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={vatanApiUser}
-                    onChange={(e) => setVatanApiUser(e.target.value)}
-                    placeholder="905XXXXXXXXX"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('vatansms_api_user', vatanApiUser, setVatanMessage, setVatanSaving)}
-                    disabled={vatanSaving || !vatanApiUser}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">API Sifre</label>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={vatanApiPass}
-                    onChange={(e) => setVatanApiPass(e.target.value)}
-                    placeholder="VatanSMS API sifresi"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('vatansms_api_pass', vatanApiPass, setVatanMessage, setVatanSaving)}
-                    disabled={vatanSaving || !vatanApiPass}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
-                </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Gonderen Basligi (Originator)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={vatanSender}
-                    onChange={(e) => setVatanSender(e.target.value)}
-                    placeholder="MILLETNEDER"
-                    maxLength={11}
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('vatansms_sender', vatanSender, setVatanMessage, setVatanSaving)}
-                    disabled={vatanSaving || !vatanSender}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
-                </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Maks 11 karakter, Turkce karakter kullanilamaz. VatanSMS panelinden tanimlanmis olmali.</p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-                <div>
-                  <span className="text-xs font-medium text-neutral-600">Test Modu</span>
-                  <p className="text-[10px] text-neutral-400">Acikken SMS gonderilmez, OTP kodu sunucu loglarinda gosterilir.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    const newVal = !vatanTestMode;
-                    setVatanTestMode(newVal);
-                    handleSaveSetting('vatansms_test_mode', String(newVal), setVatanMessage, setVatanSaving);
-                  }}
-                  disabled={vatanSaving}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    vatanTestMode ? 'bg-green-500' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      vatanTestMode ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Firebase Ayarlari */}
         {showFirebaseSettings && (
-          <div className="border border-neutral-200 p-5">
-            <h2 className="text-sm font-bold text-black mb-1">Firebase Ayarlari</h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              Firebase Phone Auth istemci tarafinda calisir. reCAPTCHA otomatik olarak yonetilir.{' '}
-              <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="underline">
-                Firebase Console
-              </a>
-            </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Firebase Ayarlari</CardTitle>
+              <CardDescription className="text-xs">
+                Firebase Phone Auth istemci tarafinda calisir. reCAPTCHA otomatik olarak yonetilir.{' '}
+                <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="underline">
+                  Firebase Console
+                </a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {firebaseMessage && (
+                <Alert className="mb-4">
+                  <AlertDescription className="text-xs">{firebaseMessage}</AlertDescription>
+                </Alert>
+              )}
 
-            {firebaseMessage && (
-              <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
-                {firebaseMessage}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Web API Key</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={firebaseApiKey}
-                    onChange={(e) => setFirebaseApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('firebase_api_key', firebaseApiKey, setFirebaseMessage, setFirebaseSaving)}
-                    disabled={firebaseSaving || !firebaseApiKey}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Web API Key</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={firebaseApiKey}
+                      onChange={(e) => setFirebaseApiKey(e.target.value)}
+                      placeholder="AIzaSy..."
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('firebase_api_key', firebaseApiKey, setFirebaseMessage, setFirebaseSaving)}
+                      disabled={firebaseSaving || !firebaseApiKey}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Firebase Console &gt; Project Settings &gt; Web API Key</p>
                 </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Firebase Console &gt; Project Settings &gt; Web API Key</p>
-              </div>
 
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Project ID</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={firebaseProjectId}
-                    onChange={(e) => setFirebaseProjectId(e.target.value)}
-                    placeholder="my-project-12345"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('firebase_project_id', firebaseProjectId, setFirebaseMessage, setFirebaseSaving)}
-                    disabled={firebaseSaving || !firebaseProjectId}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Project ID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={firebaseProjectId}
+                      onChange={(e) => setFirebaseProjectId(e.target.value)}
+                      placeholder="my-project-12345"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('firebase_project_id', firebaseProjectId, setFirebaseMessage, setFirebaseSaving)}
+                      disabled={firebaseSaving || !firebaseProjectId}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-medium text-neutral-600 mb-1">Auth Domain</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={firebaseAuthDomain}
-                    onChange={(e) => setFirebaseAuthDomain(e.target.value)}
-                    placeholder="my-project-12345.firebaseapp.com"
-                    className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                  />
-                  <button
-                    onClick={() => handleSaveSetting('firebase_auth_domain', firebaseAuthDomain, setFirebaseMessage, setFirebaseSaving)}
-                    disabled={firebaseSaving || !firebaseAuthDomain}
-                    className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                  >
-                    Kaydet
-                  </button>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Auth Domain</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={firebaseAuthDomain}
+                      onChange={(e) => setFirebaseAuthDomain(e.target.value)}
+                      placeholder="my-project-12345.firebaseapp.com"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveSetting('firebase_auth_domain', firebaseAuthDomain, setFirebaseMessage, setFirebaseSaving)}
+                      disabled={firebaseSaving || !firebaseAuthDomain}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Bos birakilirsa project-id.firebaseapp.com kullanilir.</p>
                 </div>
-                <p className="text-[10px] text-neutral-400 mt-1">Bos birakilirsa project-id.firebaseapp.com kullanilir.</p>
-              </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-                <div>
-                  <span className="text-xs font-medium text-neutral-600">Test Modu</span>
-                  <p className="text-[10px] text-neutral-400">Acikken token dogrulama atlanir (gelistirme icin).</p>
-                </div>
-                <button
-                  onClick={() => {
-                    const newVal = !firebaseTestMode;
-                    setFirebaseTestMode(newVal);
-                    handleSaveSetting('firebase_test_mode', String(newVal), setFirebaseMessage, setFirebaseSaving);
-                  }}
-                  disabled={firebaseSaving}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    firebaseTestMode ? 'bg-neutral-800' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      firebaseTestMode ? 'translate-x-5' : 'translate-x-0'
-                    }`}
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <div>
+                    <Label className="text-xs">Test Modu</Label>
+                    <p className="text-[10px] text-muted-foreground">Acikken token dogrulama atlanir (gelistirme icin).</p>
+                  </div>
+                  <Switch
+                    checked={firebaseTestMode}
+                    disabled={firebaseSaving}
+                    onCheckedChange={(checked) => {
+                      setFirebaseTestMode(checked);
+                      handleSaveSetting('firebase_test_mode', String(checked), setFirebaseMessage, setFirebaseSaving);
+                    }}
                   />
-                </button>
-              </div>
+                </div>
 
-              <div className="bg-neutral-50 border border-neutral-100 p-3 mt-2">
-                <p className="text-[10px] text-neutral-600">
-                  <strong>Not:</strong> Firebase Phone Auth istemci tarafinda calisir. Hata 39, reCAPTCHA sorunu veya kota asiminda
-                  kullanici fark etmeden yedek saglayiciya ({selectedFallback === 'twilio' ? 'Twilio' : 'VatanSMS'}) duser.
-                </p>
+                <Alert className="mt-2">
+                  <AlertDescription className="text-[10px]">
+                    <strong>Not:</strong> Firebase Phone Auth istemci tarafinda calisir. Hata 39, reCAPTCHA sorunu veya kota asiminda
+                    kullanici fark etmeden yedek saglayiciya ({selectedFallback === 'twilio' ? 'Twilio' : 'VatanSMS'}) duser.
+                  </AlertDescription>
+                </Alert>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* E-posta seciliyken: Twilio E-posta + SMTP ayarlari */}
         {selectedMethod === 'email' && (
           <>
-            <div className="border border-neutral-200 p-5">
-              <h2 className="text-sm font-bold text-black mb-1">Twilio E-posta Kanali</h2>
-              <p className="text-xs text-neutral-500 mb-4">
-                E-posta ile OTP dogrulama icin Twilio Verify servisinde e-posta kanali aktif olmalidir.
-              </p>
-              <div className="bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-600">
-                  Twilio Console &gt; Verify &gt; Services &gt; Email Integration bolumunden yapilandirin.
-                </p>
-                <a
-                  href="https://console.twilio.com/us1/develop/verify/services"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 underline mt-1 inline-block"
-                >
-                  Twilio Verify Services
-                </a>
-              </div>
-            </div>
-
-            <div className="border border-neutral-200 p-5">
-              <h2 className="text-sm font-bold text-black mb-1">SMTP E-posta Ayarlari</h2>
-              <p className="text-xs text-neutral-500 mb-4">
-                Kurtarma kodlarini e-posta ile gondermek icin SMTP sunucu bilgilerini girin.
-              </p>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Host</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={smtpHost}
-                      onChange={(e) => setSmtpHost(e.target.value)}
-                      placeholder="smtp.sendgrid.net"
-                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSaveSetting('smtp_host', smtpHost, setTwilioMessage, setTwilioSaving)}
-                      disabled={twilioSaving || !smtpHost}
-                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Twilio E-posta Kanali</CardTitle>
+                <CardDescription className="text-xs">
+                  E-posta ile OTP dogrulama icin Twilio Verify servisinde e-posta kanali aktif olmalidir.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Alert>
+                  <AlertDescription className="text-xs">
+                    Twilio Console &gt; Verify &gt; Services &gt; Email Integration bolumunden yapilandirin.
+                    <br />
+                    <a
+                      href="https://console.twilio.com/us1/develop/verify/services"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline mt-1 inline-block"
                     >
-                      Kaydet
-                    </button>
+                      Twilio Verify Services
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">SMTP E-posta Ayarlari</CardTitle>
+                <CardDescription className="text-xs">
+                  Kurtarma kodlarini e-posta ile gondermek icin SMTP sunucu bilgilerini girin.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">SMTP Host</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={smtpHost}
+                        onChange={(e) => setSmtpHost(e.target.value)}
+                        placeholder="smtp.sendgrid.net"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveSetting('smtp_host', smtpHost, setTwilioMessage, setTwilioSaving)}
+                        disabled={twilioSaving || !smtpHost}
+                      >
+                        Kaydet
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">SMTP Port</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={smtpPort}
+                        onChange={(e) => setSmtpPort(e.target.value)}
+                        placeholder="587"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveSetting('smtp_port', smtpPort, setTwilioMessage, setTwilioSaving)}
+                        disabled={twilioSaving || !smtpPort}
+                      >
+                        Kaydet
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">587 (TLS) veya 465 (SSL)</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">SMTP Kullanici</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={smtpUser}
+                        onChange={(e) => setSmtpUser(e.target.value)}
+                        placeholder="apikey"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveSetting('smtp_user', smtpUser, setTwilioMessage, setTwilioSaving)}
+                        disabled={twilioSaving || !smtpUser}
+                      >
+                        Kaydet
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">SMTP Sifre</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="password"
+                        value={smtpPass}
+                        onChange={(e) => setSmtpPass(e.target.value)}
+                        placeholder="SMTP API key veya sifre"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveSetting('smtp_pass', smtpPass, setTwilioMessage, setTwilioSaving)}
+                        disabled={twilioSaving || !smtpPass}
+                      >
+                        Kaydet
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Gonderen E-posta</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="email"
+                        value={smtpFrom}
+                        onChange={(e) => setSmtpFrom(e.target.value)}
+                        placeholder="noreply@milletneder.com"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveSetting('smtp_from', smtpFrom, setTwilioMessage, setTwilioSaving)}
+                        disabled={twilioSaving || !smtpFrom}
+                      >
+                        Kaydet
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Port</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={smtpPort}
-                      onChange={(e) => setSmtpPort(e.target.value)}
-                      placeholder="587"
-                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSaveSetting('smtp_port', smtpPort, setTwilioMessage, setTwilioSaving)}
-                      disabled={twilioSaving || !smtpPort}
-                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    >
-                      Kaydet
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-neutral-400 mt-1">587 (TLS) veya 465 (SSL)</p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Kullanici</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={smtpUser}
-                      onChange={(e) => setSmtpUser(e.target.value)}
-                      placeholder="apikey"
-                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSaveSetting('smtp_user', smtpUser, setTwilioMessage, setTwilioSaving)}
-                      disabled={twilioSaving || !smtpUser}
-                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    >
-                      Kaydet
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">SMTP Sifre</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      value={smtpPass}
-                      onChange={(e) => setSmtpPass(e.target.value)}
-                      placeholder="SMTP API key veya sifre"
-                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSaveSetting('smtp_pass', smtpPass, setTwilioMessage, setTwilioSaving)}
-                      disabled={twilioSaving || !smtpPass}
-                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    >
-                      Kaydet
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-neutral-400 mt-1">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">Gonderen E-posta</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      value={smtpFrom}
-                      onChange={(e) => setSmtpFrom(e.target.value)}
-                      placeholder="noreply@milletneder.com"
-                      className="flex-1 px-3 py-2 text-sm border border-neutral-200 focus:border-black focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSaveSetting('smtp_from', smtpFrom, setTwilioMessage, setTwilioSaving)}
-                      disabled={twilioSaving || !smtpFrom}
-                      className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    >
-                      Kaydet
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </>
         )}
 
-        {/* Test: Bakiye Dusuk Simülasyonu */}
-        <div className="border border-amber-300 bg-amber-50 p-5">
-          <h2 className="text-sm font-bold text-black mb-1">Test Araclari</h2>
-          <p className="text-xs text-neutral-500 mb-4">
-            Gelistirme ve test amacli simülasyon ayarlari.
-          </p>
+        {/* Test: Bakiye Dusuk Simulasyonu */}
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="text-sm">Test Araclari</CardTitle>
+            <CardDescription className="text-xs">
+              Gelistirme ve test amacli simulasyon ayarlari.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {forceLowMessage && (
+              <Alert className="mb-4">
+                <AlertDescription className="text-xs">{forceLowMessage}</AlertDescription>
+              </Alert>
+            )}
 
-          {forceLowMessage && (
-            <div className="bg-neutral-50 border border-neutral-200 p-2 mb-3 text-xs text-black">
-              {forceLowMessage}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-neutral-600">Bakiye Dusuk Simülasyonu</span>
-              <p className="text-[10px] text-neutral-400">Acikken SMS bakiyesi dusuk gibi davranir ve bagis modalini gosterir.</p>
-            </div>
-            <button
-              onClick={() => {
-                const newVal = !forceLowBalance;
-                setForceLowBalance(newVal);
-                handleSaveSetting('force_low_balance', String(newVal), setForceLowMessage, setForceLowSaving);
-              }}
-              disabled={forceLowSaving}
-              className={`relative w-11 h-6 rounded-full transition-colors ${
-                forceLowBalance ? 'bg-amber-500' : 'bg-neutral-300'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  forceLowBalance ? 'translate-x-5' : 'translate-x-0'
-                }`}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-xs">Bakiye Dusuk Simulasyonu</Label>
+                <p className="text-[10px] text-muted-foreground">Acikken SMS bakiyesi dusuk gibi davranir ve bagis modalini gosterir.</p>
+              </div>
+              <Switch
+                checked={forceLowBalance}
+                disabled={forceLowSaving}
+                onCheckedChange={(checked) => {
+                  setForceLowBalance(checked);
+                  handleSaveSetting('force_low_balance', String(checked), setForceLowMessage, setForceLowSaving);
+                }}
               />
-            </button>
-          </div>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Gizlilik Notu */}
-        <div className="border border-neutral-200 p-5 bg-neutral-50">
-          <h2 className="text-sm font-bold text-black mb-2">Gizlilik ve Guvenlik</h2>
-          <ul className="text-xs text-neutral-600 space-y-1.5">
-            <li>E-posta ve telefon numaralari hicbir yerde saklanmaz.</li>
-            <li>Veritabaninda sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
-            <li>Kullanici kimligi ile oy tercihi arasinda baglanti kurulamaz.</li>
-            <li>Twilio, VatanSMS ve SMTP bilgileri AES-256-GCM ile sifrelenerek saklanir.</li>
-          </ul>
-        </div>
+        <Card className="bg-muted/50">
+          <CardHeader>
+            <CardTitle className="text-sm">Gizlilik ve Guvenlik</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="text-xs text-muted-foreground space-y-1.5">
+              <li>E-posta ve telefon numaralari hicbir yerde saklanmaz.</li>
+              <li>Veritabaninda sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
+              <li>Kullanici kimligi ile oy tercihi arasinda baglanti kurulamaz.</li>
+              <li>Twilio, VatanSMS ve SMTP bilgileri AES-256-GCM ile sifrelenerek saklanir.</li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

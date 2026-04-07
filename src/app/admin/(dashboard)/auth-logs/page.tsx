@@ -1,5 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface AuthLog {
   id: number;
@@ -20,18 +32,18 @@ interface Summary {
   count: number;
 }
 
-const eventTypeLabels: Record<string, { label: string; color: string }> = {
-  login: { label: 'Giriş', color: 'bg-neutral-100 text-black' },
-  login_fail: { label: 'Başarısız Giriş', color: 'bg-neutral-200 text-neutral-800' },
-  register: { label: 'Kayıt', color: 'bg-black text-white' },
-  register_fail: { label: 'Başarısız Kayıt', color: 'bg-neutral-200 text-neutral-800' },
-  register_incomplete: { label: 'Tamamlanmamış', color: 'bg-neutral-200 text-neutral-700' },
-  register_blocked: { label: 'Engellendi', color: 'bg-neutral-300 text-neutral-900' },
-  password_reset: { label: 'Şifre Sıfırlama', color: 'bg-neutral-100 text-neutral-700' },
-  password_change: { label: 'Şifre Değişikliği', color: 'bg-neutral-100 text-neutral-700' },
-  client_error: { label: 'Client Hata', color: 'bg-neutral-200 text-neutral-800' },
-  otp_sent: { label: 'OTP Gönderim', color: 'bg-neutral-100 text-neutral-600' },
-  otp_verified: { label: 'OTP Doğrulama', color: 'bg-neutral-100 text-black' },
+const eventTypeLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+  login: { label: 'Giris', variant: 'default' },
+  login_fail: { label: 'Basarisiz Giris', variant: 'secondary' },
+  register: { label: 'Kayit', variant: 'default' },
+  register_fail: { label: 'Basarisiz Kayit', variant: 'secondary' },
+  register_incomplete: { label: 'Tamamlanmamis', variant: 'secondary' },
+  register_blocked: { label: 'Engellendi', variant: 'secondary' },
+  password_reset: { label: 'Sifre Sifirlama', variant: 'outline' },
+  password_change: { label: 'Sifre Degisikligi', variant: 'outline' },
+  client_error: { label: 'Client Hata', variant: 'secondary' },
+  otp_sent: { label: 'OTP Gonderim', variant: 'outline' },
+  otp_verified: { label: 'OTP Dogrulama', variant: 'default' },
 };
 
 export default function AuthLogsPage() {
@@ -65,114 +77,161 @@ export default function AuthLogsPage() {
     setLoading(false);
   }
 
-  const eventInfo = (type: string) => eventTypeLabels[type] || { label: type, color: 'bg-neutral-100 text-neutral-800' };
+  const eventInfo = (type: string) => eventTypeLabels[type] || { label: type, variant: 'outline' as const };
+
+  if (loading && logs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-16" />
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            <div className="space-y-0">
+              <Skeleton className="h-10 w-full" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-black">Auth Logları</h1>
-        <span className="text-sm text-neutral-500">{total.toLocaleString('tr-TR')} kayıt</span>
+        <h1 className="text-lg font-bold text-foreground">Auth Loglari</h1>
+        <span className="text-sm text-muted-foreground">{total.toLocaleString('tr-TR')} kayit</span>
       </div>
 
-      {/* Özet kartları */}
+      {/* Ozet kartlari */}
       {summary.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           {summary.map((s) => {
             const info = eventInfo(s.event_type);
             return (
-              <button
+              <Card
                 key={s.event_type}
+                className={`cursor-pointer transition-all ${
+                  filter === s.event_type
+                    ? 'ring-2 ring-primary'
+                    : 'hover:ring-1 hover:ring-border'
+                }`}
                 onClick={() => { setFilter(filter === s.event_type ? '' : s.event_type); setPage(1); }}
-                className={`p-3 border text-left transition-all ${filter === s.event_type ? 'border-black ring-1 ring-black' : 'border-neutral-200 hover:border-neutral-400'}`}
               >
-                <div className="text-lg font-bold text-black">{s.count}</div>
-                <div className="text-[10px] text-neutral-500">{info.label}</div>
-              </button>
+                <CardContent className="p-3">
+                  <div className="text-lg font-bold text-foreground">{s.count}</div>
+                  <div className="text-[10px] text-muted-foreground">{info.label}</div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
       )}
 
       {/* Log tablosu */}
-      <div className="border border-neutral-200 overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Tarih</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Olay</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Yöntem</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Sağlayıcı</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Kimlik</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">User ID</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">IP</th>
-              <th className="px-3 py-2 text-left font-medium text-neutral-500">Hata</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={8} className="px-3 py-8 text-center text-neutral-400">Yükleniyor...</td></tr>
-            ) : logs.length === 0 ? (
-              <tr><td colSpan={8} className="px-3 py-8 text-center text-neutral-400">Log bulunamadı</td></tr>
-            ) : (
-              logs.map((log) => {
-                const info = eventInfo(log.event_type);
-                return (
-                  <tr key={log.id} className="border-b border-neutral-100 hover:bg-neutral-50">
-                    <td className="px-3 py-2 text-neutral-600 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Istanbul' })}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-block px-2 py-0.5 text-[10px] font-medium ${info.color}`}>
-                        {info.label}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-neutral-600">{log.auth_method || '-'}</td>
-                    <td className="px-3 py-2 text-neutral-600 text-[10px]">
-                      {(() => {
-                        try {
-                          const d = log.details ? JSON.parse(log.details) : null;
-                          return d?.sms_provider || '-';
-                        } catch { return '-'; }
-                      })()}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-neutral-600">{log.identity_hint || '-'}</td>
-                    <td className="px-3 py-2 text-neutral-600">{log.user_id ?? '-'}</td>
-                    <td className="px-3 py-2 font-mono text-neutral-500 text-[10px]">{log.ip_address || '-'}</td>
-                    <td className="px-3 py-2">
-                      {log.error_code ? (
-                        <span className="text-red-600" title={log.error_message || ''}>
-                          {log.error_code}
-                        </span>
-                      ) : '-'}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Tarih</TableHead>
+                <TableHead className="text-xs">Olay</TableHead>
+                <TableHead className="text-xs">Yontem</TableHead>
+                <TableHead className="text-xs">Saglayici</TableHead>
+                <TableHead className="text-xs">Kimlik</TableHead>
+                <TableHead className="text-xs">User ID</TableHead>
+                <TableHead className="text-xs">IP</TableHead>
+                <TableHead className="text-xs">Hata</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Skeleton className="h-4 w-24" />
+                      <span className="text-muted-foreground text-xs">Yukleniyor...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : logs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    Log bulunamadi
+                  </TableCell>
+                </TableRow>
+              ) : (
+                logs.map((log) => {
+                  const info = eventInfo(log.event_type);
+                  return (
+                    <TableRow key={log.id}>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(log.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Istanbul' })}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <Badge variant={info.variant} className="text-[10px]">
+                          {info.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{log.auth_method || '-'}</TableCell>
+                      <TableCell className="text-[10px] text-muted-foreground">
+                        {(() => {
+                          try {
+                            const d = log.details ? JSON.parse(log.details) : null;
+                            return d?.sms_provider || '-';
+                          } catch { return '-'; }
+                        })()}
+                      </TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">{log.identity_hint || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{log.user_id ?? '-'}</TableCell>
+                      <TableCell className="text-[10px] font-mono text-muted-foreground">{log.ip_address || '-'}</TableCell>
+                      <TableCell className="text-xs">
+                        {log.error_code ? (
+                          <Badge variant="destructive" className="text-[10px]" title={log.error_message || ''}>
+                            {log.error_code}
+                          </Badge>
+                        ) : '-'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Sayfalama */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page <= 1}
-            className="px-4 py-2 text-xs border border-neutral-200 disabled:opacity-30 hover:bg-neutral-50"
           >
-            Önceki
-          </button>
-          <span className="text-xs text-neutral-500">
+            Onceki
+          </Button>
+          <span className="text-xs text-muted-foreground">
             Sayfa {page} / {totalPages}
           </span>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page >= totalPages}
-            className="px-4 py-2 text-xs border border-neutral-200 disabled:opacity-30 hover:bg-neutral-50"
           >
             Sonraki
-          </button>
+          </Button>
         </div>
       )}
     </div>
