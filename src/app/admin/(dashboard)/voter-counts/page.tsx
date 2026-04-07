@@ -167,7 +167,7 @@ export default function VoterCountsPage() {
                   <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
                   <TableHead className="text-[11px] uppercase">Ilce Sayisi</TableHead>
                   <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
-                  <TableHead className="text-[11px] uppercase">Islem</TableHead>
+                  <TableHead className="text-[11px] uppercase">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,7 +242,7 @@ export default function VoterCountsPage() {
                     <TableHead className="text-[11px] uppercase">Ilce</TableHead>
                     <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
                     <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
-                    <TableHead className="text-[11px] uppercase">Islem</TableHead>
+                    <TableHead className="text-[11px] uppercase">İşlem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

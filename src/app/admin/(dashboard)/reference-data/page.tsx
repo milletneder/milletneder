@@ -171,7 +171,7 @@ export default function ReferenceDataPage() {
                 <TableHead className="text-[11px] uppercase">Kategori</TableHead>
                 <TableHead className="text-[11px] uppercase">Nufus Payi</TableHead>
                 <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
-                <TableHead className="text-[11px] uppercase">Islem</TableHead>
+                <TableHead className="text-[11px] uppercase">İşlem</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

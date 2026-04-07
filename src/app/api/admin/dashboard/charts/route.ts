@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql, gte } from 'drizzle-orm';
+import { sql, gte, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { users, votes } from '@/lib/db/schema';
+import { users, authLogs } from '@/lib/db/schema';
 import { getAdminFromRequest } from '@/lib/auth/admin-middleware';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const [registrations, votesData] = await Promise.all([
+    const [registrations, loginsData] = await Promise.all([
       db
         .select({
           date: sql<string>`date_trunc('day', ${users.created_at})::date::text`,
@@ -31,16 +31,16 @@ export async function GET(request: NextRequest) {
         .orderBy(sql`date_trunc('day', ${users.created_at})`),
       db
         .select({
-          date: sql<string>`date_trunc('day', ${votes.created_at})::date::text`,
+          date: sql<string>`date_trunc('day', ${authLogs.created_at})::date::text`,
           count: sql<number>`count(*)::int`,
         })
-        .from(votes)
-        .where(gte(votes.created_at, thirtyDaysAgo))
-        .groupBy(sql`date_trunc('day', ${votes.created_at})`)
-        .orderBy(sql`date_trunc('day', ${votes.created_at})`),
+        .from(authLogs)
+        .where(sql`${authLogs.created_at} >= ${thirtyDaysAgo} AND ${authLogs.event_type} = 'login'`)
+        .groupBy(sql`date_trunc('day', ${authLogs.created_at})`)
+        .orderBy(sql`date_trunc('day', ${authLogs.created_at})`),
     ]);
 
-    return NextResponse.json({ registrations, votes: votesData });
+    return NextResponse.json({ registrations, logins: loginsData });
   } catch (error) {
     console.error('Dashboard charts error:', error);
     return NextResponse.json(

@@ -30,8 +30,8 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AdminSidebar adminName={admin.name} adminEmail={admin.email} onLogout={logout} />
       <SidebarInset>
-        <AdminTopbar adminName={admin.name} onLogout={logout} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <AdminTopbar />
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

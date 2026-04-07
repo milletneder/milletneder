@@ -79,12 +79,12 @@ const providerLabels: Record<string, string> = {
 
 const trendChartConfig: ChartConfig = {
   registrations: { label: 'Kayıt', color: 'var(--color-foreground)' },
-  votes: { label: 'Oy', color: 'var(--color-muted-foreground)' },
+  logins: { label: 'Giriş', color: 'var(--color-muted-foreground)' },
 };
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<StatData | null>(null);
-  const [trendData, setTrendData] = useState<{ date: string; registrations: number; votes: number }[]>([]);
+  const [trendData, setTrendData] = useState<{ date: string; registrations: number; logins: number }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -97,20 +97,20 @@ export default function AdminDashboardPage() {
         if (chartsRes.ok) {
           const data = await chartsRes.json();
           const regMap = new Map<string, number>();
-          const voteMap = new Map<string, number>();
+          const loginMap = new Map<string, number>();
           (data.registrations || []).forEach((d: { date: string; count: number }) => {
             const label = d.date ? new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Istanbul' }) : '';
             regMap.set(label, d.count ?? 0);
           });
-          (data.votes || []).forEach((d: { date: string; count: number }) => {
+          (data.logins || []).forEach((d: { date: string; count: number }) => {
             const label = d.date ? new Date(d.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Istanbul' }) : '';
-            voteMap.set(label, d.count ?? 0);
+            loginMap.set(label, d.count ?? 0);
           });
-          const allDates = [...new Set([...regMap.keys(), ...voteMap.keys()])].sort();
+          const allDates = [...new Set([...regMap.keys(), ...loginMap.keys()])].sort();
           setTrendData(allDates.map((date) => ({
             date,
             registrations: regMap.get(date) || 0,
-            votes: voteMap.get(date) || 0,
+            logins: loginMap.get(date) || 0,
           })));
         }
       } catch { /* silent */ }
@@ -186,7 +186,7 @@ export default function AdminDashboardPage() {
         {/* Günlük Kayıt & Oy Trendi */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-sm">Günlük Kayıt & Oy Trendi (30 gün)</CardTitle>
+            <CardTitle className="text-sm">Günlük Kayıt & Giriş Trendi (30 gün)</CardTitle>
           </CardHeader>
           <CardContent>
             {trendData.length > 0 ? (
@@ -197,7 +197,7 @@ export default function AdminDashboardPage() {
                   <YAxis tickLine={false} axisLine={false} fontSize={10} width={32} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Area dataKey="registrations" fill="var(--color-foreground)" fillOpacity={0.15} stroke="var(--color-foreground)" strokeWidth={1.5} type="monotone" />
-                  <Area dataKey="votes" fill="var(--color-muted-foreground)" fillOpacity={0.08} stroke="var(--color-muted-foreground)" strokeWidth={1.5} type="monotone" />
+                  <Area dataKey="logins" fill="var(--color-muted-foreground)" fillOpacity={0.08} stroke="var(--color-muted-foreground)" strokeWidth={1.5} type="monotone" />
                 </AreaChart>
               </ChartContainer>
             ) : (

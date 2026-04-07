@@ -140,7 +140,7 @@ export default function UserDetailPage() {
         await fetchUser();
       } else {
         const data = await res.json();
-        alert(data.error || 'Islem basarisiz');
+        alert(data.error || 'İşlem başarısız');
       }
     } catch {
       alert('Bir hata olustu');
@@ -215,7 +215,7 @@ export default function UserDetailPage() {
                   <div className="text-foreground font-mono text-xs break-all">{user.identity_hash || '\u2014'}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Giris Yontemi</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Giriş Yöntemi</div>
                   <div className="text-foreground">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</div>
                 </div>
                 <div>
@@ -227,7 +227,7 @@ export default function UserDetailPage() {
                   <div className="text-foreground">{user.district || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Kayit tarihi</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Kayıt tarihi</div>
                   <div className="text-foreground">
                     {new Date(user.created_at).toLocaleDateString('tr-TR', {
                       day: 'numeric',
@@ -284,7 +284,7 @@ export default function UserDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Islem Butonlari */}
+          {/* İşlem Butonları */}
           <div className="flex gap-3">
             {user.is_flagged ? (
               <AlertDialog>
@@ -342,7 +342,7 @@ export default function UserDetailPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Devre Disi Birak</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bu kullaniciyi devre disi birakmak istediginize emin misiniz? Giris yapamayacak.
+                      Bu kullaniciyi devre disi birakmak istediginize emin misiniz? Giriş yapamayacak.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

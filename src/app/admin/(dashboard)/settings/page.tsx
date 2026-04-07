@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
 
       if (res.ok) {
         setAuthMethod(selectedMethod);
-        setMessage('Dogrulama yontemi guncellendi');
+        setMessage('Doğrulama yöntemi güncellendi');
         setTimeout(() => setMessage(''), 3000);
       } else {
         const data = await res.json();
@@ -190,7 +190,7 @@ export default function AdminSettingsPage() {
         setFallbackProvider(selectedFallback);
       }
 
-      setMessage('SMS saglayici ayarlari guncellendi');
+      setMessage('SMS sağlayıcı ayarları güncellendi');
       setTimeout(() => setMessage(''), 3000);
     } catch {
       setMessage('Baglanti hatasi');
@@ -292,7 +292,7 @@ export default function AdminSettingsPage() {
         {/* Dogrulama Yontemi */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Kullanici Dogrulama Yontemi</CardTitle>
+            <CardTitle className="text-sm">Kullanıcı Doğrulama Yöntemi</CardTitle>
             <CardDescription className="text-xs">
               Kullanicilarin giris ve kayit olurken kullanacagi dogrulama yontemi.
             </CardDescription>
@@ -330,7 +330,7 @@ export default function AdminSettingsPage() {
             {methodChanged && (
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
-                  Yontem degistirildi, kaydetmek icin onaylayin.
+                  Yöntem değiştirildi, kaydetmek için onaylayın.
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -357,7 +357,7 @@ export default function AdminSettingsPage() {
         {selectedMethod === 'phone' && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Birincil SMS Saglayici</CardTitle>
+              <CardTitle className="text-sm">Birincil SMS Sağlayıcı</CardTitle>
               <CardDescription className="text-xs">
                 SMS dogrulama kodlari icin kullanilacak servis saglayicisini secin.
               </CardDescription>
@@ -408,7 +408,7 @@ export default function AdminSettingsPage() {
               {/* Yedek saglayici (Firebase seciliyken) */}
               {selectedProvider === 'firebase' && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <h3 className="text-xs font-bold text-foreground mb-2">Yedek SMS Saglayici</h3>
+                  <h3 className="text-xs font-bold text-foreground mb-2">Yedek SMS Sağlayıcı</h3>
                   <p className="text-[10px] text-muted-foreground mb-3">
                     Firebase hata verdiginde (Error 39, reCAPTCHA sorunu vb.) kullanici fark etmeden bu saglayiciya duser.
                   </p>
@@ -440,7 +440,7 @@ export default function AdminSettingsPage() {
               {providerChanged && (
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
-                    Saglayici degistirildi, kaydetmek icin onaylayin.
+                    Sağlayıcı değiştirildi, kaydetmek için onaylayın.
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -630,7 +630,7 @@ export default function AdminSettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">API Sifre</Label>
+                  <Label className="text-xs">API Şifresi</Label>
                   <div className="flex gap-2">
                     <Input
                       type="password"
@@ -898,7 +898,7 @@ export default function AdminSettingsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">SMTP Sifre</Label>
+                    <Label className="text-xs">SMTP Şifresi</Label>
                     <div className="flex gap-2">
                       <Input
                         type="password"

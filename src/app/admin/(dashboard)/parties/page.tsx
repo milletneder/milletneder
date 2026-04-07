@@ -395,7 +395,7 @@ export default function PartiesPage() {
                   <TableHead>Kisaltma</TableHead>
                   <TableHead>Renk</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead>Islemler</TableHead>
+                  <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
