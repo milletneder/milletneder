@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import './globals.css';
+import { DM_Sans } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: {
@@ -77,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" translate="no" suppressHydrationWarning>
+    <html lang="tr" translate="no" suppressHydrationWarning className={cn("font-sans", dmSans.variable)}>
       <head>
         <meta name="google" content="notranslate" />
         <script
