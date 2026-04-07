@@ -182,7 +182,7 @@ export default function PartiesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Bir hata olustu');
+        setError(data.error || 'Bir hata oluştu');
         setSaving(false);
         return;
       }
@@ -190,7 +190,7 @@ export default function PartiesPage() {
       cancelForm();
       await fetchParties();
     } catch {
-      setError('Bir hata olustu');
+      setError('Bir hata oluştu');
     }
     setSaving(false);
   }
@@ -206,7 +206,7 @@ export default function PartiesPage() {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingId ? 'Partiyi Duzenle' : 'Yeni Parti'}
+              {editingId ? 'Partiyi Düzenle' : 'Yeni Parti'}
             </DialogTitle>
           </DialogHeader>
 
@@ -229,7 +229,7 @@ export default function PartiesPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="party-short-name">Kisaltma</Label>
+                <Label htmlFor="party-short-name">Kısaltma</Label>
                 <Input
                   id="party-short-name"
                   type="text"
@@ -253,7 +253,7 @@ export default function PartiesPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="party-sort-order">Siralama</Label>
+                <Label htmlFor="party-sort-order">Sıralama</Label>
                 <Input
                   id="party-sort-order"
                   type="number"
@@ -288,7 +288,7 @@ export default function PartiesPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Yazi rengi</Label>
+                <Label>Yazı rengi</Label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -330,7 +330,7 @@ export default function PartiesPage() {
                 <div className="border border-input rounded-lg p-1">
                   <img
                     src={logoPreview}
-                    alt="Logo onizleme"
+                    alt="Logo önizleme"
                     className="w-10 h-10 object-contain"
                   />
                 </div>
@@ -354,7 +354,7 @@ export default function PartiesPage() {
                 variant="outline"
                 onClick={cancelForm}
               >
-                Iptal
+                İptal
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
@@ -389,10 +389,10 @@ export default function PartiesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sira</TableHead>
+                  <TableHead>Sıra</TableHead>
                   <TableHead>Logo</TableHead>
                   <TableHead>Ad</TableHead>
-                  <TableHead>Kisaltma</TableHead>
+                  <TableHead>Kısaltma</TableHead>
                   <TableHead>Renk</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead>İşlemler</TableHead>
@@ -433,7 +433,7 @@ export default function PartiesPage() {
                       {party.is_active ? (
                         <Badge variant="default">Etkin</Badge>
                       ) : (
-                        <Badge variant="secondary">Devre disi</Badge>
+                        <Badge variant="secondary">Devre dışı</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -442,7 +442,7 @@ export default function PartiesPage() {
                         size="sm"
                         onClick={() => openEditForm(party)}
                       >
-                        Duzenle
+                        Düzenle
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -453,7 +453,7 @@ export default function PartiesPage() {
                       colSpan={7}
                       className="text-center text-muted-foreground py-8"
                     >
-                      Henuz parti bulunmuyor.
+                      Henüz parti bulunmuyor.
                     </TableCell>
                   </TableRow>
                 )}

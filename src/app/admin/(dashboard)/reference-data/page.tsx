@@ -45,11 +45,11 @@ interface DistrictElectionRow {
 }
 
 const DIMENSION_LABELS: Record<string, string> = {
-  age: 'Yas',
+  age: 'Yaş',
   gender: 'Cinsiyet',
-  education: 'Egitim',
-  region: 'Bolge',
-  city: 'Il',
+  education: 'Eğitim',
+  region: 'Bölge',
+  city: 'İl',
 };
 
 export default function ReferenceDataPage() {
@@ -124,15 +124,15 @@ export default function ReferenceDataPage() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-2">Referans Veriler</h1>
-      <p className="text-sm text-muted-foreground mb-4">TUIK ve YSK referans nufus dagilimlari. Agirliklandirma hesaplamalarinda kullanilir.</p>
+      <p className="text-sm text-muted-foreground mb-4">TÜİK ve YSK referans nüfus dağılımları. Ağırlıklandırma hesaplamalarında kullanılır.</p>
 
       <Card className="mb-8">
         <CardContent>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            Bu sayfadaki veriler, agirliklandirma motorunun referans noktasidir. Post-Stratification ve Raking yontemleri buradaki nufus paylarini kullanarak anketteki sapmayi duzeltir. Bolgesel Kota yontemi bolge paylarini, Partizan Sapma duzeltmesi ise 2023 secim sonuclarini referans alir.
+            Bu sayfadaki veriler, ağırlıklandırma motorunun referans noktasıdır. Post-Stratification ve Raking yöntemleri buradaki nüfus paylarını kullanarak anketteki sapmayı düzeltir. Bölgesel Kota yöntemi bölge paylarını, Partizan Sapma düzeltmesi ise 2023 seçim sonuçlarını referans alır.
           </p>
           <p className="text-xs text-muted-foreground">
-            Bir degeri degistirdiginizde, agirliklandirma sonuclari da buna gore degisecektir. Hatali bir pay girilirse sonuclar sapabilir. Degisiklik yapmadan once TUIK veya YSK kaynaklarini kontrol ediniz.
+            Bir değeri değiştirdiğinizde, ağırlıklandırma sonuçları da buna göre değişecektir. Hatalı bir pay girilirse sonuçlar sapabilir. Değişiklik yapmadan önce TÜİK veya YSK kaynaklarını kontrol ediniz.
           </p>
         </CardContent>
       </Card>
@@ -145,7 +145,7 @@ export default function ReferenceDataPage() {
           size="sm"
           onClick={() => setFilterDimension('')}
         >
-          Tumu
+          Tümü
         </Button>
         {['age', 'gender', 'education', 'region'].map(dim => (
           <Button
@@ -161,15 +161,15 @@ export default function ReferenceDataPage() {
 
       {/* Demographics Table */}
       <section className="mb-12">
-        <h2 className="text-lg font-bold mb-2">Demografik Referans Dagilimlari</h2>
-        <p className="text-xs text-muted-foreground mb-4">TUIK 2025 verilerine dayali gercek nufus dagilimlari. Her kategorinin nufus payi, anketteki temsil oraniyla karsilastirilarak agirlik hesaplanir. Bir payi degistirmek icin satirdaki &quot;Duzenle&quot; butonuna tiklayin.</p>
+        <h2 className="text-lg font-bold mb-2">Demografik Referans Dağılımları</h2>
+        <p className="text-xs text-muted-foreground mb-4">TÜİK 2025 verilerine dayalı gerçek nüfus dağılımları. Her kategorinin nüfus payı, anketteki temsil oranıyla karşılaştırılarak ağırlık hesaplanır. Bir payı değiştirmek için satırdaki &quot;Düzenle&quot; butonuna tıklayın.</p>
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-[11px] uppercase">Boyut</TableHead>
                 <TableHead className="text-[11px] uppercase">Kategori</TableHead>
-                <TableHead className="text-[11px] uppercase">Nufus Payi</TableHead>
+                <TableHead className="text-[11px] uppercase">Nüfus Payı</TableHead>
                 <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
                 <TableHead className="text-[11px] uppercase">İşlem</TableHead>
               </TableRow>
@@ -211,7 +211,7 @@ export default function ReferenceDataPage() {
                           size="xs"
                           onClick={() => setEditingId(null)}
                         >
-                          Iptal
+                          İptal
                         </Button>
                       </div>
                     ) : (
@@ -221,7 +221,7 @@ export default function ReferenceDataPage() {
                         className="text-muted-foreground"
                         onClick={() => { setEditingId(d.id); setEditValue(d.population_share); }}
                       >
-                        Duzenle
+                        Düzenle
                       </Button>
                     )}
                   </TableCell>
@@ -234,17 +234,17 @@ export default function ReferenceDataPage() {
 
       {/* Election Results */}
       <section>
-        <h2 className="text-lg font-bold mb-2">2023 Secim Sonuclari (YSK)</h2>
+        <h2 className="text-lg font-bold mb-2">2023 Seçim Sonuçları (YSK)</h2>
         <p className="text-xs text-muted-foreground mb-4">
-          YSK resmi sonuclari. Partizan Sapma duzeltmesinde referans olarak kullanilir. Anketteki kullanicilarin beyan ettigi 2023 oylari bu degerlerle karsilastirilir -- eger belirli bir parti fazla temsil ediliyorsa, o parti secmenlerinin agirligi orantili olarak duzeltilir.
+          YSK resmi sonuçları. Partizan Sapma düzeltmesinde referans olarak kullanılır. Anketteki kullanıcıların beyan ettiği 2023 oyları bu değerlerle karşılaştırılır — eğer belirli bir parti fazla temsil ediliyorsa, o parti seçmenlerinin ağırlığı orantılı olarak düzeltilir.
         </p>
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-[11px] uppercase">Parti</TableHead>
-                <TableHead className="text-[11px] uppercase">Oy Payi</TableHead>
-                <TableHead className="text-[11px] uppercase">Oy Sayisi</TableHead>
+                <TableHead className="text-[11px] uppercase">Oy Payı</TableHead>
+                <TableHead className="text-[11px] uppercase">Oy Sayısı</TableHead>
                 <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
               </TableRow>
             </TableHeader>
@@ -264,9 +264,9 @@ export default function ReferenceDataPage() {
 
       {/* City-Level Election Results */}
       <section className="mt-12">
-        <h2 className="text-lg font-bold mb-2">2023 Il Bazli Secim Sonuclari (YSK)</h2>
+        <h2 className="text-lg font-bold mb-2">2023 İl Bazlı Seçim Sonuçları (YSK)</h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Il bazli YSK 2023 milletvekili secim sonuclari. Haritada beraberliklerde hangi partinin onde gosterilecegini belirlemek icin tiebreaker olarak kullanilir.
+          İl bazlı YSK 2023 milletvekili seçim sonuçları. Haritada beraberliklerde hangi partinin önde gösterileceğini belirlemek için tiebreaker olarak kullanılır.
         </p>
 
         <div className="mb-4">
@@ -274,7 +274,7 @@ export default function ReferenceDataPage() {
             type="text"
             value={cityElectionFilter}
             onChange={e => setCityElectionFilter(e.target.value)}
-            placeholder="Il ara..."
+            placeholder="İl ara..."
             className="w-64"
           />
         </div>
@@ -284,10 +284,10 @@ export default function ReferenceDataPage() {
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="text-[11px] uppercase">Il</TableHead>
+                  <TableHead className="text-[11px] uppercase">İl</TableHead>
                   <TableHead className="text-[11px] uppercase">Parti</TableHead>
-                  <TableHead className="text-[11px] uppercase">Oy Sayisi</TableHead>
-                  <TableHead className="text-[11px] uppercase">Oy Payi</TableHead>
+                  <TableHead className="text-[11px] uppercase">Oy Sayısı</TableHead>
+                  <TableHead className="text-[11px] uppercase">Oy Payı</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -317,15 +317,15 @@ export default function ReferenceDataPage() {
           </div>
         </Card>
         <p className="text-xs text-muted-foreground mt-2">
-          Toplam {cityElectionResults.length} kayit &middot; {[...new Set(cityElectionResults.map(r => r.city))].length} il
+          Toplam {cityElectionResults.length} kayıt &middot; {[...new Set(cityElectionResults.map(r => r.city))].length} il
         </p>
       </section>
 
       {/* District-Level Election Results */}
       <section className="mt-12">
-        <h2 className="text-lg font-bold mb-2">2023 Ilce Bazli Secim Sonuclari (YSK)</h2>
+        <h2 className="text-lg font-bold mb-2">2023 İlçe Bazlı Seçim Sonuçları (YSK)</h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Ilce bazli YSK 2023 milletvekili secim sonuclari. Ilce duzeyinde agirliklandirma ve tiebreaker hesaplamalarinda kullanilir.
+          İlçe bazlı YSK 2023 milletvekili seçim sonuçları. İlçe düzeyinde ağırlıklandırma ve tiebreaker hesaplamalarında kullanılır.
         </p>
 
         <Card>
@@ -333,11 +333,11 @@ export default function ReferenceDataPage() {
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="text-[11px] uppercase">Il</TableHead>
-                  <TableHead className="text-[11px] uppercase">Ilce</TableHead>
+                  <TableHead className="text-[11px] uppercase">İl</TableHead>
+                  <TableHead className="text-[11px] uppercase">İlçe</TableHead>
                   <TableHead className="text-[11px] uppercase">Parti</TableHead>
-                  <TableHead className="text-[11px] uppercase">Oy Sayisi</TableHead>
-                  <TableHead className="text-[11px] uppercase">Oy Payi</TableHead>
+                  <TableHead className="text-[11px] uppercase">Oy Sayısı</TableHead>
+                  <TableHead className="text-[11px] uppercase">Oy Payı</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -371,7 +371,7 @@ export default function ReferenceDataPage() {
           </div>
         </Card>
         <p className="text-xs text-muted-foreground mt-2">
-          Toplam {districtElectionResults.length} kayit &middot; {[...new Set(districtElectionResults.map(r => `${r.city}|${r.district}`))].length} ilce
+          Toplam {districtElectionResults.length} kayıt &middot; {[...new Set(districtElectionResults.map(r => `${r.city}|${r.district}`))].length} ilçe
         </p>
       </section>
     </div>

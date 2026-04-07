@@ -143,10 +143,10 @@ export default function AdminSettingsPage() {
         setTimeout(() => setMessage(''), 3000);
       } else {
         const data = await res.json();
-        setMessage(data.error || 'Hata olustu');
+        setMessage(data.error || 'Hata oluştu');
       }
     } catch {
-      setMessage('Baglanti hatasi');
+      setMessage('Bağlantı hatası');
     } finally {
       setSaving(false);
     }
@@ -167,7 +167,7 @@ export default function AdminSettingsPage() {
         });
         if (!res.ok) {
           const data = await res.json();
-          setMessage(data.error || 'Hata olustu');
+          setMessage(data.error || 'Hata oluştu');
           setSaving(false);
           return;
         }
@@ -183,7 +183,7 @@ export default function AdminSettingsPage() {
         });
         if (!res2.ok) {
           const data = await res2.json();
-          setMessage(data.error || 'Yedek saglayici kaydedilemedi');
+          setMessage(data.error || 'Yedek sağlayıcı kaydedilemedi');
           setSaving(false);
           return;
         }
@@ -193,7 +193,7 @@ export default function AdminSettingsPage() {
       setMessage('SMS sağlayıcı ayarları güncellendi');
       setTimeout(() => setMessage(''), 3000);
     } catch {
-      setMessage('Baglanti hatasi');
+      setMessage('Bağlantı hatası');
     } finally {
       setSaving(false);
     }
@@ -215,10 +215,10 @@ export default function AdminSettingsPage() {
         setTimeout(() => setMsg(''), 2000);
       } else {
         const data = await res.json();
-        setMsg(data.error || 'Hata olustu');
+        setMsg(data.error || 'Hata oluştu');
       }
     } catch {
-      setMsg('Baglanti hatasi');
+      setMsg('Bağlantı hatası');
     } finally {
       setLoading(false);
     }
@@ -280,7 +280,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-xl font-bold text-foreground mb-1">Ayarlar</h1>
-      <p className="text-muted-foreground text-sm mb-6">Kimlik dogrulama ve servis ayarlari</p>
+      <p className="text-muted-foreground text-sm mb-6">Kimlik doğrulama ve servis ayarları</p>
 
       {message && (
         <Alert className="mb-4">
@@ -289,12 +289,12 @@ export default function AdminSettingsPage() {
       )}
 
       <div className="space-y-6">
-        {/* Dogrulama Yontemi */}
+        {/* Doğrulama Yöntemi */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Kullanıcı Doğrulama Yöntemi</CardTitle>
             <CardDescription className="text-xs">
-              Kullanicilarin giris ve kayit olurken kullanacagi dogrulama yontemi.
+              Kullanıcıların giriş ve kayıt olurken kullanacağı doğrulama yöntemi.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -309,7 +309,7 @@ export default function AdminSettingsPage() {
               >
                 <div className="text-center">
                   <span className="block text-lg mb-1">E-posta</span>
-                  <span className="block text-[11px] opacity-70">E-posta + sifre ile giris</span>
+                  <span className="block text-[11px] opacity-70">E-posta + şifre ile giriş</span>
                 </div>
               </button>
               <button
@@ -322,7 +322,7 @@ export default function AdminSettingsPage() {
               >
                 <div className="text-center">
                   <span className="block text-lg mb-1">SMS</span>
-                  <span className="block text-[11px] opacity-70">Telefon + OTP ile giris</span>
+                  <span className="block text-[11px] opacity-70">Telefon + OTP ile giriş</span>
                 </div>
               </button>
             </div>
@@ -338,7 +338,7 @@ export default function AdminSettingsPage() {
                     size="sm"
                     onClick={() => setSelectedMethod(authMethod)}
                   >
-                    Iptal
+                    İptal
                   </Button>
                   <Button
                     size="sm"
@@ -353,13 +353,13 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* SMS Saglayici Secimi (sadece SMS modu seciliyken) */}
+        {/* SMS Sağlayıcı Seçimi (sadece SMS modu seçiliyken) */}
         {selectedMethod === 'phone' && (
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">Birincil SMS Sağlayıcı</CardTitle>
               <CardDescription className="text-xs">
-                SMS dogrulama kodlari icin kullanilacak servis saglayicisini secin.
+                SMS doğrulama kodları için kullanılacak servis sağlayıcısını seçin.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -374,7 +374,7 @@ export default function AdminSettingsPage() {
                 >
                   <div className="text-center">
                     <span className="block text-lg mb-1">Firebase</span>
-                    <span className="block text-[11px] opacity-70">Google (ucuz, istemci tarafli)</span>
+                    <span className="block text-[11px] opacity-70">Google (ucuz, istemci taraflı)</span>
                   </div>
                 </button>
                 <button
@@ -387,7 +387,7 @@ export default function AdminSettingsPage() {
                 >
                   <div className="text-center">
                     <span className="block text-lg mb-1">Twilio</span>
-                    <span className="block text-[11px] opacity-70">Uluslararasi (Verify API)</span>
+                    <span className="block text-[11px] opacity-70">Uluslararası (Verify API)</span>
                   </div>
                 </button>
                 <button
@@ -400,17 +400,17 @@ export default function AdminSettingsPage() {
                 >
                   <div className="text-center">
                     <span className="block text-lg mb-1">VatanSMS</span>
-                    <span className="block text-[11px] opacity-70">Yerli saglayici (XML API)</span>
+                    <span className="block text-[11px] opacity-70">Yerli sağlayıcı (XML API)</span>
                   </div>
                 </button>
               </div>
 
-              {/* Yedek saglayici (Firebase seciliyken) */}
+              {/* Yedek sağlayıcı (Firebase seçiliyken) */}
               {selectedProvider === 'firebase' && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <h3 className="text-xs font-bold text-foreground mb-2">Yedek SMS Sağlayıcı</h3>
                   <p className="text-[10px] text-muted-foreground mb-3">
-                    Firebase hata verdiginde (Error 39, reCAPTCHA sorunu vb.) kullanici fark etmeden bu saglayiciya duser.
+                    Firebase hata verdiğinde (Error 39, reCAPTCHA sorunu vb.) kullanıcı fark etmeden bu sağlayıcıya düşer.
                   </p>
                   <div className="flex gap-3">
                     <button
@@ -448,7 +448,7 @@ export default function AdminSettingsPage() {
                       size="sm"
                       onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}
                     >
-                      Iptal
+                      İptal
                     </Button>
                     <Button
                       size="sm"
@@ -464,15 +464,15 @@ export default function AdminSettingsPage() {
           </Card>
         )}
 
-        {/* Twilio Ayarlari */}
+        {/* Twilio Ayarları */}
         {showTwilioSettings && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Twilio Ayarlari</CardTitle>
+              <CardTitle className="text-sm">Twilio Ayarları</CardTitle>
               <CardDescription className="text-xs">
                 {selectedMethod === 'email'
-                  ? 'E-posta OTP dogrulama icin Twilio Verify API bilgilerini girin.'
-                  : 'SMS dogrulama icin Twilio API bilgilerini girin.'}
+                  ? 'E-posta OTP doğrulama için Twilio Verify API bilgilerini girin.'
+                  : 'SMS doğrulama için Twilio API bilgilerini girin.'}
                 {' '}
                 <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="underline">
                   Twilio Console
@@ -525,7 +525,7 @@ export default function AdminSettingsPage() {
                       Kaydet
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile şifrelenerek saklanır.</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -552,7 +552,7 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <div>
                     <Label className="text-xs">Test Modu</Label>
-                    <p className="text-[10px] text-muted-foreground">Acikken dogrulama kodu gonderilmez, sunucu loglarinda gosterilir.</p>
+                    <p className="text-[10px] text-muted-foreground">Açıkken doğrulama kodu gönderilmez, sunucu loglarında gösterilir.</p>
                   </div>
                   <Switch
                     checked={twilioTestMode}
@@ -568,17 +568,17 @@ export default function AdminSettingsPage() {
           </Card>
         )}
 
-        {/* VatanSMS Ayarlari */}
+        {/* VatanSMS Ayarları */}
         {showVatanSettings && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">VatanSMS Ayarlari</CardTitle>
+              <CardTitle className="text-sm">VatanSMS Ayarları</CardTitle>
               <CardDescription className="text-xs">
-                Yerli SMS saglayici API bilgilerini girin. Bilgilere{' '}
+                Yerli SMS sağlayıcı API bilgilerini girin. Bilgilere{' '}
                 <a href="https://panel.vatansms.com" target="_blank" rel="noopener noreferrer" className="underline">
                   VatanSMS Panel
                 </a>
-                {' '}&gt; Hesap Ayarlari &gt; SMS API bolumunden ulasabilirsiniz.
+                {' '}&gt; Hesap Ayarları &gt; SMS API bölümünden ulaşabilirsiniz.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -590,7 +590,7 @@ export default function AdminSettingsPage() {
 
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">API Kullanici ID</Label>
+                  <Label className="text-xs">API Kullanıcı ID</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
@@ -610,7 +610,7 @@ export default function AdminSettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">API Kullanici Adi</Label>
+                  <Label className="text-xs">API Kullanıcı Adı</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
@@ -636,7 +636,7 @@ export default function AdminSettingsPage() {
                       type="password"
                       value={vatanApiPass}
                       onChange={(e) => setVatanApiPass(e.target.value)}
-                      placeholder="VatanSMS API sifresi"
+                      placeholder="VatanSMS API şifresi"
                       className="flex-1"
                     />
                     <Button
@@ -647,11 +647,11 @@ export default function AdminSettingsPage() {
                       Kaydet
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                  <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile şifrelenerek saklanır.</p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Gonderen Basligi (Originator)</Label>
+                  <Label className="text-xs">Gönderen Başlığı (Originator)</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
@@ -669,13 +669,13 @@ export default function AdminSettingsPage() {
                       Kaydet
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Maks 11 karakter, Turkce karakter kullanilamaz. VatanSMS panelinden tanimlanmis olmali.</p>
+                  <p className="text-[10px] text-muted-foreground">Maks 11 karakter, Türkçe karakter kullanılamaz. VatanSMS panelinden tanımlanmış olmalı.</p>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <div>
                     <Label className="text-xs">Test Modu</Label>
-                    <p className="text-[10px] text-muted-foreground">Acikken SMS gonderilmez, OTP kodu sunucu loglarinda gosterilir.</p>
+                    <p className="text-[10px] text-muted-foreground">Açıkken SMS gönderilmez, OTP kodu sunucu loglarında gösterilir.</p>
                   </div>
                   <Switch
                     checked={vatanTestMode}
@@ -691,13 +691,13 @@ export default function AdminSettingsPage() {
           </Card>
         )}
 
-        {/* Firebase Ayarlari */}
+        {/* Firebase Ayarları */}
         {showFirebaseSettings && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Firebase Ayarlari</CardTitle>
+              <CardTitle className="text-sm">Firebase Ayarları</CardTitle>
               <CardDescription className="text-xs">
-                Firebase Phone Auth istemci tarafinda calisir. reCAPTCHA otomatik olarak yonetilir.{' '}
+                Firebase Phone Auth istemci tarafında çalışır. reCAPTCHA otomatik olarak yönetilir.{' '}
                 <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="underline">
                   Firebase Console
                 </a>
@@ -770,13 +770,13 @@ export default function AdminSettingsPage() {
                       Kaydet
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Bos birakilirsa project-id.firebaseapp.com kullanilir.</p>
+                  <p className="text-[10px] text-muted-foreground">Boş bırakılırsa project-id.firebaseapp.com kullanılır.</p>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <div>
                     <Label className="text-xs">Test Modu</Label>
-                    <p className="text-[10px] text-muted-foreground">Acikken token dogrulama atlanir (gelistirme icin).</p>
+                    <p className="text-[10px] text-muted-foreground">Açıkken token doğrulama atlanır (geliştirme için).</p>
                   </div>
                   <Switch
                     checked={firebaseTestMode}
@@ -790,8 +790,8 @@ export default function AdminSettingsPage() {
 
                 <Alert className="mt-2">
                   <AlertDescription className="text-[10px]">
-                    <strong>Not:</strong> Firebase Phone Auth istemci tarafinda calisir. Hata 39, reCAPTCHA sorunu veya kota asiminda
-                    kullanici fark etmeden yedek saglayiciya ({selectedFallback === 'twilio' ? 'Twilio' : 'VatanSMS'}) duser.
+                    <strong>Not:</strong> Firebase Phone Auth istemci tarafında çalışır. Hata 39, reCAPTCHA sorunu veya kota aşımında
+                    kullanıcı fark etmeden yedek sağlayıcıya ({selectedFallback === 'twilio' ? 'Twilio' : 'VatanSMS'}) düşer.
                   </AlertDescription>
                 </Alert>
               </div>
@@ -799,20 +799,20 @@ export default function AdminSettingsPage() {
           </Card>
         )}
 
-        {/* E-posta seciliyken: Twilio E-posta + SMTP ayarlari */}
+        {/* E-posta seçiliyken: Twilio E-posta + SMTP ayarları */}
         {selectedMethod === 'email' && (
           <>
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm">Twilio E-posta Kanali</CardTitle>
                 <CardDescription className="text-xs">
-                  E-posta ile OTP dogrulama icin Twilio Verify servisinde e-posta kanali aktif olmalidir.
+                  E-posta ile OTP doğrulama için Twilio Verify servisinde e-posta kanalı aktif olmalıdır.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Alert>
                   <AlertDescription className="text-xs">
-                    Twilio Console &gt; Verify &gt; Services &gt; Email Integration bolumunden yapilandirin.
+                    Twilio Console &gt; Verify &gt; Services &gt; Email Integration bölümünden yapılandırın.
                     <br />
                     <a
                       href="https://console.twilio.com/us1/develop/verify/services"
@@ -829,9 +829,9 @@ export default function AdminSettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">SMTP E-posta Ayarlari</CardTitle>
+                <CardTitle className="text-sm">SMTP E-posta Ayarları</CardTitle>
                 <CardDescription className="text-xs">
-                  Kurtarma kodlarini e-posta ile gondermek icin SMTP sunucu bilgilerini girin.
+                  Kurtarma kodlarını e-posta ile göndermek için SMTP sunucu bilgilerini girin.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -878,7 +878,7 @@ export default function AdminSettingsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">SMTP Kullanici</Label>
+                    <Label className="text-xs">SMTP Kullanıcı</Label>
                     <div className="flex gap-2">
                       <Input
                         type="text"
@@ -904,7 +904,7 @@ export default function AdminSettingsPage() {
                         type="password"
                         value={smtpPass}
                         onChange={(e) => setSmtpPass(e.target.value)}
-                        placeholder="SMTP API key veya sifre"
+                        placeholder="SMTP API key veya şifre"
                         className="flex-1"
                       />
                       <Button
@@ -915,11 +915,11 @@ export default function AdminSettingsPage() {
                         Kaydet
                       </Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile sifrelenerek saklanir.</p>
+                    <p className="text-[10px] text-muted-foreground">Veritabaninda AES-256-GCM ile şifrelenerek saklanır.</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Gonderen E-posta</Label>
+                    <Label className="text-xs">Gönderen E-posta</Label>
                     <div className="flex gap-2">
                       <Input
                         type="email"
@@ -943,12 +943,12 @@ export default function AdminSettingsPage() {
           </>
         )}
 
-        {/* Test: Bakiye Dusuk Simulasyonu */}
+        {/* Test: Bakiye Düşük Simülasyonu */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-sm">Test Araclari</CardTitle>
+            <CardTitle className="text-sm">Test Araçları</CardTitle>
             <CardDescription className="text-xs">
-              Gelistirme ve test amacli simulasyon ayarlari.
+              Geliştirme ve test amaçlı simülasyon ayarları.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -960,8 +960,8 @@ export default function AdminSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-xs">Bakiye Dusuk Simulasyonu</Label>
-                <p className="text-[10px] text-muted-foreground">Acikken SMS bakiyesi dusuk gibi davranir ve bagis modalini gosterir.</p>
+                <Label className="text-xs">Bakiye Düşük Simülasyonu</Label>
+                <p className="text-[10px] text-muted-foreground">Açıkken SMS bakiyesi düşük gibi davranır ve bağış modalını gösterir.</p>
               </div>
               <Switch
                 checked={forceLowBalance}
@@ -978,14 +978,14 @@ export default function AdminSettingsPage() {
         {/* Gizlilik Notu */}
         <Card className="bg-muted/50">
           <CardHeader>
-            <CardTitle className="text-sm">Gizlilik ve Guvenlik</CardTitle>
+            <CardTitle className="text-sm">Gizlilik ve Güvenlik</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="text-xs text-muted-foreground space-y-1.5">
-              <li>E-posta ve telefon numaralari hicbir yerde saklanmaz.</li>
-              <li>Veritabaninda sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
-              <li>Kullanici kimligi ile oy tercihi arasinda baglanti kurulamaz.</li>
-              <li>Twilio, VatanSMS ve SMTP bilgileri AES-256-GCM ile sifrelenerek saklanir.</li>
+              <li>E-posta ve telefon numaraları hiçbir yerde saklanmaz.</li>
+              <li>Veritabanında sadece kimlik hash&apos;i tutulur (SHA256 + HMAC).</li>
+              <li>Kullanıcı kimliği ile oy tercihi arasında bağlantı kurulamaz.</li>
+              <li>Twilio, VatanSMS ve SMTP bilgileri AES-256-GCM ile şifrelenerek saklanır.</li>
             </ul>
           </CardContent>
         </Card>

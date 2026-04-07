@@ -143,7 +143,7 @@ export default function UserDetailPage() {
         alert(data.error || 'İşlem başarısız');
       }
     } catch {
-      alert('Bir hata olustu');
+      alert('Bir hata oluştu');
     } finally {
       setActionLoading(false);
     }
@@ -157,14 +157,14 @@ export default function UserDetailPage() {
         headers: getAdminHeaders(),
       });
       if (res.ok) {
-        alert('Kullanici basariyla silindi.');
+        alert('Kullanıcı başarıyla silindi.');
         router.push('/admin/users');
       } else {
         const data = await res.json();
-        alert(data.error || 'Silme islemi basarisiz');
+        alert(data.error || 'Silme işlemi başarısız');
       }
     } catch {
-      alert('Bir hata olustu');
+      alert('Bir hata oluştu');
     } finally {
       setActionLoading(false);
     }
@@ -175,19 +175,19 @@ export default function UserDetailPage() {
   }
 
   if (!user) {
-    return <div className="text-muted-foreground text-sm py-10 text-center">Kullanici bulunamadi.</div>;
+    return <div className="text-muted-foreground text-sm py-10 text-center">Kullanıcı bulunamadı.</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Baslik */}
+      {/* Başlık */}
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push('/admin/users')}
         >
-          &larr; Kullanicilar
+          &larr; Kullanıcılar
         </Button>
         <h1 className="text-lg font-bold text-foreground font-mono">
           {user.identity_hash ? user.identity_hash.substring(0, 16) + '...' : `#${user.id}`}
@@ -201,12 +201,12 @@ export default function UserDetailPage() {
           <TabsTrigger value="devices">Cihazlar ({deviceLogs.length})</TabsTrigger>
         </TabsList>
 
-        {/* Bilgiler Sekmesi */}
+        {/* Bilgiler sekmesi */}
         <TabsContent value="info" className="space-y-6">
-          {/* Kullanici Bilgileri */}
+          {/* Kullanıcı Bilgileri */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Kullanici Bilgileri</CardTitle>
+              <CardTitle className="text-sm">Kullanıcı Bilgileri</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-sm">
@@ -219,11 +219,11 @@ export default function UserDetailPage() {
                   <div className="text-foreground">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Il</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">İl</div>
                   <div className="text-foreground">{user.city}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Ilce</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">İlçe</div>
                   <div className="text-foreground">{user.district || '-'}</div>
                 </div>
                 <div>
@@ -238,7 +238,7 @@ export default function UserDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Son giris</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Son giriş</div>
                   <div className="text-foreground">
                     {user.last_login_at
                       ? new Date(user.last_login_at).toLocaleDateString('tr-TR', {
@@ -253,7 +253,7 @@ export default function UserDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Supheli</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Şüpheli</div>
                   <div>
                     {user.is_flagged ? (
                       <Badge variant="destructive">Evet</Badge>
@@ -268,7 +268,7 @@ export default function UserDetailPage() {
                     {user.is_active ? (
                       <Badge variant="default">Etkin</Badge>
                     ) : (
-                      <Badge variant="destructive">Devre disi</Badge>
+                      <Badge variant="destructive">Devre dışı</Badge>
                     )}
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export default function UserDetailPage() {
                   <div className="text-foreground font-mono text-xs">{user.referral_code}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground text-xs mb-0.5">Referans sayisi</div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Referans sayısı</div>
                   <div className="text-foreground font-medium">{referralCount}</div>
                 </div>
               </div>
@@ -290,18 +290,18 @@ export default function UserDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" disabled={actionLoading}>
-                    Supheli isaretini kaldir
+                    Şüpheli işaretini kaldır
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Isareti Kaldir</AlertDialogTitle>
+                    <AlertDialogTitle>İşareti Kaldır</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Supheli isaretini kaldirmak istediginize emin misiniz?
+                      Şüpheli işaretini kaldırmak istediğinize emin misiniz?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                     <AlertDialogAction onClick={() => handleAction('unflag')}>
                       Onayla
                     </AlertDialogAction>
@@ -312,18 +312,18 @@ export default function UserDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button disabled={actionLoading}>
-                    Supheli isaretle
+                    Şüpheli işaretle
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Supheli Isaretle</AlertDialogTitle>
+                    <AlertDialogTitle>Şüpheli İşaretle</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bu kullaniciyi supheli olarak isaretlemek istediginize emin misiniz?
+                      Bu kullanıcıyı şüpheli olarak işaretlemek istediğinize emin misiniz?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                     <AlertDialogAction onClick={() => handleAction('flag')}>
                       Onayla
                     </AlertDialogAction>
@@ -335,18 +335,18 @@ export default function UserDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" disabled={actionLoading}>
-                    Devre disi birak
+                    Devre dışı bırak
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Devre Disi Birak</AlertDialogTitle>
+                    <AlertDialogTitle>Devre Dışı Bırak</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bu kullaniciyi devre disi birakmak istediginize emin misiniz? Giriş yapamayacak.
+                      Bu kullanıcıyı devre dışı bırakmak istediğinize emin misiniz? Giriş yapamayacak.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                     <AlertDialogAction onClick={() => handleAction('deactivate')}>
                       Onayla
                     </AlertDialogAction>
@@ -357,18 +357,18 @@ export default function UserDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button disabled={actionLoading}>
-                    Etkinlestir
+                    Etkinleştir
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Etkinlestir</AlertDialogTitle>
+                    <AlertDialogTitle>Etkinleştir</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bu kullaniciyi etkinlestirmek istediginize emin misiniz?
+                      Bu kullanıcıyı etkinleştirmek istediğinize emin misiniz?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                     <AlertDialogAction onClick={() => handleAction('activate')}>
                       Onayla
                     </AlertDialogAction>
@@ -378,32 +378,32 @@ export default function UserDetailPage() {
             )}
           </div>
 
-          {/* Tehlikeli Bolge */}
+          {/* Tehlikeli Bölge */}
           <Card className="border-destructive/50 bg-destructive/5">
             <CardHeader>
-              <CardTitle className="text-sm text-destructive">Tehlikeli Bolge</CardTitle>
+              <CardTitle className="text-sm text-destructive">Tehlikeli Bölge</CardTitle>
               <CardDescription className="text-destructive/80">
-                Bu kullaniciyi silmek geri alinamaz. Tum oylari, cihaz kayitlari ve profil bilgileri kalici olarak silinecektir.
+                Bu kullanıcıyı silmek geri alınamaz. Tüm oyları, cihaz kayıtları ve profil bilgileri kalıcı olarak silinecektir.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" disabled={actionLoading}>
-                    Kullaniciyi Sil
+                    Kullanıcıyı Sil
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Kullaniciyi Kalici Olarak Sil</AlertDialogTitle>
+                    <AlertDialogTitle>Kullanıcıyı Kalıcı Olarak Sil</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Bu islem geri alinamaz! Kullanici #{id} ile ilgili tum oylar, cihaz kayitlari ve profil bilgileri kalici olarak silinecektir.
+                      Bu işlem geri alınamaz! Kullanıcı #{id} ile ilgili tüm oylar, cihaz kayıtları ve profil bilgileri kalıcı olarak silinecektir.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                     <AlertDialogAction variant="destructive" onClick={handleDelete}>
-                      Kalici Olarak Sil
+                      Kalıcı Olarak Sil
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -412,12 +412,12 @@ export default function UserDetailPage() {
           </Card>
         </TabsContent>
 
-        {/* Oylar Sekmesi */}
+        {/* Oylar sekmesi */}
         <TabsContent value="votes">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Oy gecmisi</CardTitle>
-              <span className="text-xs text-muted-foreground">{votes.length} kayit</span>
+              <CardTitle className="text-sm">Oy geçmişi</CardTitle>
+              <span className="text-xs text-muted-foreground">{votes.length} kayıt</span>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -426,7 +426,7 @@ export default function UserDetailPage() {
                     <TableHead>Parti</TableHead>
                     <TableHead>Tur</TableHead>
                     <TableHead>Durum</TableHead>
-                    <TableHead>Degisiklik</TableHead>
+                    <TableHead>Değişiklik</TableHead>
                     <TableHead>Tarih</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -438,7 +438,7 @@ export default function UserDetailPage() {
                         <TableCell>Tur #{vote.round_id}</TableCell>
                         <TableCell>
                           <Badge variant={vote.is_valid ? 'default' : 'destructive'}>
-                            {vote.is_valid ? 'Gecerli' : 'Gecersiz'}
+                            {vote.is_valid ? 'Geçerli' : 'Geçersiz'}
                           </Badge>
                         </TableCell>
                         <TableCell>{vote.change_count}x</TableCell>
@@ -450,7 +450,7 @@ export default function UserDetailPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        Oy kaydi bulunamadi.
+                        Oy kaydı bulunamadı.
                       </TableCell>
                     </TableRow>
                   )}
@@ -460,12 +460,12 @@ export default function UserDetailPage() {
           </Card>
         </TabsContent>
 
-        {/* Cihazlar Sekmesi */}
+        {/* Cihazlar sekmesi */}
         <TabsContent value="devices">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Cihaz kayitlari</CardTitle>
-              <span className="text-xs text-muted-foreground">{deviceLogs.length} kayit</span>
+              <CardTitle className="text-sm">Cihaz kayıtları</CardTitle>
+              <span className="text-xs text-muted-foreground">{deviceLogs.length} kayıt</span>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -503,7 +503,7 @@ export default function UserDetailPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                        Cihaz kaydi bulunamadi.
+                        Cihaz kaydı bulunamadı.
                       </TableCell>
                     </TableRow>
                   )}
