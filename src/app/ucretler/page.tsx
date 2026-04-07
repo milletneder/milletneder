@@ -59,11 +59,11 @@ function fmt(n: number) {
 
 function FeatureList({ features }: { features: string[] }) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {features.map((f) => (
-        <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-          <Check className="size-3.5 shrink-0 mt-0.5 text-foreground" />
-          <span>{f}</span>
+        <li key={f} className="flex items-start gap-2.5">
+          <Check className="size-4 shrink-0 mt-0.5 text-foreground" />
+          <span className="text-muted-foreground">{f}</span>
         </li>
       ))}
     </ul>
@@ -83,17 +83,17 @@ export default function UcretlerPage() {
         {/* Hero */}
         <div className="pt-16 pb-12 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Ücretler</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+          <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
             Bağımsız ve şeffaf seçim verisine erişim. İhtiyacınıza uygun planı seçin.
           </p>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-3 mt-8">
-            <span className={`text-sm ${!yearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+            <span className={!yearly ? 'font-medium' : 'text-muted-foreground'}>
               Aylık
             </span>
             <Switch checked={yearly} onCheckedChange={setYearly} />
-            <span className={`text-sm ${yearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+            <span className={yearly ? 'font-medium' : 'text-muted-foreground'}>
               Yıllık
             </span>
             {yearly && <Badge variant="outline">Tasarruf</Badge>}
@@ -106,21 +106,23 @@ export default function UcretlerPage() {
           {/* Vatandaş */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-sm font-semibold">Vatandaş</p>
-              <div className="mt-4 mb-1">
-                <span className="text-3xl font-bold tabular-nums">
+              <p className="font-semibold">Vatandaş</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                İl/ilçe kırılımları ve raporlara anında erişim.
+              </p>
+
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-bold tabular-nums">
                   ₺{yearly ? '999' : '99'}
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground">
                   {yearly ? ' /yıl' : ' /ay'}
                 </span>
+                {yearly && (
+                  <p className="text-sm text-muted-foreground mt-1">aylık ₺83 — yılda ₺189 tasarruf</p>
+                )}
               </div>
-              {yearly && (
-                <p className="text-xs text-muted-foreground mb-4">₺83/ay — yılda ₺189 tasarruf</p>
-              )}
-              {!yearly && (
-                <p className="text-xs text-muted-foreground mb-4">İl/ilçe kırılımları ve raporlara anında erişim</p>
-              )}
+
               <Button variant="outline" className="w-full mb-6">Başla</Button>
               <FeatureList features={VATANDAS_FEATURES} />
             </CardContent>
@@ -130,23 +132,25 @@ export default function UcretlerPage() {
           <Card className="ring-2 ring-foreground">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Araştırmacı</p>
+                <p className="font-semibold">Araştırmacı</p>
                 <Badge>Popüler</Badge>
               </div>
-              <div className="mt-4 mb-1">
-                <span className="text-3xl font-bold tabular-nums">
+              <p className="text-sm text-muted-foreground mt-1">
+                API, export, arşiv ve analiz araçları.
+              </p>
+
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-bold tabular-nums">
                   ₺{yearly ? '4.999' : '499'}
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground">
                   {yearly ? ' /yıl' : ' /ay'}
                 </span>
+                {yearly && (
+                  <p className="text-sm text-muted-foreground mt-1">aylık ₺417 — yılda ₺989 tasarruf</p>
+                )}
               </div>
-              {yearly && (
-                <p className="text-xs text-muted-foreground mb-4">₺417/ay — yılda ₺989 tasarruf</p>
-              )}
-              {!yearly && (
-                <p className="text-xs text-muted-foreground mb-4">API, export, arşiv ve analiz araçları</p>
-              )}
+
               <Button className="w-full mb-6">Başla</Button>
               <FeatureList features={ARASTIRMACI_FEATURES} />
             </CardContent>
@@ -155,21 +159,25 @@ export default function UcretlerPage() {
           {/* Siyasi Parti */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-sm font-semibold">Siyasi Parti</p>
-              <div className="mt-4 mb-1">
-                <span className="text-3xl font-bold tabular-nums">
+              <p className="font-semibold">Siyasi Parti</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Parti odaklı analiz paneli ve stratejik araçlar.
+              </p>
+
+              <div className="mt-5 mb-1">
+                <span className="text-4xl font-bold tabular-nums">
                   ₺{fmt(partyPrice)}
                 </span>
-                <span className="text-sm text-muted-foreground"> /ay</span>
+                <span className="text-muted-foreground"> /ay</span>
               </div>
-              <p className="text-xs text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 {members < 100000
                   ? '100.000 üyeye kadar sabit ücret'
                   : `${fmt(members)} üye × ₺0,01`}
               </p>
 
               <div className="mb-6 space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Resmî üye sayısı</span>
                   <span className="font-medium tabular-nums">{fmt(members)}</span>
                 </div>
@@ -180,7 +188,7 @@ export default function UcretlerPage() {
                   max={12000000}
                   step={50000}
                 />
-                <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+                <div className="flex justify-between text-sm text-muted-foreground tabular-nums">
                   <span>50.000</span>
                   <span>12.000.000</span>
                 </div>
@@ -195,9 +203,9 @@ export default function UcretlerPage() {
         {/* Ücretsiz */}
         <Separator className="mb-12" />
         <div className="max-w-lg mx-auto">
-          <div className="text-center mb-6">
-            <p className="text-sm font-semibold">Ücretsiz</p>
-            <p className="text-xs text-muted-foreground mt-1">Oy kullanan herkes için.</p>
+          <div className="text-center mb-8">
+            <p className="font-semibold">Ücretsiz</p>
+            <p className="text-sm text-muted-foreground mt-1">Oy kullanan herkes için.</p>
           </div>
           <FeatureList features={UCRETSIZ_FEATURES} />
         </div>
