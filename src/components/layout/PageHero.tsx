@@ -11,7 +11,7 @@ interface PageHeroProps {
 
 export default function PageHero({ title, subtitle, backLink, stats }: PageHeroProps) {
   return (
-    <div className="mb-10">
+    <div className="pt-10 mb-10">
       {backLink && (
         <Link href={backLink.href} className="text-xs text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 transition-colors">
           <ArrowLeft className="size-3" />
