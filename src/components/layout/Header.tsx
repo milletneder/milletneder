@@ -316,7 +316,13 @@ export default function Header() {
 
             {/* Desktop */}
             <div className="hidden md:flex items-center gap-1">
-              <Separator orientation="vertical" className="mx-1 self-center h-5" />
+              <Button variant="ghost" size="icon" asChild>
+                <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer" title="GitHub">
+                  <GithubIcon className="size-4" />
+                </a>
+              </Button>
+
+              <Separator orientation="vertical" className="mx-1 h-4" />
 
               <Button onClick={handleVoteClick}>
                 Katıl
