@@ -277,26 +277,26 @@ export default function WeightingPage() {
 
           return (
             <AccordionItem key={key} value={key} className="border border-border rounded-lg overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-                  }}
-                >
-                  <Switch
-                    checked={config.is_enabled}
-                    onCheckedChange={(checked) => updateConfig(key, { is_enabled: checked })}
-                  />
-                </div>
-                <AccordionTrigger className="flex-1 hover:no-underline py-0">
-                  <div className="text-left">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+                    }}
+                  >
+                    <Switch
+                      checked={config.is_enabled}
+                      onCheckedChange={(checked) => updateConfig(key, { is_enabled: checked })}
+                    />
+                  </div>
+                  <div className="text-left min-w-0">
                     <h3 className="text-sm font-medium">{info?.title || key}</h3>
                     <p className="text-xs text-muted-foreground">{info?.description}</p>
                   </div>
-                  {saving === key && <span className="text-xs text-muted-foreground mr-2">Kaydediliyor...</span>}
-                </AccordionTrigger>
-              </div>
+                  {saving === key && <span className="text-xs text-muted-foreground shrink-0">Kaydediliyor...</span>}
+                </div>
+              </AccordionTrigger>
 
               <AccordionContent className="px-4 pb-4">
                 <div className="space-y-4">
