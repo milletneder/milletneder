@@ -33,10 +33,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Menu,
-  LogIn,
   LogOut,
   User,
   ChevronDown,
+  Stamp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -296,11 +296,8 @@ export default function Header() {
 
           {/* Right: katıl + auth */}
           <div className="flex items-center gap-2">
-            {/* Mobile: Katıl + Giriş/User */}
+            {/* Mobile: Giriş/User + Katıl */}
             <div className="flex md:hidden items-center gap-2">
-              <Button onClick={handleVoteClick}>
-                Katıl
-              </Button>
               {!isLoggedIn ? (
                 <Button variant="outline" onClick={() => setShowLoginDialog(true)}>
                   Giriş
@@ -312,6 +309,10 @@ export default function Header() {
                   </Link>
                 </Button>
               )}
+              <Button onClick={handleVoteClick}>
+                <Stamp className="size-3.5" data-icon="inline-start" />
+                Katıl
+              </Button>
             </div>
 
             {/* Desktop */}
@@ -322,11 +323,8 @@ export default function Header() {
                 </a>
               </Button>
 
-              <div className="mx-1 w-px h-4 bg-border" />
-
-              <Button onClick={handleVoteClick}>
-                Katıl
-              </Button>
+              {/* Separator: sol ml-1 (ghost buton optik boşluğu dengelemek için), sağ mr-0.5 (yarısı) */}
+              <div className="ml-1 mr-0.5 w-px h-4 bg-border" />
 
               {isLoggedIn ? (
                 <DropdownMenu>
@@ -353,10 +351,16 @@ export default function Header() {
                 </DropdownMenu>
               ) : (
                 <Button variant="outline" onClick={() => setShowLoginDialog(true)}>
-                  <LogIn className="size-3.5" data-icon="inline-start" />
                   Giriş
                 </Button>
               )}
+
+              <div className="w-1" />
+
+              <Button onClick={handleVoteClick}>
+                <Stamp className="size-3.5" data-icon="inline-start" />
+                Katıl
+              </Button>
             </div>
           </div>
         </div>
