@@ -276,7 +276,7 @@ export default function WeightingPage() {
           const info = CONFIG_LABELS[key];
 
           return (
-            <AccordionItem key={key} value={key} className="border border-border rounded-lg overflow-hidden">
+            <AccordionItem key={key} value={key} className="border border-border rounded-lg">
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div
