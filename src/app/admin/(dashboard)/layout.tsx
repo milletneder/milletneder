@@ -28,7 +28,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AdminSidebar />
+      <AdminSidebar adminName={admin.name} adminEmail={admin.email} onLogout={logout} />
       <SidebarInset>
         <AdminTopbar adminName={admin.name} onLogout={logout} />
         <main className="flex-1 overflow-auto p-6">{children}</main>

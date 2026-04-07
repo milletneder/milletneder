@@ -91,8 +91,6 @@ export default function AuditLogPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold text-foreground">Denetim Kaydi</h1>
-
       <div className="flex flex-wrap gap-3">
         <Input
           type="text"

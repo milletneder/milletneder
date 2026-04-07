@@ -14,6 +14,12 @@ import {
   SidebarFooter,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
   LayoutDashboard,
@@ -25,6 +31,8 @@ import {
   Scale,
   Settings,
   ScrollText,
+  LogOut,
+  ChevronsUpDown,
 } from 'lucide-react';
 
 const navGroups = [
@@ -54,7 +62,13 @@ const navGroups = [
   },
 ];
 
-export default function AdminSidebarComponent() {
+interface AdminSidebarProps {
+  adminName?: string;
+  adminEmail?: string;
+  onLogout?: () => void;
+}
+
+export default function AdminSidebarComponent({ adminName, adminEmail, onLogout }: AdminSidebarProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -91,10 +105,33 @@ export default function AdminSidebarComponent() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3">
-        <p className="text-xs text-muted-foreground">
-          Yönetim Paneli
-        </p>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton className="w-full">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="size-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
+                      {adminName?.charAt(0)?.toUpperCase() || 'A'}
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-medium truncate">{adminName || 'Admin'}</span>
+                      <span className="text-xs text-muted-foreground truncate">{adminEmail || ''}</span>
+                    </div>
+                  </div>
+                  <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="w-56">
+                <DropdownMenuItem onClick={onLogout} className="text-muted-foreground">
+                  <LogOut className="size-3.5" />
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

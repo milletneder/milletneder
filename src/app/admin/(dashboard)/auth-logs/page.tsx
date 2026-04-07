@@ -107,9 +107,8 @@ export default function AuthLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-foreground">Auth Loglari</h1>
-        <span className="text-sm text-muted-foreground">{total.toLocaleString('tr-TR')} kayit</span>
+      <div className="flex items-center justify-end">
+        <span className="text-sm text-muted-foreground">{total.toLocaleString('tr-TR')} kayıt</span>
       </div>
 
       {/* Ozet kartlari */}
