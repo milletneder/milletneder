@@ -89,7 +89,7 @@ export default function DemographicComparison({
   const ctaButtonLabel = !isLoggedIn
     ? 'Giriş Yap'
     : !hasVoted
-      ? 'Oy Ver'
+      ? 'Katıl'
       : 'Bilgi Ekle';
 
   const previewBrackets = brackets.slice(0, 4).map((b) => ({

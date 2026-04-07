@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       recordFailure(identityHash);
       await logAuthEvent({ eventType: 'login_fail', authMethod: 'phone', identityHint: `+90${rawPhone}`, request, errorCode: 'user_not_found' });
-      return NextResponse.json({ error: 'Bu numarayla kayıtlı bir hesap bulunamadı. Henüz kayıt olmadıysanız ana sayfadan "Oy Ver" butonuyla kayıt olabilirsiniz.' }, { status: 401 });
+      return NextResponse.json({ error: 'Bu numarayla kayıtlı bir hesap bulunamadı. Henüz kayıt olmadıysanız ana sayfadan "Katıl" butonuyla kayıt olabilirsiniz.' }, { status: 401 });
     }
 
     if (!user.is_active) {

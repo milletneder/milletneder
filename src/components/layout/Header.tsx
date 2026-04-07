@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
-import Counter from '@/components/ui/Counter';
 import AuthForm from '@/components/auth/AuthForm';
 import DemographicBanner from '@/components/layout/DemographicBanner';
 import RecoveryCodesTopbar from '@/components/layout/RecoveryCodesTopbar';
@@ -17,28 +17,28 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Menu,
-  Vote,
   LogIn,
   LogOut,
   User,
   ChevronDown,
-  ExternalLink,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -48,18 +48,13 @@ function GithubIcon({ className }: { className?: string }) {
   );
 }
 
-interface HeaderProps {
-  totalVotes?: number;
-  daysRemaining?: number;
-  currentMonth?: string;
-  onVoteClick?: () => void;
-  userHasVoted?: boolean;
-}
-
-export default function Header({ totalVotes, daysRemaining, currentMonth, onVoteClick, userHasVoted }: HeaderProps) {
+export default function Header() {
   const { isLoggedIn, login, logout } = useAuth();
-  const [showLoginForm, setShowLoginForm] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(48);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
@@ -69,7 +64,11 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const update = () => setHeaderHeight(el.offsetHeight);
+    const update = () => {
+      const h = el.offsetHeight;
+      setHeaderHeight(h);
+      document.documentElement.style.setProperty('--header-height', `${h}px`);
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
@@ -86,10 +85,18 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
 
   // VoteModal'dan gelen "giris yap" istegini dinle
   useEffect(() => {
-    const handler = () => { setShowLoginForm(true); setMobileMenuOpen(true); };
+    const handler = () => setShowLoginDialog(true);
     window.addEventListener('open-login', handler);
     return () => window.removeEventListener('open-login', handler);
   }, []);
+
+  const handleVoteClick = () => {
+    if (pathname === '/') {
+      window.dispatchEvent(new Event('open-vote-modal'));
+    } else {
+      router.push('/?vote=true');
+    }
+  };
 
   const handleAuth = async (identityValue: string, extraData?: { password?: string }) => {
     const isPhone = /^\d{10}$/.test(identityValue.replace(/\s/g, ''));
@@ -97,14 +104,14 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
       ? { verifiedPhone: identityValue, password: extraData?.password }
       : { verifiedEmail: identityValue, password: extraData?.password };
     sessionStorage.setItem('pendingRegistration', JSON.stringify(pendingData));
-    setShowLoginForm(false);
+    setShowLoginDialog(false);
     setMobileMenuOpen(false);
-    if (onVoteClick) onVoteClick();
+    handleVoteClick();
   };
 
   const handleDirectLogin = (token: string) => {
     login(token);
-    setShowLoginForm(false);
+    setShowLoginDialog(false);
     setMobileMenuOpen(false);
   };
 
@@ -114,13 +121,16 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
     window.location.href = '/';
   };
 
-  const navLinks = [
-    { href: '/', label: 'Ana Sayfa' },
-    { href: '/islemler', label: 'İşlemler' },
+  const mainNavLinks = [
+    { href: '/', label: 'Keşfet' },
     { href: '/raporlar', label: 'Raporlar' },
-    { href: '/metodoloji', label: 'Metodoloji' },
-    { href: '/oneriler', label: 'Öneriler' },
-    { href: '/#bagis-yap', label: 'Bağış Yap' },
+    { href: '/islemler', label: 'İşlemler' },
+  ];
+
+  const moreLinks = [
+    { href: '/metodoloji', label: 'Nasıl çalışır?' },
+    { href: '/oneriler', label: 'Öneride bulun' },
+    { href: '/#bagis-yap', label: 'Bağış yap' },
   ];
 
   const loginFormContent = (
@@ -142,9 +152,9 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
         onDirectLogin={handleDirectLogin}
         loginOnly
         onRegistrationNeeded={() => {
-          setShowLoginForm(false);
+          setShowLoginDialog(false);
           setMobileMenuOpen(false);
-          if (onVoteClick) onVoteClick();
+          handleVoteClick();
         }}
       />
     </div>
@@ -154,8 +164,84 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
     <>
       <header ref={headerRef} className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
-          {/* Left: brand + stats */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          {/* Left: mobile hamburger + brand + desktop nav */}
+          <div className="flex items-center gap-1">
+            {/* Mobile hamburger — sol taraf */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon" className="-ml-2">
+                  <Menu className="size-5" />
+                  <span className="sr-only">Menü</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72">
+                <SheetHeader>
+                  <SheetTitle className="text-left text-base">#MilletNeDer</SheetTitle>
+                </SheetHeader>
+
+                <div className="flex flex-col gap-1 mt-4">
+                  {mainNavLinks.map((link) => (
+                    <Button key={link.href} variant="ghost" className="justify-start" asChild>
+                      <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
+                        {link.label}
+                      </Link>
+                    </Button>
+                  ))}
+
+                  {/* Daha fazla — mobilde akordiyon */}
+                  <Button
+                    variant="ghost"
+                    className="justify-between"
+                    onClick={() => setMobileMoreOpen(!mobileMoreOpen)}
+                  >
+                    Daha fazla
+                    <ChevronDown className={cn('size-3 transition-transform', mobileMoreOpen && 'rotate-180')} />
+                  </Button>
+                  {mobileMoreOpen && (
+                    <div className="flex flex-col gap-1 pl-4">
+                      {moreLinks.map((link) => (
+                        <Button key={link.href} variant="ghost" className="justify-start text-muted-foreground" asChild>
+                          <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
+                            {link.label}
+                          </Link>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="my-3" />
+
+                <div className="flex flex-col gap-1">
+                  {isLoggedIn && (
+                    <Button variant="ghost" className="justify-start" asChild>
+                      <Link href="/profil" onClick={() => setMobileMenuOpen(false)}>
+                        <User className="size-4" data-icon="inline-start" />
+                        Hesabım
+                      </Link>
+                    </Button>
+                  )}
+                  <Button variant="ghost" className="justify-start" asChild>
+                    <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer">
+                      <GithubIcon className="size-4" />
+                      GitHub
+                    </a>
+                  </Button>
+                </div>
+
+                {isLoggedIn && (
+                  <>
+                    <Separator className="my-3" />
+                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                      <LogOut className="size-4" data-icon="inline-start" />
+                      Çıkış Yap
+                    </Button>
+                  </>
+                )}
+              </SheetContent>
+            </Sheet>
+
+            {/* Logo + badge */}
             <Link href="/" className="flex items-center gap-2">
               <svg width="142" height="20" viewBox="0 0 71 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M64.75 8.92389V8.69589L64.93 8.63589C65.09 8.59589 65.198 8.52789 65.254 8.43189C65.318 8.33589 65.35 8.20789 65.35 8.04789V4.53189C65.342 4.35589 65.31 4.22389 65.254 4.13589C65.198 4.03989 65.09 3.97589 64.93 3.94389L64.75 3.89589V3.67989L66.706 2.98389L66.85 3.11589L66.958 4.17189V4.25589C67.078 4.03189 67.23 3.82389 67.414 3.63189C67.598 3.43989 67.798 3.28389 68.014 3.16389C68.23 3.04389 68.446 2.98389 68.662 2.98389C68.966 2.98389 69.194 3.06389 69.346 3.22389C69.498 3.38389 69.574 3.58789 69.574 3.83589C69.574 4.10789 69.498 4.31589 69.346 4.45989C69.194 4.59589 69.01 4.66389 68.794 4.66389C68.474 4.66389 68.198 4.51989 67.966 4.23189L67.942 4.20789C67.862 4.11189 67.77 4.05989 67.666 4.05189C67.57 4.03589 67.474 4.08389 67.378 4.19589C67.298 4.27589 67.222 4.37189 67.15 4.48389C67.086 4.58789 67.026 4.71189 66.97 4.85589V7.99989C66.97 8.15189 67.002 8.27989 67.066 8.38389C67.13 8.47989 67.238 8.54789 67.39 8.58789L67.75 8.69589V8.92389H64.75Z" fill="currentColor"/>
@@ -173,153 +259,115 @@ export default function Header({ totalVotes, daysRemaining, currentMonth, onVote
               </svg>
               <Badge variant="outline">Beta</Badge>
             </Link>
-            <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
-              {currentMonth && <span>{currentMonth}</span>}
-              {totalVotes !== undefined && (
-                <>
-                  {currentMonth && <Separator orientation="vertical" className="h-3" />}
-                  <span className="text-foreground font-medium"><Counter value={totalVotes} className="text-foreground text-xs" /> oy</span>
-                </>
-              )}
-              {daysRemaining !== undefined && daysRemaining > 0 && (
-                <>
-                  <Separator orientation="vertical" className="h-3" />
-                  <span>{daysRemaining} gün</span>
-                </>
-              )}
-            </div>
-          </div>
 
-          {/* Right: desktop nav + auth */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Button key={link.href} variant="ghost" asChild>
-                <Link href={link.href}>{link.label}</Link>
-              </Button>
-            ))}
-            <Button variant="ghost" size="icon" asChild>
-              <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer" title="GitHub">
-                <GithubIcon className="size-4" />
-              </a>
-            </Button>
+            {/* Desktop navigasyon linkleri */}
+            <nav className="hidden md:flex items-center gap-1 ml-4">
+              {mainNavLinks.map((link) => (
+                <Button key={link.href} variant="ghost" asChild>
+                  <Link href={link.href}>{link.label}</Link>
+                </Button>
+              ))}
 
-            <Separator orientation="vertical" className="mx-1 h-5" />
-
-            {onVoteClick && (
-              <Button onClick={onVoteClick}>
-                <Vote className="size-3.5" data-icon="inline-start" />
-                {userHasVoted ? 'Oy Değiştir' : 'Oy Ver'}
-              </Button>
-            )}
-
-            {isLoggedIn ? (
+              {/* Daha fazla — masaüstünde açılır menü */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <User className="size-3.5" data-icon="inline-start" />
-                    Hesabım
+                  <Button variant="ghost">
+                    Daha fazla
                     <ChevronDown className="size-3" data-icon="inline-end" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profil">
-                      <User className="size-3.5" />
-                      Hesabıma Git
-                    </Link>
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="start">
+                  {moreLinks.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild>
+                      <Link href={link.href}>{link.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground">
-                    <LogOut className="size-3.5" />
-                    Çıkış Yap
+                  <DropdownMenuItem asChild>
+                    <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer">
+                      <GithubIcon className="size-3.5" />
+                      GitHub
+                    </a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Popover open={showLoginForm} onOpenChange={setShowLoginForm}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">
-                    <LogIn className="size-3.5" data-icon="inline-start" />
-                    Giriş
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80 p-4">
-                  {loginFormContent}
-                </PopoverContent>
-              </Popover>
-            )}
+            </nav>
           </div>
 
-          {/* Mobile: sheet trigger */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="size-5" />
-                <span className="sr-only">Menu</span>
+          {/* Right: katıl + auth */}
+          <div className="flex items-center gap-2">
+            {/* Mobile: Katıl + Giriş/User */}
+            <div className="flex md:hidden items-center gap-2">
+              <Button onClick={handleVoteClick}>
+                Katıl
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <SheetHeader>
-                <SheetTitle className="text-left text-base">#MilletNeDer</SheetTitle>
-              </SheetHeader>
+              {!isLoggedIn ? (
+                <Button variant="outline" onClick={() => setShowLoginDialog(true)}>
+                  Giriş
+                </Button>
+              ) : (
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/profil">
+                    <User className="size-4" />
+                  </Link>
+                </Button>
+              )}
+            </div>
 
-              <div className="flex flex-col gap-1 mt-4">
-                {navLinks.map((link) => (
-                  <Button key={link.href} variant="ghost" className="justify-start" asChild>
-                    <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
-                      {link.label}
-                    </Link>
-                  </Button>
-                ))}
-                {isLoggedIn && (
-                  <Button variant="ghost" className="justify-start" asChild>
-                    <Link href="/profil" onClick={() => setMobileMenuOpen(false)}>
-                      <User className="size-4" data-icon="inline-start" />
+            {/* Desktop */}
+            <div className="hidden md:flex items-center gap-1">
+              <Separator orientation="vertical" className="mx-1 self-center h-5" />
+
+              <Button onClick={handleVoteClick}>
+                Katıl
+              </Button>
+
+              {isLoggedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <User className="size-3.5" data-icon="inline-start" />
                       Hesabım
-                    </Link>
-                  </Button>
-                )}
-                <Button variant="ghost" className="justify-start" asChild>
-                  <a href="https://github.com/milletneder/milletneder" target="_blank" rel="noopener noreferrer">
-                    <GithubIcon className="size-4" />
-                    GitHub
-                  </a>
-                </Button>
-              </div>
-
-              {totalVotes !== undefined && (
-                <div className="text-xs text-muted-foreground pt-3 mt-3 border-t border-border tabular-nums">
-                  <span className="text-foreground font-medium"><Counter value={totalVotes} className="text-foreground text-xs" /> oy</span>
-                  {daysRemaining !== undefined && daysRemaining > 0 && <span className="ml-3">{daysRemaining} gün</span>}
-                </div>
-              )}
-
-              <Separator className="my-3" />
-
-              <div className="space-y-3">
-                {isLoggedIn ? (
-                  <Button variant="outline" className="w-full" onClick={handleLogout}>
-                    <LogOut className="size-4" data-icon="inline-start" />
-                    Çıkış Yap
-                  </Button>
-                ) : (
-                  loginFormContent
-                )}
-              </div>
-
-              {onVoteClick && (
-                <Button className="w-full mt-3" onClick={() => { onVoteClick(); setMobileMenuOpen(false); }}>
-                  <Vote className="size-4" data-icon="inline-start" />
-                  {userHasVoted ? 'Oy Değiştir' : 'Oy Ver'}
+                      <ChevronDown className="size-3" data-icon="inline-end" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem asChild>
+                      <Link href="/profil">
+                        <User className="size-3.5" />
+                        Hesabıma Git
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground">
+                      <LogOut className="size-3.5" />
+                      Çıkış Yap
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button variant="outline" onClick={() => setShowLoginDialog(true)}>
+                  <LogIn className="size-3.5" data-icon="inline-start" />
+                  Giriş
                 </Button>
               )}
-            </SheetContent>
-          </Sheet>
+            </div>
+          </div>
         </div>
         <DemographicBanner />
         <RecoveryCodesTopbar />
       </header>
       <div style={{ height: headerHeight }} />
+
+      {/* Login Dialog — hem mobil hem masaüstü */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Giriş Yap</DialogTitle>
+          </DialogHeader>
+          {loginFormContent}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
