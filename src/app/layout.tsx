@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 import { DM_Sans } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'});
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: {
@@ -81,7 +83,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" translate="no" suppressHydrationWarning className={cn("font-sans", dmSans.variable)}>
+    <html lang="tr" translate="no" suppressHydrationWarning className={cn("font-sans antialiased", dmSans.variable)}>
       <head>
         <meta name="google" content="notranslate" />
         <script
@@ -123,8 +125,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-white text-black antialiased notranslate" style={{ fontFamily: '"Google Sans", "Google Sans Text", sans-serif' }} suppressHydrationWarning>
-        <AuthProvider>{children}</AuthProvider>
+      <body className="bg-background text-foreground notranslate" suppressHydrationWarning>
+        <AuthProvider>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

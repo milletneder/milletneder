@@ -1,9 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import PageHero from '@/components/layout/PageHero';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  Loader2,
+} from 'lucide-react';
 
 interface Transaction {
   hash: string;
@@ -36,23 +50,6 @@ const TYPE_LABELS: Record<string, string> = {
   HESAP_SILME: 'Hesap Silme',
 };
 
-function formatTime(ts: string): string {
-  const d = new Date(ts);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-
-  if (diffMs < 0 || diffMs > 86400000) {
-    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' });
-  }
-
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHour = Math.floor(diffMs / 3600000);
-
-  if (diffMin < 1) return 'az önce';
-  if (diffMin < 60) return `${diffMin} dk`;
-  return `${diffHour} sa`;
-}
-
 function formatFullTime(ts: string): string {
   const d = new Date(ts);
   const base = d.toLocaleString('tr-TR', {
@@ -68,8 +65,6 @@ function formatFullTime(ts: string): string {
   return `${base}.${ms}`;
 }
 
-import { Suspense } from 'react';
-
 const STATUS_LABELS: Record<string, string> = {
   invalid: 'Geçersiz Oylar',
   flagged: 'Şüpheli Hesaplar',
@@ -78,8 +73,8 @@ const STATUS_LABELS: Record<string, string> = {
 export default function IslemlerPageWrapper() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     }>
       <IslemlerPage />
@@ -105,7 +100,6 @@ function IslemlerPage() {
   const [flaggedCount, setFlaggedCount] = useState(0);
   const [initializedFromUrl, setInitializedFromUrl] = useState(false);
 
-  // URL query params'dan filtreleri oku (sadece ilk yüklemede)
   useEffect(() => {
     if (initializedFromUrl) return;
     const urlType = searchParams.get('type') || '';
@@ -139,9 +133,7 @@ function IslemlerPage() {
         if (data.counts) setTypeCounts(data.counts);
         if (data.flaggedCount !== undefined) setFlaggedCount(data.flaggedCount);
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     setLoading(false);
   }, [page, typeFilter, cityFilter, partyFilter, statusFilter, initializedFromUrl]);
 
@@ -172,17 +164,16 @@ function IslemlerPage() {
     setPartyFilter('');
     setStatusFilter('');
     setPage(1);
-    // URL'yi de temizle
     router.replace('/islemler', { scroll: false });
   };
 
   const hasAnyFilter = typeFilter || cityFilter || partyFilter || statusFilter;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Header totalVotes={totalVotes} />
 
-      <main className="max-w-3xl mx-auto px-6 pb-16">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
         <PageHero
           title="İşlem Geçmişi"
           subtitle="Tüm platform işlemleri şeffaf ve doğrulanabilir şekilde listelenir. Her işlem benzersiz bir hash ile tanımlanır."
@@ -199,110 +190,99 @@ function IslemlerPage() {
 
         {/* Filters */}
         <div className="space-y-3 mb-6">
-          {/* Aktif filtre göstergesi */}
           {hasAnyFilter && (
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-neutral-400">Aktif filtreler:</span>
+              <span className="text-xs text-muted-foreground">Aktif filtreler:</span>
               {statusFilter && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-neutral-900 text-white">
+                <Badge variant="default">
                   {STATUS_LABELS[statusFilter] || statusFilter}
-                  <button onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1 hover:text-neutral-300">&times;</button>
-                </span>
+                  <button onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                </Badge>
               )}
               {partyFilter && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-neutral-900 text-white">
+                <Badge variant="default">
                   Parti: {partyFilter}
-                  <button onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1 hover:text-neutral-300">&times;</button>
-                </span>
+                  <button onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                </Badge>
               )}
               {typeFilter && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-neutral-900 text-white">
+                <Badge variant="default">
                   {TYPE_LABELS[typeFilter]}
-                  <button onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1 hover:text-neutral-300">&times;</button>
-                </span>
+                  <button onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                </Badge>
               )}
               {cityFilter && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-neutral-900 text-white">
+                <Badge variant="default">
                   İl: {cityFilter}
-                  <button onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1 hover:text-neutral-300">&times;</button>
-                </span>
+                  <button onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                </Badge>
               )}
-              <button
-                onClick={clearAllFilters}
-                className="px-2 py-1 text-xs text-neutral-400 hover:text-black underline"
-              >
+              <Button variant="link" size="xs" onClick={clearAllFilters}>
                 Tümünü temizle
-              </button>
+              </Button>
             </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-neutral-400 mr-1">Tür:</span>
+            <span className="text-xs text-muted-foreground mr-1">Tür:</span>
             {['OY_KULLANIM', 'OY_DEGISIKLIK', 'OY_DEVIR', 'KAYIT', 'OY_SILME', 'HESAP_SILME'].map((t) => (
-              <button
+              <Button
                 key={t}
+                variant={typeFilter === t ? 'default' : 'outline'}
+                size="xs"
                 onClick={() => handleTypeChange(t)}
-                className={`px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  typeFilter === t
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-neutral-600 border-neutral-200 hover:border-black'
-                }`}
               >
                 {TYPE_LABELS[t]}
-              </button>
+              </Button>
             ))}
 
-            <span className="text-neutral-200 mx-1">|</span>
-            <span className="text-xs text-neutral-400 mr-1">Durum:</span>
+            <Separator orientation="vertical" className="h-4 mx-1" />
+            <span className="text-xs text-muted-foreground mr-1">Durum:</span>
             {['invalid', 'flagged'].map((s) => (
-              <button
+              <Button
                 key={s}
+                variant={statusFilter === s ? 'default' : 'outline'}
+                size="xs"
                 onClick={() => handleStatusChange(s)}
-                className={`px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  statusFilter === s
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-neutral-600 border-neutral-200 hover:border-black'
-                }`}
               >
                 {STATUS_LABELS[s]}
-              </button>
+              </Button>
             ))}
 
             <div className="ml-auto flex gap-2">
-              <input
+              <Input
                 type="text"
                 placeholder="Parti ara..."
                 value={partyFilter}
                 onChange={(e) => { setPartyFilter(e.target.value); setPage(1); }}
-                className="border border-neutral-200 px-3 py-1.5 text-xs w-28 focus:border-black focus:outline-none"
+                className="h-7 text-xs w-28"
               />
-              <input
+              <Input
                 type="text"
                 placeholder="İl ara..."
                 value={cityFilter}
                 onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
-                className="border border-neutral-200 px-3 py-1.5 text-xs w-28 focus:border-black focus:outline-none"
+                className="h-7 text-xs w-28"
               />
             </div>
           </div>
         </div>
 
         {/* Transaction list */}
-        <div className="border border-neutral-100">
-          {/* Table header — desktop */}
-          <div className="hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 bg-neutral-50 border-b border-neutral-100">
-            <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-semibold">İşlem Kimliği</span>
-            <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-semibold">Tür</span>
-            <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-semibold">Detay</span>
-            <span className="text-[11px] uppercase tracking-wider text-neutral-400 font-semibold text-right">Zaman</span>
+        <Card>
+          <div className="hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 bg-muted/50 border-b border-border">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">İşlem Kimliği</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Tür</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Detay</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right">Zaman</span>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : transactions.length === 0 ? (
-            <div className="py-16 text-center text-neutral-400 text-sm">
+            <div className="py-16 text-center text-muted-foreground text-sm">
               İşlem bulunamadı
             </div>
           ) : (
@@ -310,117 +290,115 @@ function IslemlerPage() {
               <div key={tx.hash}>
                 {/* Desktop row */}
                 <div
-                  className={`hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 border-b border-neutral-50 hover:bg-neutral-50/50 transition-colors cursor-pointer items-center ${tx.isValid === false ? 'bg-red-50/40' : ''}`}
+                  className={cn(
+                    "hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer items-center",
+                    tx.isValid === false && 'bg-destructive/5'
+                  )}
                   onClick={() => setExpandedTx(expandedTx === tx.hash ? null : tx.hash)}
                 >
-                  <div className="font-mono text-xs text-neutral-400 truncate">
-                    {tx.hash}
-                  </div>
-                  <div className="text-xs font-medium text-neutral-500 flex items-center gap-1.5">
+                  <div className="font-mono text-xs text-muted-foreground truncate">{tx.hash}</div>
+                  <div className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                     {TYPE_LABELS[tx.type]}
                     {tx.isValid === false && (
-                      <span className="text-[10px] text-red-500 font-medium">GEÇERSİZ</span>
+                      <Badge variant="destructive" className="text-[10px] px-1 py-0">GEÇERSİZ</Badge>
                     )}
                   </div>
-                  <div className="text-sm text-neutral-600">
-                    <TxDetail tx={tx} />
-                  </div>
-                  <div className="text-xs text-neutral-400 text-right tabular-nums">
-                    {formatFullTime(tx.timestamp)}
-                  </div>
+                  <div className="text-sm"><TxDetail tx={tx} /></div>
+                  <div className="text-xs text-muted-foreground text-right tabular-nums">{formatFullTime(tx.timestamp)}</div>
                 </div>
 
                 {/* Mobile row */}
                 <div
-                  className={`sm:hidden px-4 py-3 border-b border-neutral-50 active:bg-neutral-50 ${tx.isValid === false ? 'bg-red-50/40' : ''}`}
+                  className={cn(
+                    "sm:hidden px-4 py-3 border-b border-border/50 active:bg-muted/30",
+                    tx.isValid === false && 'bg-destructive/5'
+                  )}
                   onClick={() => setExpandedTx(expandedTx === tx.hash ? null : tx.hash)}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-neutral-500">
+                    <span className="text-xs font-medium text-muted-foreground">
                       {TYPE_LABELS[tx.type]}
                       {tx.isValid === false && (
-                        <span className="text-[10px] text-red-500 font-medium ml-1.5">GEÇERSİZ</span>
+                        <Badge variant="destructive" className="text-[10px] px-1 py-0 ml-1.5">GEÇERSİZ</Badge>
                       )}
                     </span>
-                    <span className="text-xs text-neutral-400 tabular-nums">{formatFullTime(tx.timestamp)}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{formatFullTime(tx.timestamp)}</span>
                   </div>
-                  <div className="text-sm text-neutral-600 mb-1">
-                    <TxDetail tx={tx} />
-                  </div>
-                  <div className="font-mono text-xs text-neutral-300 truncate">{tx.hash}</div>
+                  <div className="text-sm mb-1"><TxDetail tx={tx} /></div>
+                  <div className="font-mono text-xs text-muted-foreground/50 truncate">{tx.hash}</div>
                 </div>
 
                 {/* Expanded details */}
                 {expandedTx === tx.hash && (
-                  <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100">
+                  <div className="px-4 py-3 bg-muted/50 border-b border-border">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">İşlem Kimliği</span>
-                        <span className="font-mono text-neutral-600 break-all">{tx.hash}</span>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">İşlem Kimliği</span>
+                        <span className="font-mono text-muted-foreground break-all">{tx.hash}</span>
                       </div>
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Zaman</span>
-                        <span className="text-neutral-600 tabular-nums">{formatFullTime(tx.timestamp)}</span>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Zaman</span>
+                        <span className="tabular-nums">{formatFullTime(tx.timestamp)}</span>
                       </div>
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Durum</span>
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Durum</span>
                         {tx.isValid === false ? (
-                          <span className="text-neutral-800 font-medium">Geçersiz</span>
+                          <Badge variant="destructive" className="text-[10px]">Geçersiz</Badge>
                         ) : tx.isValid === true ? (
-                          <span className="text-neutral-800 font-medium">Onaylandı</span>
+                          <Badge variant="secondary" className="text-[10px]">Onaylandı</Badge>
                         ) : (
-                          <span className="text-neutral-400">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </div>
                       {tx.city && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">İl</span>
-                          <span className="text-neutral-600">{tx.city}</span>
+                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">İl</span>
+                          <span>{tx.city}</span>
                         </div>
                       )}
                       {tx.roundId > 0 && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Tur</span>
-                          <span className="text-neutral-600">#{tx.roundId}</span>
+                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Tur</span>
+                          <span>#{tx.roundId}</span>
                         </div>
                       )}
                       {tx.type === 'OY_KULLANIM' && tx.party && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Parti</span>
+                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.partyColor || '#555' }} />
-                            <span className="text-neutral-800 font-medium">{tx.party}</span>
+                            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
+                            <span className="font-medium">{tx.party}</span>
                           </span>
                         </div>
                       )}
                       {tx.type === 'OY_DEGISIKLIK' && (
                         <>
                           <div>
-                            <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Eski Parti</span>
+                            <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Eski Parti</span>
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.oldPartyColor || '#555' }} />
-                              <span className="text-neutral-500 line-through">{tx.oldParty}</span>
+                              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.oldPartyColor || '#555' }} />
+                              <span className="text-muted-foreground line-through">{tx.oldParty}</span>
                             </span>
                           </div>
                           <div>
-                            <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Yeni Parti</span>
+                            <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Yeni Parti</span>
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
-                              <span className="text-neutral-800 font-medium">{tx.newParty}</span>
+                              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
+                              <span className="font-medium">{tx.newParty}</span>
                             </span>
                           </div>
                         </>
                       )}
                       {tx.type === 'OY_SILME' && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-neutral-400 block mb-0.5">Parti</span>
+                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
                           {tx.party ? (
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="w-2.5 h-2.5" style={{ backgroundColor: tx.partyColor || '#555' }} />
-                              <span className="text-neutral-800 font-medium">{tx.party}</span>
+                              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
+                              <span className="font-medium">{tx.party}</span>
                             </span>
                           ) : (
-                            <span className="text-neutral-400">[şifreli oy]</span>
+                            <span className="text-muted-foreground">[şifreli oy]</span>
                           )}
                         </div>
                       )}
@@ -430,18 +408,20 @@ function IslemlerPage() {
               </div>
             ))
           )}
-        </div>
+        </Card>
 
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 text-xs font-medium border border-neutral-200 hover:border-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
+              <ChevronLeft className="size-3.5" data-icon="inline-start" />
               Önceki
-            </button>
+            </Button>
 
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(7, pagination.totalPages) }, (_, i) => {
@@ -456,61 +436,63 @@ function IslemlerPage() {
                   p = page - 3 + i;
                 }
                 return (
-                  <button
+                  <Button
                     key={p}
+                    variant={p === page ? 'default' : 'ghost'}
+                    size="icon-sm"
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 text-xs font-medium transition-colors ${
-                      p === page
-                        ? 'bg-black text-white'
-                        : 'text-neutral-500 hover:bg-neutral-100'
-                    }`}
                   >
                     {p}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page === pagination.totalPages}
-              className="px-3 py-1.5 text-xs font-medium border border-neutral-200 hover:border-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Sonraki
-            </button>
+              <ChevronRight className="size-3.5" data-icon="inline-end" />
+            </Button>
           </div>
         )}
 
         {/* Info footer */}
-        <div className="mt-8 pt-6 border-t border-neutral-100">
-          <div className="bg-neutral-50 px-5 py-4 space-y-3">
-            <h3 className="text-xs font-bold text-black">Şeffaflık Hakkında</h3>
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              Bu sayfa, platformda gerçekleşen tüm işlemleri şeffaf bir şekilde listeler.
-              Her işlem benzersiz bir kriptografik hash ile tanımlanır ve değiştirilemez.
-              Kullanıcı kimlikleri anonim hash&apos;ler ile gösterilir —
-              hiçbir kişisel veri açığa çıkmaz.
-            </p>
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-semibold text-black">İşlem Türleri</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-neutral-500">
-                <div><strong className="text-neutral-700">Oy</strong> — İlk kez oy vermek</div>
-                <div><strong className="text-neutral-700">Değişiklik</strong> — Oyu başka partiye taşımak</div>
-                <div><strong className="text-neutral-700">Devir</strong> — Önceki turdan otomatik devir</div>
-                <div><strong className="text-neutral-700">Kayıt</strong> — Yeni hesap oluşturma</div>
-                <div><strong className="text-neutral-700">Oy Silme</strong> — Hesap silindiğinde oyun kaldırılması</div>
-                <div><strong className="text-neutral-700">Hesap Silme</strong> — Kullanıcı hesabının silinmesi</div>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-semibold text-black">Şüpheli Hesap Tespiti</h4>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                Aynı cihazdan birden fazla hesap oluşturulduğu tespit edildiğinde, ilgili tüm hesaplar
-                otomatik olarak şüpheli işaretlenir ve oyları geçersiz sayılır. Bu hesaplar katılımcı
-                sayısına dahil edilmez. Şüpheli hesap sayısı şeffaflık gereği üstte gösterilir.
+        <div className="mt-8">
+          <Separator className="mb-6" />
+          <Card className="bg-muted/50">
+            <CardContent className="pt-5 space-y-3">
+              <h3 className="text-xs font-bold">Şeffaflık Hakkında</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Bu sayfa, platformda gerçekleşen tüm işlemleri şeffaf bir şekilde listeler.
+                Her işlem benzersiz bir kriptografik hash ile tanımlanır ve değiştirilemez.
+                Kullanıcı kimlikleri anonim hash&apos;ler ile gösterilir —
+                hiçbir kişisel veri açığa çıkmaz.
               </p>
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-semibold">İşlem Türleri</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
+                  <div><strong className="text-foreground">Oy</strong> — İlk kez oy vermek</div>
+                  <div><strong className="text-foreground">Değişiklik</strong> — Oyu başka partiye taşımak</div>
+                  <div><strong className="text-foreground">Devir</strong> — Önceki turdan otomatik devir</div>
+                  <div><strong className="text-foreground">Kayıt</strong> — Yeni hesap oluşturma</div>
+                  <div><strong className="text-foreground">Oy Silme</strong> — Hesap silindiğinde oyun kaldırılması</div>
+                  <div><strong className="text-foreground">Hesap Silme</strong> — Kullanıcı hesabının silinmesi</div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-semibold">Şüpheli Hesap Tespiti</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Aynı cihazdan birden fazla hesap oluşturulduğu tespit edildiğinde, ilgili tüm hesaplar
+                  otomatik olarak şüpheli işaretlenir ve oyları geçersiz sayılır. Bu hesaplar katılımcı
+                  sayısına dahil edilmez. Şüpheli hesap sayısı şeffaflık gereği üstte gösterilir.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
@@ -521,9 +503,9 @@ function TxDetail({ tx }: { tx: Transaction }) {
   if (tx.type === 'KAYIT') {
     return (
       <span>
-        {tx.city && <span className="text-neutral-800 font-medium">{tx.city}</span>}
-        {tx.city && <span className="text-neutral-300 mx-1.5">·</span>}
-        <span className="text-neutral-400">Yeni hesap</span>
+        {tx.city && <span className="font-medium">{tx.city}</span>}
+        {tx.city && <span className="text-muted-foreground/30 mx-1.5">·</span>}
+        <span className="text-muted-foreground">Yeni hesap</span>
       </span>
     );
   }
@@ -533,12 +515,12 @@ function TxDetail({ tx }: { tx: Transaction }) {
       <span className="inline-flex items-center gap-1.5 flex-wrap">
         {tx.city && (
           <>
-            <span className="text-neutral-800 font-medium">{tx.city}</span>
-            <span className="text-neutral-300">·</span>
+            <span className="font-medium">{tx.city}</span>
+            <span className="text-muted-foreground/30">·</span>
           </>
         )}
-        <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.partyColor || '#555' }} />
-        <span className="font-medium text-neutral-800">{tx.party}</span>
+        <span className="w-2.5 h-2.5 inline-block shrink-0 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
+        <span className="font-medium">{tx.party}</span>
       </span>
     );
   }
@@ -548,13 +530,13 @@ function TxDetail({ tx }: { tx: Transaction }) {
       <span className="inline-flex items-center gap-1.5 flex-wrap">
         {tx.city && (
           <>
-            <span className="text-neutral-800 font-medium">{tx.city}</span>
-            <span className="text-neutral-300">·</span>
+            <span className="font-medium">{tx.city}</span>
+            <span className="text-muted-foreground/30">·</span>
           </>
         )}
-        <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.partyColor || '#555' }} />
-        <span className="font-medium text-neutral-800">{tx.party}</span>
-        <span className="text-neutral-400 text-xs">devir</span>
+        <span className="w-2.5 h-2.5 inline-block shrink-0 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
+        <span className="font-medium">{tx.party}</span>
+        <span className="text-muted-foreground text-xs">devir</span>
       </span>
     );
   }
@@ -564,17 +546,15 @@ function TxDetail({ tx }: { tx: Transaction }) {
       <span className="inline-flex items-center gap-1.5 flex-wrap">
         {tx.city && (
           <>
-            <span className="text-neutral-800 font-medium">{tx.city}</span>
-            <span className="text-neutral-300">·</span>
+            <span className="font-medium">{tx.city}</span>
+            <span className="text-muted-foreground/30">·</span>
           </>
         )}
-        <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.oldPartyColor || '#555' }} />
-        <span className="text-neutral-400 line-through">{tx.oldParty}</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" className="text-neutral-300 flex-shrink-0">
-          <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-        </svg>
-        <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
-        <span className="font-medium text-neutral-800">{tx.newParty}</span>
+        <span className="w-2.5 h-2.5 inline-block shrink-0 rounded-sm" style={{ backgroundColor: tx.oldPartyColor || '#555' }} />
+        <span className="text-muted-foreground line-through">{tx.oldParty}</span>
+        <ArrowRight className="size-3 text-muted-foreground/50 shrink-0" />
+        <span className="w-2.5 h-2.5 inline-block shrink-0 rounded-sm" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
+        <span className="font-medium">{tx.newParty}</span>
       </span>
     );
   }
@@ -584,19 +564,19 @@ function TxDetail({ tx }: { tx: Transaction }) {
       <span className="inline-flex items-center gap-1.5 flex-wrap">
         {tx.city && (
           <>
-            <span className="text-neutral-800 font-medium">{tx.city}</span>
-            <span className="text-neutral-300">·</span>
+            <span className="font-medium">{tx.city}</span>
+            <span className="text-muted-foreground/30">·</span>
           </>
         )}
         {tx.party ? (
           <>
-            <span className="w-2.5 h-2.5 inline-block flex-shrink-0" style={{ backgroundColor: tx.partyColor || '#555' }} />
-            <span className="font-medium text-neutral-800">{tx.party}</span>
+            <span className="w-2.5 h-2.5 inline-block shrink-0 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
+            <span className="font-medium">{tx.party}</span>
           </>
         ) : (
-          <span className="text-neutral-400">[şifreli oy]</span>
+          <span className="text-muted-foreground">[şifreli oy]</span>
         )}
-        <span className="text-neutral-400 text-xs">silindi</span>
+        <span className="text-muted-foreground text-xs">silindi</span>
       </span>
     );
   }
@@ -604,9 +584,9 @@ function TxDetail({ tx }: { tx: Transaction }) {
   if (tx.type === 'HESAP_SILME') {
     return (
       <span>
-        {tx.city && <span className="text-neutral-800 font-medium">{tx.city}</span>}
-        {tx.city && <span className="text-neutral-300 mx-1.5">·</span>}
-        <span className="text-neutral-400">Hesap silindi</span>
+        {tx.city && <span className="font-medium">{tx.city}</span>}
+        {tx.city && <span className="text-muted-foreground/30 mx-1.5">·</span>}
+        <span className="text-muted-foreground">Hesap silindi</span>
       </span>
     );
   }

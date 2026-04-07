@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LeaderboardEntry {
   city: string;
@@ -28,7 +35,6 @@ function formatPct(pct: number): string {
 }
 
 export default function ParticipationLeaderboard({ entries, title, subtitle }: ParticipationLeaderboardProps) {
-  const [showTooltip, setShowTooltip] = useState(false);
   const [activeCity, setActiveCity] = useState<string | null>(null);
   const [showAllEntries, setShowAllEntries] = useState(false);
   const sorted = [...entries].sort((a, b) => b.representationPct - a.representationPct);
@@ -37,35 +43,29 @@ export default function ParticipationLeaderboard({ entries, title, subtitle }: P
   return (
     <div>
       <div className="flex items-center gap-2 mb-1">
-        <h2 className="text-lg font-bold text-black">
+        <h2 className="text-lg font-bold">
           {title || 'Temsil Oranı Sıralaması'}
         </h2>
-        <div className="relative">
-          <button
-            onClick={() => setShowTooltip(!showTooltip)}
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-            className="w-5 h-5 rounded-full border border-neutral-300 text-neutral-400 text-xs flex items-center justify-center hover:border-neutral-500 hover:text-neutral-600 transition-colors"
-          >
-            ?
-          </button>
-          {showTooltip && (
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-7 w-72 bg-black text-white text-xs rounded-none px-4 py-3 z-50 shadow-xl leading-relaxed">
-              <div className="font-semibold mb-1">Bu sıralama nasıl hesaplanır?</div>
-              <p>
-                Her ilin toplam oy sayısı, YSK kayıtlı seçmen sayısına bölünerek
-                temsil oranı hesaplanır. Böylece büyük illerin ham oy avantajı
-                ortadan kalkar ve küçük illerin katılım başarısı görünür olur.
-              </p>
-              <p className="mt-1.5 text-neutral-400">
-                Örnek: 100.000 seçmenli bir ilde 50 oy → ‰0.5 temsil oranı
-              </p>
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-black rotate-45" />
-            </div>
-          )}
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <HelpCircle className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="font-semibold mb-1">Bu sıralama nasıl hesaplanır?</p>
+            <p className="text-xs">
+              Her ilin toplam oy sayısı, YSK kayıtlı seçmen sayısına bölünerek
+              temsil oranı hesaplanır. Böylece büyük illerin ham oy avantajı
+              ortadan kalkar ve küçük illerin katılım başarısı görünür olur.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Örnek: 100.000 seçmenli bir ilde 50 oy = ‰0.5 temsil oranı
+            </p>
+          </TooltipContent>
+        </Tooltip>
       </div>
-      <p className="text-neutral-400 text-xs mb-6">
+      <p className="text-muted-foreground text-xs mb-6">
         {subtitle || 'İl seçmen sayısına oranla katılım — YSK kayıtlı seçmen verilerine göre'}
       </p>
 
@@ -85,36 +85,35 @@ export default function ParticipationLeaderboard({ entries, title, subtitle }: P
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-neutral-400 text-xs w-6 flex-shrink-0 text-right tabular-nums">
+                  <span className="text-muted-foreground text-xs w-6 shrink-0 text-right tabular-nums">
                     {`${index + 1}.`}
                   </span>
-                  <span className="text-black font-medium text-sm truncate">{displayName}</span>
+                  <span className="font-medium text-sm truncate">{displayName}</span>
                 </div>
-                <span className="text-black font-bold text-xs tabular-nums flex-shrink-0 ml-2">
+                <span className="font-bold text-xs tabular-nums shrink-0 ml-2">
                   ‰{formatPct(entry.representationPct * 10)}
                 </span>
               </div>
               <div
-                className="w-full bg-neutral-100 h-3 overflow-hidden cursor-pointer"
+                className="w-full bg-muted h-3 rounded-sm overflow-hidden cursor-pointer"
                 onClick={() => setActiveCity(isActive ? null : entryKey)}
                 onMouseEnter={() => setActiveCity(entryKey)}
                 onMouseLeave={() => setActiveCity(null)}
               >
                 <motion.div
-                  className="h-full bg-black"
+                  className="h-full bg-primary rounded-sm"
                   initial={{ width: 0 }}
                   animate={{ width: `${barPct}%` }}
                   transition={{ duration: 0.6, delay: index * 0.04 }}
                 />
               </div>
               {isActive && (
-                <div className="absolute right-0 mt-1 bg-black text-white text-xs rounded-none px-3 py-2 z-40 shadow-lg whitespace-nowrap">
-                  <span className="text-neutral-400">Oy:</span>{' '}
+                <div className="absolute right-0 mt-1 bg-popover text-popover-foreground border border-border text-xs rounded-lg px-3 py-2 z-40 shadow-lg whitespace-nowrap">
+                  <span className="text-muted-foreground">Oy:</span>{' '}
                   {entry.voteCount.toLocaleString('tr-TR')}
-                  <span className="mx-2 text-neutral-600">|</span>
-                  <span className="text-neutral-400">Seçmen:</span>{' '}
+                  <span className="mx-2 text-border">|</span>
+                  <span className="text-muted-foreground">Seçmen:</span>{' '}
                   {entry.voterCount.toLocaleString('tr-TR')}
-                  <div className="absolute right-4 -top-1.5 w-3 h-3 bg-black rotate-45" />
                 </div>
               )}
             </motion.div>
@@ -122,12 +121,23 @@ export default function ParticipationLeaderboard({ entries, title, subtitle }: P
         })}
       </div>
       {sorted.length > 15 && (
-        <button
+        <Button
+          variant="outline"
+          className="w-full mt-4"
           onClick={() => setShowAllEntries(!showAllEntries)}
-          className="mt-4 w-full py-3 text-xs font-medium text-neutral-500 hover:text-black border border-neutral-200 hover:border-neutral-400 transition-colors"
         >
-          {showAllEntries ? 'Daha az göster' : `Tümünü göster (${sorted.length})`}
-        </button>
+          {showAllEntries ? (
+            <>
+              <ChevronUp className="size-3.5" data-icon="inline-start" />
+              Daha az göster
+            </>
+          ) : (
+            <>
+              <ChevronDown className="size-3.5" data-icon="inline-start" />
+              Tümünü göster ({sorted.length})
+            </>
+          )}
+        </Button>
       )}
     </div>
   );

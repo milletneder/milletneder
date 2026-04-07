@@ -1,6 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { X } from 'lucide-react';
 
 interface PartyDetailModalProps {
   party: {
@@ -32,7 +35,7 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
         onClick={onClose}
       >
         <motion.div
-          className="bg-white w-full sm:max-w-md sm:mx-4 max-h-[85vh] overflow-y-auto"
+          className="bg-background border border-border rounded-t-xl sm:rounded-xl w-full sm:max-w-md sm:mx-4 max-h-[85vh] overflow-y-auto shadow-lg"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
@@ -40,32 +43,34 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-neutral-100 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between rounded-t-xl">
             <div className="flex items-center gap-3">
-              <div className="w-4 h-4" style={{ backgroundColor: party.color }} />
-              <h2 className="text-lg font-bold text-black">{party.partyName}</h2>
+              <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: party.color }} />
+              <h2 className="text-lg font-bold">{party.partyName}</h2>
             </div>
-            <button onClick={onClose} className="text-neutral-400 hover:text-black text-xl leading-none">&times;</button>
+            <Button variant="ghost" size="icon-sm" onClick={onClose}>
+              <X className="size-4" />
+            </Button>
           </div>
 
           <div className="px-6 py-5 space-y-6">
-            {/* Ana Yüzde */}
+            {/* Main percentage */}
             <div className="text-center">
-              <div className="text-5xl font-bold text-black tabular-nums">
+              <div className="text-5xl font-bold tabular-nums">
                 %{party.percentage.toFixed(1)}
               </div>
               {hasWeighting && (
-                <p className="text-sm text-neutral-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Ağırlıklı sonuç
                 </p>
               )}
             </div>
 
-            {/* Görsel Bar */}
+            {/* Visual bar */}
             <div>
-              <div className="w-full bg-neutral-100 h-6 overflow-hidden">
+              <div className="w-full bg-muted h-6 rounded-lg overflow-hidden">
                 <motion.div
-                  className="h-full"
+                  className="h-full rounded-lg"
                   style={{ backgroundColor: party.color }}
                   initial={{ width: 0 }}
                   animate={{ width: `${party.percentage}%` }}
@@ -73,13 +78,13 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-xs text-neutral-400">%0</span>
-                <span className="text-xs text-neutral-400">%50</span>
-                <span className="text-xs text-neutral-400">%100</span>
+                <span className="text-xs text-muted-foreground">%0</span>
+                <span className="text-xs text-muted-foreground">%50</span>
+                <span className="text-xs text-muted-foreground">%100</span>
               </div>
             </div>
 
-            {/* Detay Bilgileri */}
+            {/* Detail rows */}
             <div className="space-y-3">
               <DetailRow
                 label="Toplam Oy"
@@ -99,24 +104,24 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                     value={`%${party.percentage.toFixed(1)}`}
                     description="Demografik düzeltmeler sonrası oran"
                   />
-                  <div className="bg-neutral-50 border border-neutral-100 p-4">
+                  <div className="bg-muted rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-black">Ağırlıklandırma Etkisi</span>
-                      <span className={`text-sm font-bold tabular-nums ${party.delta! > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      <span className="text-sm font-medium">Ağırlıklandırma Etkisi</span>
+                      <span className="text-sm font-bold tabular-nums">
                         {party.delta! > 0 ? '+' : ''}{party.delta!.toFixed(1)} puan
                       </span>
                     </div>
 
-                    {/* Ham vs Ağırlıklı karşılaştırma barları */}
+                    {/* Raw vs Weighted comparison bars */}
                     <div className="space-y-2 mt-3">
                       <div>
                         <div className="flex justify-between mb-0.5">
-                          <span className="text-xs text-neutral-400">Ham</span>
-                          <span className="text-[11px] text-neutral-500 tabular-nums">%{rawPct.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">Ham</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">%{rawPct.toFixed(1)}</span>
                         </div>
-                        <div className="w-full bg-neutral-100 h-3 overflow-hidden">
+                        <div className="w-full bg-background h-3 rounded-sm overflow-hidden">
                           <motion.div
-                            className="h-full opacity-40"
+                            className="h-full opacity-40 rounded-sm"
                             style={{ backgroundColor: party.color }}
                             initial={{ width: 0 }}
                             animate={{ width: `${rawPct}%` }}
@@ -126,12 +131,12 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                       </div>
                       <div>
                         <div className="flex justify-between mb-0.5">
-                          <span className="text-xs text-neutral-400">Ağırlıklı</span>
-                          <span className="text-[11px] text-neutral-500 tabular-nums">%{party.percentage.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">Ağırlıklı</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">%{party.percentage.toFixed(1)}</span>
                         </div>
-                        <div className="w-full bg-neutral-100 h-3 overflow-hidden">
+                        <div className="w-full bg-background h-3 rounded-sm overflow-hidden">
                           <motion.div
-                            className="h-full"
+                            className="h-full rounded-sm"
                             style={{ backgroundColor: party.color }}
                             initial={{ width: 0 }}
                             animate={{ width: `${party.percentage}%` }}
@@ -141,7 +146,7 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
                       </div>
                     </div>
 
-                    <p className="text-xs text-neutral-400 mt-3 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
                       {party.delta! > 0
                         ? `${party.partyName} seçmeni ankette az temsil ediliyor. Demografik düzeltmeler sonucunda oran ${Math.abs(party.delta!).toFixed(1)} puan artırıldı.`
                         : `${party.partyName} seçmeni ankette fazla temsil ediliyor. Demografik düzeltmeler sonucunda oran ${Math.abs(party.delta!).toFixed(1)} puan azaltıldı.`
@@ -160,15 +165,15 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
               )}
             </div>
 
-            {/* Açıklama */}
-            <div className="border-t border-neutral-100 pt-4">
-              <p className="text-xs text-neutral-400 leading-relaxed">
-                {hasWeighting
-                  ? 'Bu sonuçlar yaş, cinsiyet, eğitim ve bölge gibi demografik faktörler göz önüne alınarak ağırlıklandırılmıştır. Amaç, online anketin Türkiye genelini daha doğru temsil etmesini sağlamaktır.'
-                  : 'Bu sonuçlar kullanıcıların doğrudan oylarına dayalı ham dağılımdır. Ağırlıklandırma aktif olduğunda demografik düzeltmeler uygulanır.'
-                }
-              </p>
-            </div>
+            <Separator />
+
+            {/* Explanation */}
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {hasWeighting
+                ? 'Bu sonuçlar yaş, cinsiyet, eğitim ve bölge gibi demografik faktörler göz önüne alınarak ağırlıklandırılmıştır. Amaç, online anketin Türkiye genelini daha doğru temsil etmesini sağlamaktır.'
+                : 'Bu sonuçlar kullanıcıların doğrudan oylarına dayalı ham dağılımdır. Ağırlıklandırma aktif olduğunda demografik düzeltmeler uygulanır.'
+              }
+            </p>
           </div>
         </motion.div>
       </motion.div>
@@ -180,10 +185,10 @@ function DetailRow({ label, value, description }: { label: string; value: string
   return (
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-sm text-black font-medium">{label}</p>
-        <p className="text-xs text-neutral-400">{description}</p>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <span className="text-sm font-bold text-black tabular-nums ml-4">{value}</span>
+      <span className="text-sm font-bold tabular-nums ml-4">{value}</span>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 import type { ViewMode, DataMode } from '@/types/map';
 
 interface MapToolbarProps {
@@ -19,7 +21,7 @@ interface MapToolbarProps {
 
 function ToggleGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center border border-neutral-200">
+    <div className="flex items-center border border-border rounded-md overflow-hidden">
       {children}
     </div>
   );
@@ -39,8 +41,8 @@ function ToggleButton({
       onClick={onClick}
       className={`px-3 h-8 text-xs font-medium transition-colors ${
         active
-          ? 'bg-black text-white'
-          : 'text-neutral-500 hover:text-black hover:bg-neutral-50'
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
       }`}
     >
       {children}
@@ -67,7 +69,6 @@ export default function MapToolbar({
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
-      // 100px kala gizle
       setAtBottom(scrollTop + clientHeight >= scrollHeight - 100);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -87,15 +88,12 @@ export default function MapToolbar({
       className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30"
       style={{ pointerEvents: shouldShow ? 'auto' : 'none' }}
     >
-      <div className="bg-white border border-neutral-200 shadow-lg flex items-center gap-2 px-2 h-12">
+      <div className="bg-background border border-border shadow-lg rounded-lg flex items-center gap-2 px-2 h-12">
         {/* Login olmamış kullanıcı için Oy Ver butonu */}
         {!isLoggedIn && onVoteClick && (
-          <button
-            onClick={onVoteClick}
-            className="px-4 h-8 text-xs font-medium bg-black text-white hover:bg-neutral-800 transition-colors whitespace-nowrap"
-          >
+          <Button size="sm" onClick={onVoteClick}>
             Sonuçları görmek için Oy Ver
-          </button>
+          </Button>
         )}
 
         {/* İl / İlçe toggle — sadece login olanlara */}
@@ -125,21 +123,19 @@ export default function MapToolbar({
             {/* Kararsızları Dağıt */}
             <button
               onClick={() => onDistributeUndecidedChange(!distributeUndecided)}
-              className={`flex items-center gap-2 px-3 h-8 text-xs font-medium border transition-colors ${
+              className={`flex items-center gap-2 px-3 h-8 text-xs font-medium border rounded-md transition-colors ${
                 distributeUndecided
-                  ? 'bg-black text-white border-black'
-                  : 'text-neutral-500 hover:text-black border-neutral-200 hover:border-neutral-300'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'text-muted-foreground hover:text-foreground border-border hover:border-foreground/30'
               }`}
             >
-              <span className={`w-3.5 h-3.5 flex items-center justify-center border transition-colors ${
+              <span className={`w-3.5 h-3.5 flex items-center justify-center border rounded-sm transition-colors ${
                 distributeUndecided
-                  ? 'bg-white border-white'
-                  : 'border-neutral-300'
+                  ? 'bg-primary-foreground border-primary-foreground'
+                  : 'border-border'
               }`}>
                 {distributeUndecided && (
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                    <path d="M1.5 4L3 5.5L6.5 2" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <Check className="size-2.5 text-primary" />
                 )}
               </span>
               Kararsızları Dağıt

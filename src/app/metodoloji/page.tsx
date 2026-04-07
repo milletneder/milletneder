@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import PageHero from '@/components/layout/PageHero';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface MethodologyData {
   weighting: {
@@ -82,7 +85,7 @@ export default function MetodolojiPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pb-16">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
         <PageHero
           title="Metodoloji"
           subtitle="Bu platformun anket sonuçlarını nasıl hesapladığını ve hangi düzeltme yöntemlerini uyguladığını açıklar."
@@ -95,19 +98,21 @@ export default function MetodolojiPage() {
           <>
             {/* Genel Bilgi */}
             <section className="mb-12">
-              <h2 className="text-lg font-bold text-black mb-4">Neden Ağırlıklandırma?</h2>
-              <div className="border border-neutral-200 p-4">
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Online anketlerde katılımcılar toplumun tamamını temsil etmez. Genellikle gençler, şehirliler ve
-                  belirli siyasi eğilimdeki kişiler fazla temsil edilir. Ağırlıklandırma yöntemleri, bu sapmaları
-                  TÜİK nüfus verileri ve YSK seçmen kayıtları referans alınarak düzeltir.
-                </p>
-              </div>
+              <h2 className="text-lg font-bold mb-4">Neden Ağırlıklandırma?</h2>
+              <Card>
+                <CardContent className="pt-5">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Online anketlerde katılımcılar toplumun tamamını temsil etmez. Genellikle gençler, şehirliler ve
+                    belirli siyasi eğilimdeki kişiler fazla temsil edilir. Ağırlıklandırma yöntemleri, bu sapmaları
+                    TÜİK nüfus verileri ve YSK seçmen kayıtları referans alınarak düzeltir.
+                  </p>
+                </CardContent>
+              </Card>
             </section>
 
             {/* Aktif Yöntemler */}
             <section className="mb-12">
-              <h2 className="text-lg font-bold text-black mb-4">
+              <h2 className="text-lg font-bold mb-4">
                 {activeMethods.length > 0 ? 'Aktif Yöntemler' : 'Kullanılabilir Yöntemler'}
               </h2>
 
@@ -115,23 +120,23 @@ export default function MetodolojiPage() {
                 {Object.entries(METHOD_INFO).map(([key, info]) => {
                   const isActive = activeMethods.includes(key);
                   return (
-                    <div key={key} className="border border-neutral-200">
-                      <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 border-b border-neutral-100">
-                        <h3 className="text-sm font-bold text-black">{info.title}</h3>
-                        <span className={`text-xs px-2 py-0.5 border ${
-                          isActive ? 'border-black text-black' : 'border-neutral-200 text-neutral-400'
-                        }`}>
-                          {isActive ? 'Aktif' : 'Pasif'}
-                        </span>
-                      </div>
-                      <div className="px-4 py-3">
-                        <p className="text-sm text-neutral-600 mb-3">{info.description}</p>
-                        <div className="bg-neutral-50 border border-neutral-100 px-3 py-2">
-                          <p className="text-xs text-neutral-500 mb-1">Formül</p>
-                          <code className="text-xs font-mono text-black">{info.formula}</code>
+                    <Card key={key}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">{info.title}</CardTitle>
+                          <Badge variant={isActive ? 'default' : 'secondary'}>
+                            {isActive ? 'Aktif' : 'Pasif'}
+                          </Badge>
                         </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground">{info.description}</p>
+                        <div className="bg-muted rounded-lg px-3 py-2">
+                          <p className="text-xs text-muted-foreground mb-1">Formül</p>
+                          <code className="text-xs font-mono">{info.formula}</code>
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
@@ -140,62 +145,76 @@ export default function MetodolojiPage() {
             {/* Güven & İstatistikler */}
             {data?.weighting && (
               <section className="mb-12">
-                <h2 className="text-lg font-bold text-black mb-4">Güven İstatistikleri</h2>
+                <h2 className="text-lg font-bold mb-4">Güven İstatistikleri</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="border border-neutral-200 p-4">
-                    <p className="text-2xl font-bold text-black">{data.weighting.sampleSize.toLocaleString('tr-TR')}</p>
-                    <p className="text-xs text-neutral-500 mt-1">Ham örneklem</p>
-                  </div>
-                  <div className="border border-neutral-200 p-4">
-                    <p className="text-2xl font-bold text-black">{data.weighting.effectiveSampleSize.toLocaleString('tr-TR')}</p>
-                    <p className="text-xs text-neutral-500 mt-1">Efektif örneklem</p>
-                  </div>
-                  <div className="border border-neutral-200 p-4">
-                    <p className="text-2xl font-bold text-black">{data.weighting.confidence.overall.toFixed(0)}/100</p>
-                    <p className="text-xs text-neutral-500 mt-1">Güven skoru</p>
-                  </div>
-                  <div className="border border-neutral-200 p-4">
-                    <p className="text-2xl font-bold text-black">±{data.weighting.confidence.marginOfError.toFixed(1)}</p>
-                    <p className="text-xs text-neutral-500 mt-1">Hata payı (puan)</p>
-                  </div>
+                  <Card>
+                    <CardContent className="pt-5">
+                      <p className="text-2xl font-bold tabular-nums">{data.weighting.sampleSize.toLocaleString('tr-TR')}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Ham örneklem</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5">
+                      <p className="text-2xl font-bold tabular-nums">{data.weighting.effectiveSampleSize.toLocaleString('tr-TR')}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Efektif örneklem</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5">
+                      <p className="text-2xl font-bold tabular-nums">{data.weighting.confidence.overall.toFixed(0)}/100</p>
+                      <p className="text-xs text-muted-foreground mt-1">Güven skoru</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5">
+                      <p className="text-2xl font-bold tabular-nums">±{data.weighting.confidence.marginOfError.toFixed(1)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Hata payı (puan)</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </section>
             )}
 
             {/* Ağırlık sınırları */}
             <section className="mb-12">
-              <h2 className="text-lg font-bold text-black mb-4">Güvenlik Önlemleri</h2>
-              <div className="border border-neutral-200 p-4">
-                <ul className="space-y-2 text-sm text-neutral-600">
-                  <li>Her ağırlık 0.2 ile 5.0 arasında sınırlandırılır. Hiçbir oy 5 kattan fazla güçlendirilemez.</li>
-                  <li>Efektif örneklem boyutu hesaplanır. Ağırlıklandırma örneklemi ne kadar küçültüyorsa, hata payı da o kadar artar.</li>
-                  <li>Sahtecilik tespiti ve ağırlıklandırma birbirinden bağımsız çalışır. Sahte hesaplar önce tespit edilir, sonra ağırlıklandırma uygulanır.</li>
-                  <li>Tüm parametreler ve referans veriler bu sayfada şeffaf olarak paylaşılır.</li>
-                </ul>
-              </div>
+              <h2 className="text-lg font-bold mb-4">Güvenlik Önlemleri</h2>
+              <Card>
+                <CardContent className="pt-5">
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>Her ağırlık 0.2 ile 5.0 arasında sınırlandırılır. Hiçbir oy 5 kattan fazla güçlendirilemez.</li>
+                    <li>Efektif örneklem boyutu hesaplanır. Ağırlıklandırma örneklemi ne kadar küçültüyorsa, hata payı da o kadar artar.</li>
+                    <li>Sahtecilik tespiti ve ağırlıklandırma birbirinden bağımsız çalışır. Sahte hesaplar önce tespit edilir, sonra ağırlıklandırma uygulanır.</li>
+                    <li>Tüm parametreler ve referans veriler bu sayfada şeffaf olarak paylaşılır.</li>
+                  </ul>
+                </CardContent>
+              </Card>
             </section>
 
             {/* Veri Kaynakları */}
             <section className="mb-12">
-              <h2 className="text-lg font-bold text-black mb-4">Veri Kaynakları</h2>
-              <div className="border border-neutral-200 divide-y divide-neutral-100">
-                <div className="px-4 py-3 flex justify-between">
-                  <span className="text-sm text-black">Nüfus dağılımları</span>
-                  <span className="text-xs text-neutral-400">TÜİK 2025</span>
-                </div>
-                <div className="px-4 py-3 flex justify-between">
-                  <span className="text-sm text-black">İl nüfusları</span>
-                  <span className="text-xs text-neutral-400">TÜİK 2025</span>
-                </div>
-                <div className="px-4 py-3 flex justify-between">
-                  <span className="text-sm text-black">Bölgesel seçmen dağılımı</span>
-                  <span className="text-xs text-neutral-400">YSK 2023</span>
-                </div>
-                <div className="px-4 py-3 flex justify-between">
-                  <span className="text-sm text-black">2023 seçim sonuçları</span>
-                  <span className="text-xs text-neutral-400">YSK Resmi Sonuçlar</span>
-                </div>
-              </div>
+              <h2 className="text-lg font-bold mb-4">Veri Kaynakları</h2>
+              <Card>
+                <CardContent className="pt-0 px-0">
+                  <div className="divide-y divide-border">
+                    <div className="px-4 py-3 flex justify-between">
+                      <span className="text-sm">Nüfus dağılımları</span>
+                      <span className="text-xs text-muted-foreground">TÜİK 2025</span>
+                    </div>
+                    <div className="px-4 py-3 flex justify-between">
+                      <span className="text-sm">İl nüfusları</span>
+                      <span className="text-xs text-muted-foreground">TÜİK 2025</span>
+                    </div>
+                    <div className="px-4 py-3 flex justify-between">
+                      <span className="text-sm">Bölgesel seçmen dağılımı</span>
+                      <span className="text-xs text-muted-foreground">YSK 2023</span>
+                    </div>
+                    <div className="px-4 py-3 flex justify-between">
+                      <span className="text-sm">2023 seçim sonuçları</span>
+                      <span className="text-xs text-muted-foreground">YSK Resmi Sonuçlar</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </section>
           </>
         )}

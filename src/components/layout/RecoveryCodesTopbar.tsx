@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import RecoveryCodesModal from '@/components/auth/RecoveryCodesModal';
+import { Button } from '@/components/ui/button';
+import { ShieldAlert } from 'lucide-react';
 
 interface RecoveryCodesTopbarProps {
   codes?: string[];
@@ -63,18 +65,22 @@ export default function RecoveryCodesTopbar({ codes: initialCodes }: RecoveryCod
 
   return (
     <>
-      <div className="bg-black border-b border-neutral-800">
-        <div className="max-w-screen-2xl mx-auto px-6 py-2 flex items-center justify-between gap-3">
-          <p className="text-xs text-neutral-300 flex-1">
-            <span className="text-white font-medium">Oy tercihiniz henüz koruma altında değil.</span>
-            {' '}Kurtarma kodlarınızı kaydederek oyunuzu korumaya alın.
+      <div className="bg-primary border-b border-primary/80">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
+          <p className="text-xs text-primary-foreground/70 flex items-center gap-2">
+            <ShieldAlert className="size-3.5 shrink-0" />
+            <span>
+              <span className="text-primary-foreground font-medium">Oy tercihiniz henüz koruma altında değil.</span>
+              {' '}Kurtarma kodlarınızı kaydederek oyunuzu korumaya alın.
+            </span>
           </p>
-          <button
+          <Button
+            variant="secondary"
+            size="xs"
             onClick={() => setShowModal(true)}
-            className="text-xs font-bold text-black bg-white hover:bg-neutral-200 px-3 py-1 transition-colors whitespace-nowrap"
           >
             Oyumu Korumaya Al
-          </button>
+          </Button>
         </div>
       </div>
 

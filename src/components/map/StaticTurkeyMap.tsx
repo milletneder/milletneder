@@ -129,13 +129,13 @@ function StaticTurkeyMap({ cityColors }: StaticTurkeyMapProps) {
           className="fixed z-50 pointer-events-none"
           style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
         >
-          <div className="bg-black text-white px-3 py-2 text-xs">
+          <div className="bg-popover text-popover-foreground border border-border rounded-lg shadow-lg px-3 py-2 text-xs">
             <div className="font-bold">{tooltip.name}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="w-2 h-2" style={{ backgroundColor: tooltip.color }} />
               <span>{tooltip.party}</span>
               {tooltip.pct != null && (
-                <span className="text-neutral-400">%{tooltip.pct.toFixed(1)}</span>
+                <span className="text-muted-foreground">%{tooltip.pct.toFixed(1)}</span>
               )}
             </div>
           </div>

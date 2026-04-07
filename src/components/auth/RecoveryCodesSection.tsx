@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ShieldCheck } from 'lucide-react';
 import RecoveryCodesModal from './RecoveryCodesModal';
 
 export default function RecoveryCodesSection() {
@@ -7,12 +9,10 @@ export default function RecoveryCodesSection() {
 
   return (
     <>
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-black text-white px-4 py-2.5 text-xs font-medium hover:bg-neutral-800 transition-colors"
-      >
+      <Button size="sm" onClick={() => setShowModal(true)}>
+        <ShieldCheck className="size-4 mr-1.5" />
         Kurtarma Kodlarını Yönet
-      </button>
+      </Button>
 
       {showModal && (
         <RecoveryCodesModal

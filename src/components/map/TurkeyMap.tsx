@@ -476,8 +476,8 @@ function TurkeyMap({
 
   if (hasError) {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-white">
-        <p className="text-neutral-400 text-sm">Harita yüklenemedi. Sayfayı yenileyin.</p>
+      <div className="flex items-center justify-center w-full h-full bg-background">
+        <p className="text-muted-foreground text-sm">Harita yüklenemedi. Sayfayı yenileyin.</p>
       </div>
     );
   }
@@ -490,8 +490,8 @@ function TurkeyMap({
     <div className="relative w-full aspect-[5/3] md:aspect-auto md:h-full overflow-hidden">
       {/* Spinner */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+          <div className="w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -500,7 +500,7 @@ function TurkeyMap({
         <div className="max-w-screen-2xl mx-auto px-6 pt-4 flex items-start justify-between">
           <button
             onClick={handleBack}
-            className="pointer-events-auto bg-white border border-neutral-200 px-3 py-1.5 text-xs font-medium text-black hover:border-black flex items-center gap-1.5"
+            className="pointer-events-auto bg-background border border-border rounded-md px-3 py-1.5 text-xs font-medium hover:border-foreground/30 flex items-center gap-1.5 transition-colors"
             style={{
               opacity: showBackButton ? 1 : 0,
               pointerEvents: showBackButton ? 'auto' : 'none',
@@ -520,8 +520,8 @@ function TurkeyMap({
               transition: 'opacity 0.4s ease',
             }}
           >
-            <h2 className="text-lg font-bold text-black">{selectedCity}</h2>
-            <p className="text-xs text-neutral-400">
+            <h2 className="text-lg font-bold">{selectedCity}</h2>
+            <p className="text-xs text-muted-foreground">
               {districts.reduce((s, d) => s + d.totalVotes, 0).toLocaleString('tr-TR')} oy — {districts.length} ilçe
             </p>
           </div>
@@ -668,8 +668,8 @@ function TurkeyMap({
 
       {/* Loading indicator for ilce GeoJSON */}
       {showAllDistrictsLayer && !allDistrictsGeo && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-          <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+          <div className="w-6 h-6 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 

@@ -6,7 +6,22 @@ import Header from '@/components/layout/Header';
 import RecoveryCodesSection from '@/components/auth/RecoveryCodesSection';
 import PageHero from '@/components/layout/PageHero';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { badge, btn, input, table } from '@/lib/ui';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Copy, Check, Pencil, Loader2, Trash2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { CITIES, AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
 
 interface UserProfile {
@@ -176,7 +191,6 @@ export default function ProfilPage() {
         const data = await res.json();
         setProfile((prev) => prev ? { ...prev, ...data.user } : prev);
         setEditingField(null);
-        // DemographicBanner'ın yeniden kontrol etmesi için event dispatch et
         window.dispatchEvent(new Event('profile-updated'));
       }
     } catch (err) {
@@ -262,7 +276,6 @@ export default function ProfilPage() {
     return partyList.find(p => p.id === value) || null;
   };
 
-  // 2023 oy seçimi için doğrudan kaydet (tek tıkla)
   const handlePreviousVoteSave = async (value: string) => {
     if (!token) return;
     setSaving(true);
@@ -294,7 +307,6 @@ export default function ProfilPage() {
     return null;
   };
 
-  // Not logged in — redirect to homepage
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
@@ -305,12 +317,11 @@ export default function ProfilPage() {
     return null;
   }
 
-  // Loading — boş sayfa göster, spinner yok
   if (loading) {
     return (
       <>
         <Header />
-        <main className="max-w-3xl mx-auto px-6 pb-16" />
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16" />
       </>
     );
   }
@@ -319,8 +330,8 @@ export default function ProfilPage() {
     return (
       <>
         <Header />
-        <main className="max-w-3xl mx-auto px-6 pb-16 text-center">
-          <p className="text-neutral-500 text-sm">Profil bulunamadı.</p>
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 text-center">
+          <p className="text-muted-foreground text-sm">Profil bulunamadı.</p>
         </main>
       </>
     );
@@ -328,629 +339,571 @@ export default function ProfilPage() {
 
   const nextBadge = getNextBadgeInfo();
 
+  const selectClass = "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+  // Editable field row helper
+  const renderEditableRow = (
+    label: string,
+    field: string,
+    displayValue: string,
+    editContent: React.ReactNode
+  ) => (
+    <div className="flex items-center justify-between px-4 py-3">
+      <span className="text-xs text-muted-foreground w-32">{label}</span>
+      {editingField === field ? (
+        <div className="flex-1 flex items-center gap-2">
+          {editContent}
+          <Button size="sm" onClick={() => handleSave(field)} disabled={saving}>
+            Kaydet
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
+            İptal
+          </Button>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-between">
+          <span className="text-sm">{displayValue}</span>
+          <Button variant="ghost" size="sm" onClick={() => startEdit(field)} className="text-xs text-muted-foreground">
+            <Pencil className="size-3 mr-1" />
+            Düzenle
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 pb-16">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
         <PageHero
           title="Hesabım"
           subtitle="Hesap bilgilerin, oy geçmişin ve kişisel istatistiklerin."
         />
         {/* Section 1: Hesap Bilgileri */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold text-black mb-6">Hesap Bilgileri</h2>
-          <div className="border border-neutral-200 divide-y divide-neutral-100">
-            {/* İl */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">İl</span>
-              {editingField === 'city' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editCity}
-                    onChange={(e) => setEditCity(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {CITIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('city')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{profile.city || '-'}</span>
-                  <button onClick={() => startEdit('city')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+          <h2 className="text-lg font-bold mb-6">Hesap Bilgileri</h2>
+          <Card>
+            <CardContent className="p-0 divide-y divide-border">
+              {/* İl */}
+              {renderEditableRow('İl', 'city', profile.city || '-', (
+                <select
+                  value={editCity}
+                  onChange={(e) => setEditCity(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              ))}
 
-            {/* İlçe */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">İlçe</span>
-              {editingField === 'district' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={editDistrict}
-                    onChange={(e) => setEditDistrict(e.target.value)}
-                    className={input.text + ' flex-1'}
-                    placeholder="İlçe giriniz"
-                  />
-                  <button onClick={() => handleSave('district')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{profile.district || '-'}</span>
-                  <button onClick={() => startEdit('district')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+              {/* İlçe */}
+              {renderEditableRow('İlçe', 'district', profile.district || '-', (
+                <Input
+                  value={editDistrict}
+                  onChange={(e) => setEditDistrict(e.target.value)}
+                  className="flex-1"
+                  placeholder="İlçe giriniz"
+                />
+              ))}
 
-            {/* Yas grubu */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">Yaş grubu</span>
-              {editingField === 'age_bracket' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editAgeBracket}
-                    onChange={(e) => setEditAgeBracket(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {AGE_BRACKETS.map((b) => (
-                      <option key={b.value} value={b.value}>{b.label}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('age_bracket')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{getAgeBracketLabel(profile.age_bracket)}</span>
-                  <button onClick={() => startEdit('age_bracket')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+              {/* Yas grubu */}
+              {renderEditableRow('Yaş grubu', 'age_bracket', getAgeBracketLabel(profile.age_bracket), (
+                <select
+                  value={editAgeBracket}
+                  onChange={(e) => setEditAgeBracket(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {AGE_BRACKETS.map((b) => (
+                    <option key={b.value} value={b.value}>{b.label}</option>
+                  ))}
+                </select>
+              ))}
 
-            {/* Gelir grubu */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">Gelir grubu</span>
-              {editingField === 'income_bracket' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editIncomeBracket}
-                    onChange={(e) => setEditIncomeBracket(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {INCOME_BRACKETS.map((b) => (
-                      <option key={b.value} value={b.value}>{b.label}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('income_bracket')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{getIncomeBracketLabel(profile.income_bracket)}</span>
-                  <button onClick={() => startEdit('income_bracket')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
-            {/* Cinsiyet */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">Cinsiyet</span>
-              {editingField === 'gender' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editGender}
-                    onChange={(e) => setEditGender(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {GENDER_OPTIONS.map((g) => (
-                      <option key={g.value} value={g.value}>{g.label}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('gender')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{getGenderLabel(profile.gender)}</span>
-                  <button onClick={() => startEdit('gender')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+              {/* Gelir grubu */}
+              {renderEditableRow('Gelir grubu', 'income_bracket', getIncomeBracketLabel(profile.income_bracket), (
+                <select
+                  value={editIncomeBracket}
+                  onChange={(e) => setEditIncomeBracket(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {INCOME_BRACKETS.map((b) => (
+                    <option key={b.value} value={b.value}>{b.label}</option>
+                  ))}
+                </select>
+              ))}
 
-            {/* Eğitim */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">Eğitim</span>
-              {editingField === 'education' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editEducation}
-                    onChange={(e) => setEditEducation(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {EDUCATION_BRACKETS.map((b) => (
-                      <option key={b.value} value={b.value}>{b.label}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('education')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{getEducationLabel(profile.education)}</span>
-                  <button onClick={() => startEdit('education')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+              {/* Cinsiyet */}
+              {renderEditableRow('Cinsiyet', 'gender', getGenderLabel(profile.gender), (
+                <select
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {GENDER_OPTIONS.map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
+              ))}
 
-            {/* Katılım niyeti */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs text-neutral-500 w-32">Seçime katılım</span>
-              {editingField === 'turnout_intention' ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <select
-                    value={editTurnout}
-                    onChange={(e) => setEditTurnout(e.target.value)}
-                    className={input.select + ' flex-1'}
-                  >
-                    <option value="">Seçiniz</option>
-                    {TURNOUT_OPTIONS.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                  </select>
-                  <button onClick={() => handleSave('turnout_intention')} disabled={saving} className={btn.small}>
-                    Kaydet
-                  </button>
-                  <button onClick={() => setEditingField(null)} className={btn.small}>
-                    İptal
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-black">{getTurnoutLabel(profile.turnout_intention)}</span>
-                  <button onClick={() => startEdit('turnout_intention')} className="text-xs text-neutral-400 hover:text-black">
-                    Düzenle
-                  </button>
-                </div>
-              )}
-            </div>
+              {/* Eğitim */}
+              {renderEditableRow('Eğitim', 'education', getEducationLabel(profile.education), (
+                <select
+                  value={editEducation}
+                  onChange={(e) => setEditEducation(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {EDUCATION_BRACKETS.map((b) => (
+                    <option key={b.value} value={b.value}>{b.label}</option>
+                  ))}
+                </select>
+              ))}
 
-            {/* 2023 seçim oyu */}
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-neutral-500 w-32">2023 oyu</span>
-                {editingField !== 'previous_vote_2023' ? (
-                  <div className="flex-1 flex items-center justify-between">
-                    <span className="text-sm text-black inline-flex items-center gap-2">
-                      {(() => {
-                        const party = getPartyData(profile.previous_vote_2023);
-                        if (party) return (
-                          <>
-                            <span
-                              className="w-5 h-5 flex-shrink-0 flex items-center justify-center"
-                              style={{
-                                backgroundColor: party.logoUrl ? 'transparent' : party.color,
-                                borderRadius: party.logoUrl ? '0' : '50%',
-                              }}
-                            >
-                              {party.logoUrl ? (
-                                <img src={party.logoUrl} alt="" className="max-w-full max-h-full object-contain" />
-                              ) : (
-                                <span className="text-[7px] font-bold text-white">{party.shortName}</span>
-                              )}
+              {/* Katılım niyeti */}
+              {renderEditableRow('Seçime katılım', 'turnout_intention', getTurnoutLabel(profile.turnout_intention), (
+                <select
+                  value={editTurnout}
+                  onChange={(e) => setEditTurnout(e.target.value)}
+                  className={selectClass + ' flex-1'}
+                >
+                  <option value="">Seçiniz</option>
+                  {TURNOUT_OPTIONS.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              ))}
+
+              {/* 2023 seçim oyu */}
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground w-32">2023 oyu</span>
+                  {editingField !== 'previous_vote_2023' ? (
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className="text-sm inline-flex items-center gap-2">
+                        {(() => {
+                          const party = getPartyData(profile.previous_vote_2023);
+                          if (party) return (
+                            <>
+                              <span
+                                className="w-5 h-5 flex-shrink-0 flex items-center justify-center"
+                                style={{
+                                  backgroundColor: party.logoUrl ? 'transparent' : party.color,
+                                  borderRadius: party.logoUrl ? '0' : '50%',
+                                }}
+                              >
+                                {party.logoUrl ? (
+                                  <img src={party.logoUrl} alt="" className="max-w-full max-h-full object-contain" />
+                                ) : (
+                                  <span className="text-[7px] font-bold text-white">{party.shortName}</span>
+                                )}
+                              </span>
+                              {party.name}
+                            </>
+                          );
+                          return getPreviousVoteLabel(profile.previous_vote_2023);
+                        })()}
+                      </span>
+                      <Button variant="ghost" size="sm" onClick={() => { startEdit('previous_vote_2023'); setPartySearch(''); }} className="text-xs text-muted-foreground">
+                        <Pencil className="size-3 mr-1" />
+                        Düzenle
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => { setEditingField(null); setPartySearch(''); }} className="text-xs text-muted-foreground">
+                        İptal
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {editingField === 'previous_vote_2023' && (
+                  <div className="mt-3">
+                    <Input
+                      value={partySearch}
+                      onChange={(e) => setPartySearch(e.target.value)}
+                      className="w-full mb-3"
+                      placeholder="Parti ara..."
+                      autoFocus
+                      autoComplete="off"
+                      name="party-search-2023"
+                    />
+                    <div className="max-h-72 overflow-y-auto space-y-1.5">
+                      {/* Oy kullanmadım seçeneği */}
+                      {(!partySearch || 'oy kullanmadım'.includes(partySearch.toLowerCase())) && (
+                        <button
+                          onClick={() => handlePreviousVoteSave('yok')}
+                          disabled={saving}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all ${
+                            profile.previous_vote_2023 === 'yok'
+                              ? 'ring-2 ring-ring bg-accent'
+                              : 'border border-border bg-background hover:bg-accent'
+                          }`}
+                        >
+                          <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-muted rounded-full">
+                            <span className="text-muted-foreground text-xs">—</span>
+                          </span>
+                          <span className="text-sm font-medium">Oy kullanmadım</span>
+                          {profile.previous_vote_2023 === 'yok' && (
+                            <span className="ml-auto">
+                              <Check className="size-4" />
                             </span>
-                            {party.name}
-                          </>
-                        );
-                        return getPreviousVoteLabel(profile.previous_vote_2023);
-                      })()}
-                    </span>
-                    <button onClick={() => { startEdit('previous_vote_2023'); setPartySearch(''); }} className="text-xs text-neutral-400 hover:text-black">
-                      Düzenle
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex justify-end">
-                    <button onClick={() => { setEditingField(null); setPartySearch(''); }} className="text-xs text-neutral-400 hover:text-black">
-                      İptal
-                    </button>
+                          )}
+                        </button>
+                      )}
+                      {/* Parti listesi */}
+                      {partyList
+                        .filter(p => p.id !== 'karasizim')
+                        .filter(p => {
+                          if (!partySearch) return true;
+                          const q = partySearch.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
+                          const name = p.name.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
+                          const short = p.shortName.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
+                          return name.includes(q) || short.includes(q);
+                        })
+                        .sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+                        .map(party => {
+                          const isSelected = profile.previous_vote_2023 === party.id;
+                          return (
+                            <button
+                              key={party.id}
+                              onClick={() => handlePreviousVoteSave(party.id)}
+                              disabled={saving}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all ${
+                                isSelected
+                                  ? 'ring-2 ring-ring bg-accent'
+                                  : 'border border-border bg-background hover:bg-accent'
+                              }`}
+                            >
+                              <div
+                                className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+                                style={{
+                                  backgroundColor: party.logoUrl ? 'transparent' : party.color,
+                                  borderRadius: party.logoUrl ? '0' : '50%',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                {party.logoUrl ? (
+                                  <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
+                                ) : (
+                                  <span className="text-[10px] font-bold">{party.shortName}</span>
+                                )}
+                              </div>
+                              <span className="text-sm font-medium">
+                                {party.name}
+                              </span>
+                              {isSelected && (
+                                <span className="ml-auto">
+                                  <Check className="size-4" />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
                 )}
               </div>
-              {editingField === 'previous_vote_2023' && (
-                <div className="mt-3">
-                  <input
-                    type="text"
-                    value={partySearch}
-                    onChange={(e) => setPartySearch(e.target.value)}
-                    className={input.text + ' w-full mb-3'}
-                    placeholder="Parti ara..."
-                    autoFocus
-                    autoComplete="off"
-                    name="party-search-2023"
-                  />
-                  <div className="max-h-72 overflow-y-auto space-y-1.5">
-                    {/* Oy kullanmadım seçeneği */}
-                    {(!partySearch || 'oy kullanmadım'.includes(partySearch.toLowerCase())) && (
-                      <button
-                        onClick={() => handlePreviousVoteSave('yok')}
-                        disabled={saving}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
-                          profile.previous_vote_2023 === 'yok'
-                            ? 'border-2 border-black bg-neutral-50'
-                            : 'border border-neutral-200 bg-white hover:border-black'
-                        }`}
-                      >
-                        <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-neutral-200 rounded-full">
-                          <span className="text-neutral-500 text-xs">—</span>
-                        </span>
-                        <span className="text-sm font-medium text-neutral-700">Oy kullanmadım</span>
-                        {profile.previous_vote_2023 === 'yok' && (
-                          <span className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-xs">{'\u2713'}</span>
-                          </span>
-                        )}
-                      </button>
-                    )}
-                    {/* Parti listesi — tüm aktif partiler (karasızım hariç) */}
-                    {partyList
-                      .filter(p => p.id !== 'karasizim')
-                      .filter(p => {
-                        if (!partySearch) return true;
-                        const q = partySearch.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
-                        const name = p.name.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
-                        const short = p.shortName.toLowerCase().replace(/İ/g, 'i').replace(/I/g, 'ı');
-                        return name.includes(q) || short.includes(q);
-                      })
-                      .sort((a, b) => a.name.localeCompare(b.name, 'tr'))
-                      .map(party => {
-                        const isSelected = profile.previous_vote_2023 === party.id;
-                        return (
-                          <button
-                            key={party.id}
-                            onClick={() => handlePreviousVoteSave(party.id)}
-                            disabled={saving}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
-                              isSelected
-                                ? 'border-2 border-black bg-neutral-50'
-                                : 'border border-neutral-200 bg-white hover:border-black'
-                            }`}
-                          >
-                            <div
-                              className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
-                              style={{
-                                backgroundColor: party.logoUrl ? 'transparent' : party.color,
-                                borderRadius: party.logoUrl ? '0' : '50%',
-                                color: '#ffffff',
-                              }}
-                            >
-                              {party.logoUrl ? (
-                                <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
-                              ) : (
-                                <span className="text-[10px] font-bold">{party.shortName}</span>
-                              )}
-                            </div>
-                            <span className={`text-sm font-medium ${isSelected ? 'text-black' : 'text-neutral-700'}`}>
-                              {party.name}
-                            </span>
-                            {isSelected && (
-                              <span className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-white text-xs">{'\u2713'}</span>
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
         </section>
 
         {/* Section 2: Rozetler & Davet */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold text-black mb-6">Rozetler &amp; Davet</h2>
+          <h2 className="text-lg font-bold mb-6">Rozetler &amp; Davet</h2>
 
           {/* Badges */}
           {profile.badges.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {profile.badges.map((b) => (
-                <span key={b} className={badge.dark}>
-                  {BADGE_LABELS[b] ?? b}
-                </span>
+                <Badge key={b}>{BADGE_LABELS[b] ?? b}</Badge>
               ))}
             </div>
           )}
           {profile.badges.length === 0 && (
-            <p className="text-xs text-neutral-400 mb-4">Henüz rozet kazanılmadı.</p>
+            <p className="text-xs text-muted-foreground mb-4">Henüz rozet kazanılmadı.</p>
           )}
 
           {/* Referral code */}
-          <div className="border border-neutral-200 p-4 mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-neutral-500">Davet Kodunuz</span>
-              <span className="text-xs text-neutral-400">{referralCount} davet</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 bg-neutral-50 border border-neutral-200 px-3 py-2 text-sm font-mono text-black">
-                {profile.referral_code}
-              </code>
-              <button onClick={copyReferralCode} className={btn.small}>
-                {copied ? 'Kopyalandı' : 'Kopyala'}
-              </button>
-            </div>
-          </div>
+          <Card className="mb-4">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted-foreground">Davet Kodunuz</span>
+                <span className="text-xs text-muted-foreground">{referralCount} davet</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-muted border border-border rounded-md px-3 py-2 text-sm font-mono">
+                  {profile.referral_code}
+                </code>
+                <Button variant="outline" size="sm" onClick={copyReferralCode}>
+                  {copied ? (
+                    <>
+                      <Check className="size-3.5 mr-1" />
+                      Kopyalandı
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5 mr-1" />
+                      Kopyala
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Next badge progress */}
           {nextBadge && (
-            <div className="border border-neutral-200 p-4">
-              <p className="text-xs text-neutral-500 mb-2">
-                Sonraki rozete {nextBadge.remaining} davet kaldı
-              </p>
-              <div className="w-full bg-neutral-100 h-2">
-                <div
-                  className="bg-black h-2 transition-all"
-                  style={{ width: `${(referralCount / nextBadge.target) * 100}%` }}
-                />
-              </div>
-            </div>
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Sonraki rozete {nextBadge.remaining} davet kaldı
+                </p>
+                <Progress value={(referralCount / nextBadge.target) * 100} className="h-2" />
+              </CardContent>
+            </Card>
           )}
         </section>
 
         {/* Section 3: Oy Geçmişi */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold text-black mb-6">Oy Geçmişi</h2>
-          <div className={table.container}>
-            <table className="w-full">
-              <thead className={table.head}>
-                <tr>
-                  <th className={table.th}>Tur</th>
-                  <th className={table.th}>Parti</th>
-                  <th className={table.th}>Değişiklik</th>
-                  <th className={table.th}>Durum</th>
-                </tr>
-              </thead>
-              <tbody>
+          <h2 className="text-lg font-bold mb-6">Oy Geçmişi</h2>
+          <div className="border border-border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tur</TableHead>
+                  <TableHead>Parti</TableHead>
+                  <TableHead>Değişiklik</TableHead>
+                  <TableHead>Durum</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {voteHistory.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className={table.empty}>
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       Henüz oy kullanılmadı.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   voteHistory.map((v) => (
-                    <tr key={v.roundId} className={table.row}>
-                      <td className={table.td + ' text-sm'}>{v.roundTitle}</td>
-                      <td className={table.td + ' text-sm'}>
+                    <TableRow key={v.roundId}>
+                      <TableCell className="text-sm">{v.roundTitle}</TableCell>
+                      <TableCell className="text-sm">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="w-2 h-2 inline-block" style={{ backgroundColor: v.partyColor || '#555555' }} />
+                          <span className="w-2 h-2 inline-block rounded-sm" style={{ backgroundColor: v.partyColor || '#555555' }} />
                           {v.party}
                         </span>
-                      </td>
-                      <td className={table.td + ' text-sm'}>{v.changeCount}</td>
-                      <td className={table.td}>
-                        <span className={v.isValid ? badge.positive : badge.negative}>
+                      </TableCell>
+                      <TableCell className="text-sm">{v.changeCount}</TableCell>
+                      <TableCell>
+                        <Badge variant={v.isValid ? 'default' : 'secondary'}>
                           {v.isValid ? 'Geçerli' : 'Geçersiz'}
-                        </span>
-                      </td>
-                    </tr>
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </section>
 
         {/* Section 4: Kişisel İstatistikler */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold text-black mb-6">Kişisel İstatistikler</h2>
+          <h2 className="text-lg font-bold mb-6">Kişisel İstatistikler</h2>
           {stats ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="border border-neutral-200 p-4">
-                <p className="text-2xl font-bold text-black">{stats.totalRoundsParticipated}</p>
-                <p className="text-xs text-neutral-500 mt-1">Katıldığı tur sayısı</p>
-              </div>
-              <div className="border border-neutral-200 p-4">
-                <p className="text-2xl font-bold text-black">{stats.totalVoteChanges}</p>
-                <p className="text-xs text-neutral-500 mt-1">Toplam oy değişikliği</p>
-              </div>
-              <div className="border border-neutral-200 p-4">
-                <p className="text-2xl font-bold text-black">{stats.memberSinceDays}</p>
-                <p className="text-xs text-neutral-500 mt-1">Üyelik süresi (gün)</p>
-              </div>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-2xl font-bold tabular-nums">{stats.totalRoundsParticipated}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Katıldığı tur sayısı</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-2xl font-bold tabular-nums">{stats.totalVoteChanges}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Toplam oy değişikliği</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-2xl font-bold tabular-nums">{stats.memberSinceDays}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Üyelik süresi (gün)</p>
+                </CardContent>
+              </Card>
             </div>
           ) : (
-            <p className="text-xs text-neutral-400">İstatistikler yüklenemedi.</p>
+            <p className="text-xs text-muted-foreground">İstatistikler yüklenemedi.</p>
           )}
         </section>
 
         {/* Section 5: Şifre Değiştir */}
         {profile?.auth_provider === 'phone' && (
           <section className="mb-12">
-            <h2 className="text-lg font-bold text-black mb-6">
+            <h2 className="text-lg font-bold mb-6">
               {profile.password_hash ? 'Şifre Değiştir' : 'Şifre Belirle'}
             </h2>
-            <div className="border border-neutral-200 p-4 space-y-4">
-              {profile.password_hash && (
-                <div>
-                  <label className="block text-sm text-neutral-600 mb-1">Mevcut Şifre</label>
-                  <input
+            <Card>
+              <CardContent className="pt-5 space-y-4">
+                {profile.password_hash && (
+                  <div className="space-y-1.5">
+                    <Label>Mevcut Şifre</Label>
+                    <Input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); setPasswordMsg(''); }}
+                      className="max-w-sm"
+                      placeholder="Mevcut şifreniz"
+                    />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <Label>{profile.password_hash ? 'Yeni Şifre' : 'Şifre'}</Label>
+                  <Input
                     type="password"
-                    value={currentPassword}
-                    onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); setPasswordMsg(''); }}
-                    className={`${input.text} max-w-sm`}
-                    placeholder="Mevcut şifreniz"
+                    value={newPassword}
+                    onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); setPasswordMsg(''); }}
+                    className="max-w-sm"
+                    placeholder="En az 6 karakter"
                   />
                 </div>
-              )}
-              <div>
-                <label className="block text-sm text-neutral-600 mb-1">
-                  {profile.password_hash ? 'Yeni Şifre' : 'Şifre'}
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); setPasswordMsg(''); }}
-                  className={`${input.text} max-w-sm`}
-                  placeholder="En az 6 karakter"
-                />
-              </div>
-              {passwordError && <p className="text-red-600 text-xs">{passwordError}</p>}
-              {passwordMsg && <p className="text-green-600 text-xs">{passwordMsg}</p>}
-              <button
-                onClick={async () => {
-                  if (newPassword.length < 6) {
-                    setPasswordError('Şifre en az 6 karakter olmalı');
-                    return;
-                  }
-                  setPasswordSaving(true);
-                  setPasswordError('');
-                  setPasswordMsg('');
-                  try {
-                    const res = await fetch('/api/user/change-password', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        currentPassword: currentPassword || undefined,
-                        newPassword,
-                      }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                      setPasswordError(data.error || 'Şifre değiştirme başarısız');
-                    } else {
-                      setPasswordMsg('Şifre başarıyla güncellendi!');
-                      setCurrentPassword('');
-                      setNewPassword('');
-                      // Update profile to reflect password_hash is now set
-                      if (profile && !profile.password_hash) {
-                        setProfile({ ...profile, password_hash: 'set' });
-                      }
+                {passwordError && <p className="text-destructive text-xs">{passwordError}</p>}
+                {passwordMsg && <p className="text-xs font-medium">{passwordMsg}</p>}
+                <Button
+                  onClick={async () => {
+                    if (newPassword.length < 6) {
+                      setPasswordError('Şifre en az 6 karakter olmalı');
+                      return;
                     }
-                  } catch {
-                    setPasswordError('Bağlantı hatası');
-                  } finally {
-                    setPasswordSaving(false);
-                  }
-                }}
-                disabled={passwordSaving || newPassword.length < 6 || (!!profile.password_hash && currentPassword.length < 6)}
-                className="bg-black text-white px-6 h-10 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
-              >
-                {passwordSaving ? 'Kaydediliyor...' : profile.password_hash ? 'Şifreyi Güncelle' : 'Şifre Belirle'}
-              </button>
-            </div>
+                    setPasswordSaving(true);
+                    setPasswordError('');
+                    setPasswordMsg('');
+                    try {
+                      const res = await fetch('/api/user/change-password', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          currentPassword: currentPassword || undefined,
+                          newPassword,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) {
+                        setPasswordError(data.error || 'Şifre değiştirme başarısız');
+                      } else {
+                        setPasswordMsg('Şifre başarıyla güncellendi!');
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        if (profile && !profile.password_hash) {
+                          setProfile({ ...profile, password_hash: 'set' });
+                        }
+                      }
+                    } catch {
+                      setPasswordError('Bağlantı hatası');
+                    } finally {
+                      setPasswordSaving(false);
+                    }
+                  }}
+                  disabled={passwordSaving || newPassword.length < 6 || (!!profile.password_hash && currentPassword.length < 6)}
+                >
+                  {passwordSaving ? (
+                    <>
+                      <Loader2 className="size-4 mr-1.5 animate-spin" />
+                      Kaydediliyor...
+                    </>
+                  ) : profile.password_hash ? 'Şifreyi Güncelle' : 'Şifre Belirle'}
+                </Button>
+              </CardContent>
+            </Card>
           </section>
         )}
 
         {/* Section: Kurtarma Kodları */}
         {profile?.vote_encryption_version === 1 && (
           <section id="kurtarma-kodlari" className="mb-12 scroll-mt-20">
-            <h2 className="text-lg font-bold text-black mb-6">Kurtarma Kodları</h2>
-            <div className="border border-neutral-200 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                {profile.recovery_codes_confirmed ? (
-                  <span className="text-green-700 text-sm font-medium">Kurtarma kodlarınız kaydedilmiş</span>
-                ) : (
-                  <span className="text-amber-700 text-sm font-medium">Kodlarınızı henüz kaydetmediniz</span>
-                )}
-              </div>
-              <p className="text-xs text-neutral-500 mb-4">
-                Kurtarma kodlarınızı kaybettiyseniz, mevcut şifrenizi kullanarak yeni kodlar oluşturabilirsiniz. Eski kodlar geçersiz olur.
-              </p>
-              <RecoveryCodesSection />
-            </div>
+            <h2 className="text-lg font-bold mb-6">Kurtarma Kodları</h2>
+            <Card>
+              <CardContent className="pt-5">
+                <div className="flex items-center gap-2 mb-3">
+                  {profile.recovery_codes_confirmed ? (
+                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <ShieldCheck className="size-4" />
+                      Kurtarma kodlarınız kaydedilmiş
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                      <ShieldAlert className="size-4" />
+                      Kodlarınızı henüz kaydetmediniz
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Kurtarma kodlarınızı kaybettiyseniz, mevcut şifrenizi kullanarak yeni kodlar oluşturabilirsiniz. Eski kodlar geçersiz olur.
+                </p>
+                <RecoveryCodesSection />
+              </CardContent>
+            </Card>
           </section>
         )}
 
         {/* Section 6: Hesap Sil */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold text-black mb-6">Hesap Sil</h2>
-          <div className="border border-red-200 bg-red-50 p-4">
-            {!showDeleteConfirm ? (
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-red-600">
-                  Hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.
-                </p>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="border border-red-600 text-red-600 px-4 h-10 text-sm font-medium hover:bg-red-600 hover:text-white transition-colors"
-                >
-                  Hesabımı Sil
-                </button>
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm text-red-600 font-medium mb-2">
-                  Bu işlem geri alınamaz. Tüm verileriniz silinecek.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleting}
-                    className="border border-red-600 bg-red-600 text-white px-4 h-10 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+          <h2 className="text-lg font-bold mb-6">Hesap Sil</h2>
+          <Card className="border-destructive/50">
+            <CardContent className="pt-5">
+              {!showDeleteConfirm ? (
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Hesabınızı kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
-                    {deleting ? 'Siliniyor...' : 'Evet, Hesabımı Sil'}
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className={btn.secondary}
-                  >
-                    İptal
-                  </button>
+                    <Trash2 className="size-4 mr-1.5" />
+                    Hesabımı Sil
+                  </Button>
                 </div>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium text-destructive mb-3">
+                    Bu işlem geri alınamaz. Tüm verileriniz silinecek.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      disabled={deleting}
+                    >
+                      {deleting ? (
+                        <>
+                          <Loader2 className="size-4 mr-1.5 animate-spin" />
+                          Siliniyor...
+                        </>
+                      ) : 'Evet, Hesabımı Sil'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowDeleteConfirm(false)}
+                    >
+                      İptal
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </section>
       </main>
     </>

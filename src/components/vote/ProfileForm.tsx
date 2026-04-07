@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import SearchableSelect from '@/components/ui/SearchableSelect';
 import { CITY_DISTRICTS, SORTED_CITIES } from '@/lib/geo/city-districts';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft } from 'lucide-react';
 
 interface ProfileFormProps {
   onComplete: (data: { city: string; district: string }) => void;
@@ -29,18 +32,18 @@ export default function ProfileForm({ onComplete, onBack, loading = false }: Pro
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
-      <div>
-        <label className="block text-sm text-neutral-600 mb-1">Yaşadığın İl</label>
+      <div className="space-y-2">
+        <Label>Yaşadığın İl</Label>
         <SearchableSelect
           options={SORTED_CITIES}
           value={city}
           onChange={(c) => { setCity(c); setDistrict(''); }}
           placeholder="İl ara veya seç..."
         />
-        {errors.city && <p className="text-red-600 text-xs mt-1">{errors.city}</p>}
+        {errors.city && <p className="text-destructive text-xs">{errors.city}</p>}
       </div>
-      <div>
-        <label className="block text-sm text-neutral-600 mb-1">Yaşadığın İlçe</label>
+      <div className="space-y-2">
+        <Label>Yaşadığın İlçe</Label>
         <SearchableSelect
           options={districts}
           value={district}
@@ -48,23 +51,17 @@ export default function ProfileForm({ onComplete, onBack, loading = false }: Pro
           placeholder={city ? 'İlçe ara veya seç...' : 'Önce il seçin'}
           disabled={!city}
         />
-        {errors.district && <p className="text-red-600 text-xs mt-1">{errors.district}</p>}
+        {errors.district && <p className="text-destructive text-xs">{errors.district}</p>}
       </div>
 
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={onBack}
-          className="flex-1 bg-neutral-100 text-black py-3 font-medium hover:bg-neutral-200 transition-colors"
-        >
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" className="flex-1" onClick={onBack}>
+          <ArrowLeft className="size-3.5" data-icon="inline-start" />
           Geri
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="flex-1 bg-black text-white py-3 font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50"
-        >
+        </Button>
+        <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
           {loading ? 'Kontrol ediliyor...' : 'Devam'}
-        </button>
+        </Button>
       </div>
     </div>
   );

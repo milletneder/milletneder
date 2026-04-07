@@ -18,12 +18,16 @@ import KreosusWidget from '@/components/ui/KreosusWidget';
 import type { DistrictData } from '@/components/map/TurkeyMap';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { PARTIES, getPartyColor, getPartyName, type PartyInfo } from '@/lib/parties';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Loader2 } from 'lucide-react';
 
 const TurkeyMap = dynamic(() => import('@/components/map/TurkeyMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-white">
-      <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+    <div className="w-full h-full flex items-center justify-center bg-background">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
     </div>
   ),
 });
@@ -490,7 +494,7 @@ export default function Home() {
   const isActiveRound = !userHasVoted;
 
   return (
-    <main className="min-h-screen bg-white overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden">
       <Header
         totalVotes={totalVotes}
         daysRemaining={daysRemaining}
@@ -530,13 +534,13 @@ export default function Home() {
       </section>
 
       {/* BELOW THE FOLD — content sections */}
-      <div className="max-w-3xl mx-auto px-6 space-y-24 py-24">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-24 py-24">
         {/* District breakdown when a city is selected — sadece login kullanıcılar */}
         {isLoggedIn && selectedCity && districtData.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-black">{selectedCity} — İlçe Kırılımı</h2>
-              <span className="text-xs text-neutral-400">
+              <h2 className="text-sm font-bold">{selectedCity} — İlçe Kırılımı</h2>
+              <span className="text-xs text-muted-foreground">
                 {districtData.reduce((s, d) => s + d.totalVotes, 0).toLocaleString('tr-TR')} oy — {districtData.length} ilçe
               </span>
             </div>
@@ -546,8 +550,8 @@ export default function Home() {
                 return (
                   <div key={d.name}>
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-medium text-black">{d.name}</span>
-                      <span className="text-[11px] text-neutral-400 tabular-nums">{d.totalVotes.toLocaleString('tr-TR')} oy</span>
+                      <span className="text-xs font-medium">{d.name}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{d.totalVotes.toLocaleString('tr-TR')} oy</span>
                     </div>
                     {userHasVoted && d.parties.length > 0 ? (
                       <div className="flex gap-0.5 h-3">
@@ -565,9 +569,9 @@ export default function Home() {
                         ))}
                       </div>
                     ) : (
-                      <div className="h-3 bg-neutral-100">
+                      <div className="h-3 bg-muted rounded-sm">
                         <div
-                          className="h-full bg-neutral-800"
+                          className="h-full bg-foreground/80 rounded-sm"
                           style={{ width: `${(d.totalVotes / maxD) * 100}%` }}
                         />
                       </div>
@@ -584,31 +588,31 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border border-neutral-200 bg-neutral-50 p-6 text-center"
           >
-            <p className="text-sm font-medium text-black mb-1">
-              Sonuçları görmek için bir parti seçmelisin
-            </p>
-            <p className="text-xs text-neutral-500 mb-4">
-              Kararsız olarak oy kullandın. Parti tercihini belirleyince canlı sonuçları ve detaylı kırılımları görebilirsin.
-            </p>
-            <button
-              onClick={() => setIsVoteModalOpen(true)}
-              className="bg-black text-white text-sm font-medium px-6 py-2.5 hover:bg-neutral-800 transition-colors"
-            >
-              Parti Seçimimi Güncelle
-            </button>
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <p className="text-sm font-medium mb-1">
+                  Sonuçları görmek için bir parti seçmelisin
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Kararsız olarak oy kullandın. Parti tercihini belirleyince canlı sonuçları ve detaylı kırılımları görebilirsin.
+                </p>
+                <Button onClick={() => setIsVoteModalOpen(true)}>
+                  Parti Seçimimi Güncelle
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           {/* Ham / Ağırlıklı toggle — sadece login kullanıcılar */}
           {isLoggedIn && !selectedCity && weightedResults && weightedResults.methodology.length > 0 && (
-            <div className="flex items-center gap-0 mb-6 border border-neutral-200 w-fit">
+            <div className="flex items-center gap-0 mb-6 border border-border rounded-md w-fit overflow-hidden">
               <button
                 onClick={() => handleShowWeightedChange(false)}
                 className={`px-4 py-2 text-xs font-medium transition-colors ${
-                  !showWeighted ? 'bg-black text-white' : 'bg-white text-neutral-500 hover:text-black'
+                  !showWeighted ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Ham Sonuçlar
@@ -616,7 +620,7 @@ export default function Home() {
               <button
                 onClick={() => handleShowWeightedChange(true)}
                 className={`px-4 py-2 text-xs font-medium transition-colors ${
-                  showWeighted ? 'bg-black text-white' : 'bg-white text-neutral-500 hover:text-black'
+                  showWeighted ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Ağırlıklı Sonuçlar
@@ -803,29 +807,32 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="border border-neutral-200 bg-neutral-50 p-6">
-            <h2 className="text-lg font-bold text-black mb-1">Bağımsızlığımıza Destek Ol</h2>
-            <p className="text-xs text-neutral-500 mb-4">
+          <Card>
+            <CardContent className="pt-6">
+            <h2 className="text-lg font-bold mb-1">Bağımsızlığımıza Destek Ol</h2>
+            <p className="text-xs text-muted-foreground mb-4">
               Hiçbir siyasi veya ticari kuruluştan fon almıyoruz. Platformun sürdürülebilirliği topluluk desteğiyle mümkün.
             </p>
             <KreosusWidget />
-          </div>
+            </CardContent>
+          </Card>
         </motion.section>
 
-        <footer className="py-12 border-t border-neutral-100">
+        <footer className="py-12">
+          <Separator className="mb-12" />
           <div className="text-center space-y-4">
-            <p className="text-xs font-bold text-black tracking-wide">#MilletNeDer</p>
-            <p className="text-[11px] text-neutral-400 max-w-md mx-auto">
+            <p className="text-xs font-bold tracking-wide">#MilletNeDer</p>
+            <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
               Herhangi bir siyasi parti, kurum veya kuruluşla bağlantımız yoktur. Tamamen bağımsız ve şeffaf bir platformuz.
             </p>
             <div className="flex items-center justify-center gap-4 text-[11px]">
-              <a href="/gizlilik" className="text-neutral-400 hover:text-black transition-colors">Gizlilik Politikası</a>
-              <span className="text-neutral-200">·</span>
-              <a href="/kullanim-kosullari" className="text-neutral-400 hover:text-black transition-colors">Kullanım Koşulları</a>
-              <span className="text-neutral-200">·</span>
-              <a href="/metodoloji" className="text-neutral-400 hover:text-black transition-colors">Metodoloji</a>
+              <a href="/gizlilik" className="text-muted-foreground hover:text-foreground transition-colors">Gizlilik Politikası</a>
+              <Separator orientation="vertical" className="h-3" />
+              <a href="/kullanim-kosullari" className="text-muted-foreground hover:text-foreground transition-colors">Kullanım Koşulları</a>
+              <Separator orientation="vertical" className="h-3" />
+              <a href="/metodoloji" className="text-muted-foreground hover:text-foreground transition-colors">Metodoloji</a>
             </div>
-            <p className="text-[10px] text-neutral-300">
+            <p className="text-[10px] text-muted-foreground/60">
               &copy; 2026 MilletNeDer. Bağımsız seçim nabzı platformu. Tüm veriler anonimdir.
             </p>
           </div>

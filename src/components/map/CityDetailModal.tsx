@@ -7,6 +7,8 @@ import {
   Geographies,
   Geography,
 } from 'react-simple-maps';
+import { Button } from '@/components/ui/button';
+import { X, Loader2 } from 'lucide-react';
 
 interface DistrictParty {
   party: string;
@@ -46,7 +48,6 @@ function slugify(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-// GeoJSON'dan bounding box hesapla
 function computeBounds(geojson: GeoJSON.FeatureCollection): { center: [number, number]; scale: number } {
   let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
 
@@ -77,7 +78,6 @@ function computeBounds(geojson: GeoJSON.FeatureCollection): { center: [number, n
   const spanLat = maxLat - minLat;
   const span = Math.max(spanLng, spanLat);
 
-  // Ölçek: daha küçük span → daha büyük scale
   const scale = Math.min(60000, Math.max(3000, 120 / span * 1000));
 
   return { center: [centerLng, centerLat], scale };
@@ -164,33 +164,28 @@ function CityDetailModal({ isOpen, onClose, cityName, showPartyColors }: CityDet
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-background w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-border rounded-xl shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div>
-              <h2 className="text-lg font-bold text-black">{cityName}</h2>
-              <p className="text-neutral-400 text-xs mt-0.5">
+              <h2 className="text-lg font-bold">{cityName}</h2>
+              <p className="text-muted-foreground text-xs mt-0.5">
                 {totalCityVotes.toLocaleString('tr-TR')} toplam oy — {districts.length} ilçe
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-black transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" />
-              </svg>
-            </button>
+            <Button variant="ghost" size="icon-sm" onClick={onClose}>
+              <X className="size-4" />
+            </Button>
           </div>
 
           <div className="flex-1 overflow-auto flex flex-col lg:flex-row">
             {/* Map */}
-            <div className="flex-1 relative bg-neutral-50" style={{ minHeight: '500px' }}>
+            <div className="flex-1 relative bg-muted/50" style={{ minHeight: '500px' }}>
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <Loader2 className="size-6 animate-spin text-muted-foreground" />
                 </div>
               ) : geoData ? (
                 <ComposableMap
@@ -248,48 +243,48 @@ function CityDetailModal({ isOpen, onClose, cityName, showPartyColors }: CityDet
 
               {/* Hover info */}
               {hoveredDistrict && (
-                <div className="absolute top-4 left-4 bg-black text-white px-4 py-3 shadow-xl z-10 min-w-[160px]">
+                <div className="absolute top-4 left-4 bg-popover text-popover-foreground border border-border px-4 py-3 shadow-lg rounded-lg z-10 min-w-[160px]">
                   <h3 className="font-semibold text-sm">{hoveredDistrict}</h3>
                   {hoveredData ? (
                     <div className="mt-1.5 space-y-1">
                       {hoveredData.parties.slice(0, 4).map((p) => (
                         <div key={p.party} className="flex items-center gap-2">
-                          <span className="w-2 h-2 flex-shrink-0" style={{ backgroundColor: p.color }} />
-                          <span className="text-neutral-300 text-xs flex-1">{p.party}</span>
-                          <span className="text-neutral-500 text-xs tabular-nums">{p.count}</span>
+                          <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
+                          <span className="text-muted-foreground text-xs flex-1">{p.party}</span>
+                          <span className="text-muted-foreground text-xs tabular-nums">{p.count}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-neutral-500 text-xs mt-1">Veri yok</p>
+                    <p className="text-muted-foreground text-xs mt-1">Veri yok</p>
                   )}
                 </div>
               )}
             </div>
 
             {/* District list */}
-            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-neutral-100 overflow-auto max-h-[40vh] lg:max-h-none">
-              <div className="px-4 py-3 border-b border-neutral-100 sticky top-0 bg-white z-10">
-                <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">İlçe Kırılımı</p>
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-border overflow-auto max-h-[40vh] lg:max-h-none">
+              <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">İlçe Kırılımı</p>
               </div>
-              <div className="divide-y divide-neutral-50">
+              <div className="divide-y divide-border/50">
                 {districts.map((d) => (
                   <div
                     key={d.name}
-                    className={`px-4 py-2.5 hover:bg-neutral-50 transition-colors ${
-                      hoveredDistrict === d.name ? 'bg-neutral-50' : ''
+                    className={`px-4 py-2.5 hover:bg-accent transition-colors ${
+                      hoveredDistrict === d.name ? 'bg-accent' : ''
                     }`}
                     onMouseEnter={() => setHoveredDistrict(d.name)}
                     onMouseLeave={() => setHoveredDistrict(null)}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-black">{d.name}</span>
-                      <span className="text-xs text-neutral-400 tabular-nums">
+                      <span className="text-sm font-medium">{d.name}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
                         {d.totalVotes.toLocaleString('tr-TR')} oy
                       </span>
                     </div>
                     {showPartyColors && d.parties.length > 0 && (
-                      <div className="flex gap-0.5 mt-1.5 h-1.5">
+                      <div className="flex gap-0.5 mt-1.5 h-1.5 rounded-sm overflow-hidden">
                         {d.parties.map((p) => (
                           <div
                             key={p.party}
@@ -307,7 +302,7 @@ function CityDetailModal({ isOpen, onClose, cityName, showPartyColors }: CityDet
                   </div>
                 ))}
                 {districts.length === 0 && !loading && (
-                  <div className="px-4 py-8 text-center text-neutral-400 text-sm">
+                  <div className="px-4 py-8 text-center text-muted-foreground text-sm">
                     Bu il için henüz oy verisi yok
                   </div>
                 )}
