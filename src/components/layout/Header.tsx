@@ -337,8 +337,8 @@ export default function Header() {
                 </a>
               </Button>
 
-              {/* Separator: sol ml-1 (ghost buton optik boşluğu dengelemek için), sağ mr-0.5 (yarısı) */}
-              <div className="ml-1 mr-0.5 w-px h-4 bg-border" />
+              {/* Separator: sol ml-1, sağ mr-2 (sol'un iki katı — outline butonla optik denge) */}
+              <div className="ml-1 mr-2 w-px h-4 bg-border" />
 
               {isLoggedIn ? (
                 <DropdownMenu>
@@ -368,8 +368,6 @@ export default function Header() {
                   Giriş
                 </Button>
               )}
-
-              <div className="w-1" />
 
               <Button onClick={handleVoteClick}>
                 <Stamp className="size-3.5" data-icon="inline-start" />
