@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.1.0",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "@turf/dissolve": "^7.3.4",
     "@turf/helpers": "^7.3.4",
