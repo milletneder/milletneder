@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/lib/admin/hooks';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface VoterCountRow {
   id: number;
@@ -31,7 +37,7 @@ export default function VoterCountsPage() {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'il' | 'ilce'>('il');
+  const [activeTab, setActiveTab] = useState<string>('il');
 
   const headers = useCallback(() => {
     return {
@@ -94,7 +100,7 @@ export default function VoterCountsPage() {
     a.city.localeCompare(b.city, 'tr') || a.district.localeCompare(b.district, 'tr')
   );
 
-  // İl bazlı ilçe gruplama
+  // Il bazli ilce gruplama
   const districtsByCity: Record<string, DistrictVoterCountRow[]> = {};
   for (const d of districtRows) {
     if (!districtsByCity[d.city]) districtsByCity[d.city] = [];
@@ -103,174 +109,190 @@ export default function VoterCountsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin h-6 w-6 border-2 border-black border-t-transparent rounded-full" />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-black mb-2">Seçmen Sayıları</h1>
-      <p className="text-sm text-neutral-500 mb-4">
-        İl ve ilçe bazlı kayıtlı seçmen sayıları. Temsil Oranı Sıralaması hesaplamalarında kullanılır.
+      <h1 className="text-xl font-bold mb-2">Secmen Sayilari</h1>
+      <p className="text-sm text-muted-foreground mb-4">
+        Il ve ilce bazli kayitli secmen sayilari. Temsil Orani Siralamasi hesaplamalarinda kullanilir.
       </p>
 
-      <div className="bg-neutral-50 border border-neutral-100 p-4 mb-6">
-        <p className="text-sm text-neutral-700 leading-relaxed mb-2">
-          Temsil oranı = oy sayısı / seçmen sayısı. Bu tablo YSK 2023 verilerine dayanmaktadır.
-        </p>
-        <div className="flex gap-6 text-xs text-neutral-500">
-          <span>İl toplam: <span className="font-mono font-medium text-black">{totalVoters.toLocaleString('tr-TR')}</span> ({rows.length} il)</span>
-          <span>İlçe toplam: <span className="font-mono font-medium text-black">{totalDistrictVoters.toLocaleString('tr-TR')}</span> ({districtRows.length} ilçe)</span>
-        </div>
-      </div>
+      <Card className="mb-6">
+        <CardContent>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+            Temsil orani = oy sayisi / secmen sayisi. Bu tablo YSK 2023 verilerine dayanmaktadir.
+          </p>
+          <div className="flex gap-6 text-xs text-muted-foreground">
+            <span>Il toplam: <span className="font-mono font-medium text-foreground">{totalVoters.toLocaleString('tr-TR')}</span> ({rows.length} il)</span>
+            <span>Ilce toplam: <span className="font-mono font-medium text-foreground">{totalDistrictVoters.toLocaleString('tr-TR')}</span> ({districtRows.length} ilce)</span>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Tab toggle */}
-      <div className="flex gap-0 mb-4 border border-neutral-200 w-fit">
-        <button
-          onClick={() => setActiveTab('il')}
-          className={`px-4 py-2 text-xs font-medium transition-colors ${
-            activeTab === 'il' ? 'bg-black text-white' : 'bg-white text-neutral-500 hover:text-black'
-          }`}
-        >
-          İl Bazlı ({rows.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('ilce')}
-          className={`px-4 py-2 text-xs font-medium transition-colors ${
-            activeTab === 'ilce' ? 'bg-black text-white' : 'bg-white text-neutral-500 hover:text-black'
-          }`}
-        >
-          İlçe Bazlı ({districtRows.length})
-        </button>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="il">Il Bazli ({rows.length})</TabsTrigger>
+          <TabsTrigger value="ilce">Ilce Bazli ({districtRows.length})</TabsTrigger>
+        </TabsList>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder={activeTab === 'il' ? 'İl ara...' : 'İl veya ilçe ara...'}
-          className="border border-neutral-200 px-3 py-2 text-sm w-64 focus:outline-none focus:border-black"
-        />
-      </div>
+        <div className="mb-4">
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={activeTab === 'il' ? 'Il ara...' : 'Il veya ilce ara...'}
+            className="w-64"
+          />
+        </div>
 
-      {activeTab === 'il' ? (
-        /* İl Tablosu */
-        <div className="border border-neutral-200 overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-neutral-50 border-b border-neutral-200">
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İl</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">Seçmen Sayısı</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İlçe Sayısı</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">Kaynak</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedCities.map(r => {
-                const cityDistricts = districtsByCity[r.city] || [];
-                const isExpanded = expandedCity === r.city;
-                return (
-                  <tr key={r.id} className="border-b border-neutral-100 hover:bg-neutral-50">
-                    <td className="px-4 py-2 text-sm font-medium text-black">
-                      {cityDistricts.length > 0 ? (
-                        <button
-                          onClick={() => setExpandedCity(isExpanded ? null : r.city)}
-                          className="flex items-center gap-1 hover:text-neutral-600"
-                        >
-                          <span className="text-[10px] text-neutral-400">{isExpanded ? '▼' : '▶'}</span>
-                          {r.city}
-                        </button>
-                      ) : r.city}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {editingId === r.id && editType === 'city' ? (
-                        <input
-                          type="number"
-                          value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
-                          min="0"
-                          className="border border-neutral-200 px-2 py-1 text-sm w-32 focus:outline-none focus:border-black font-mono"
-                        />
-                      ) : (
-                        <span className="font-mono">{r.voter_count.toLocaleString('tr-TR')}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-neutral-400">{cityDistricts.length}</td>
-                    <td className="px-4 py-2 text-xs text-neutral-400">{r.source}</td>
-                    <td className="px-4 py-2">
-                      {editingId === r.id && editType === 'city' ? (
-                        <div className="flex gap-2">
-                          <button onClick={() => handleSave(r.id, 'city')} disabled={saving}
-                            className="text-xs text-black border border-black px-2 py-1 hover:bg-neutral-50">Kaydet</button>
-                          <button onClick={() => setEditingId(null)}
-                            className="text-xs text-neutral-400 hover:text-black">İptal</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => { setEditingId(r.id); setEditType('city'); setEditValue(String(r.voter_count)); }}
-                          className="text-xs text-neutral-400 hover:text-black">Düzenle</button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        /* İlçe Tablosu */
-        <div className="border border-neutral-200 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-          <table className="w-full">
-            <thead className="sticky top-0 bg-white z-10">
-              <tr className="bg-neutral-50 border-b border-neutral-200">
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İl</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İlçe</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">Seçmen Sayısı</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">Kaynak</th>
-                <th className="text-left text-[11px] font-medium text-neutral-500 uppercase px-4 py-2">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedDistricts.map(r => (
-                <tr key={r.id} className="border-b border-neutral-100 hover:bg-neutral-50">
-                  <td className="px-4 py-2 text-xs text-neutral-400">{r.city}</td>
-                  <td className="px-4 py-2 text-sm font-medium text-black">{r.district}</td>
-                  <td className="px-4 py-2 text-sm">
-                    {editingId === r.id && editType === 'district' ? (
-                      <input
-                        type="number"
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        min="0"
-                        className="border border-neutral-200 px-2 py-1 text-sm w-32 focus:outline-none focus:border-black font-mono"
-                      />
-                    ) : (
-                      <span className="font-mono">{r.voter_count.toLocaleString('tr-TR')}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-xs text-neutral-400">{r.source}</td>
-                  <td className="px-4 py-2">
-                    {editingId === r.id && editType === 'district' ? (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleSave(r.id, 'district')} disabled={saving}
-                          className="text-xs text-black border border-black px-2 py-1 hover:bg-neutral-50">Kaydet</button>
-                        <button onClick={() => setEditingId(null)}
-                          className="text-xs text-neutral-400 hover:text-black">İptal</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => { setEditingId(r.id); setEditType('district'); setEditValue(String(r.voter_count)); }}
-                        className="text-xs text-neutral-400 hover:text-black">Düzenle</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <TabsContent value="il">
+          {/* Il Tablosu */}
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[11px] uppercase">Il</TableHead>
+                  <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
+                  <TableHead className="text-[11px] uppercase">Ilce Sayisi</TableHead>
+                  <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
+                  <TableHead className="text-[11px] uppercase">Islem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedCities.map(r => {
+                  const cityDistricts = districtsByCity[r.city] || [];
+                  const isExpanded = expandedCity === r.city;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-sm font-medium">
+                        {cityDistricts.length > 0 ? (
+                          <button
+                            onClick={() => setExpandedCity(isExpanded ? null : r.city)}
+                            className="flex items-center gap-1 hover:text-muted-foreground"
+                          >
+                            <span className="text-[10px] text-muted-foreground">{isExpanded ? '\u25BC' : '\u25B6'}</span>
+                            {r.city}
+                          </button>
+                        ) : r.city}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {editingId === r.id && editType === 'city' ? (
+                          <Input
+                            type="number"
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            min="0"
+                            className="w-32 font-mono"
+                          />
+                        ) : (
+                          <span className="font-mono">{r.voter_count.toLocaleString('tr-TR')}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{cityDistricts.length}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{r.source}</TableCell>
+                      <TableCell>
+                        {editingId === r.id && editType === 'city' ? (
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="xs" onClick={() => handleSave(r.id, 'city')} disabled={saving}>
+                              Kaydet
+                            </Button>
+                            <Button variant="ghost" size="xs" onClick={() => setEditingId(null)}>
+                              Iptal
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="text-muted-foreground"
+                            onClick={() => { setEditingId(r.id); setEditType('city'); setEditValue(String(r.voter_count)); }}
+                          >
+                            Duzenle
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ilce">
+          {/* Ilce Tablosu */}
+          <Card>
+            <div className="max-h-[70vh] overflow-y-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="text-[11px] uppercase">Il</TableHead>
+                    <TableHead className="text-[11px] uppercase">Ilce</TableHead>
+                    <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
+                    <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
+                    <TableHead className="text-[11px] uppercase">Islem</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedDistricts.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs text-muted-foreground">{r.city}</TableCell>
+                      <TableCell className="text-sm font-medium">{r.district}</TableCell>
+                      <TableCell className="text-sm">
+                        {editingId === r.id && editType === 'district' ? (
+                          <Input
+                            type="number"
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            min="0"
+                            className="w-32 font-mono"
+                          />
+                        ) : (
+                          <span className="font-mono">{r.voter_count.toLocaleString('tr-TR')}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{r.source}</TableCell>
+                      <TableCell>
+                        {editingId === r.id && editType === 'district' ? (
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="xs" onClick={() => handleSave(r.id, 'district')} disabled={saving}>
+                              Kaydet
+                            </Button>
+                            <Button variant="ghost" size="xs" onClick={() => setEditingId(null)}>
+                              Iptal
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="text-muted-foreground"
+                            onClick={() => { setEditingId(r.id); setEditType('district'); setEditValue(String(r.voter_count)); }}
+                          >
+                            Duzenle
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

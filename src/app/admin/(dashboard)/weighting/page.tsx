@@ -2,6 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/lib/admin/hooks';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ConfigItem {
   config_key: string;
@@ -78,9 +86,9 @@ export default function WeightingPage() {
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [previewResult, setPreviewResult] = useState<Record<string, unknown> | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const headers = useCallback(() => {
     return {
@@ -143,6 +151,7 @@ export default function WeightingPage() {
       });
       const data = await res.json();
       setPreviewResult(data);
+      setPreviewOpen(true);
     } finally {
       setPreviewing(false);
     }
@@ -155,134 +164,135 @@ export default function WeightingPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-6 w-6 border-2 border-black border-t-transparent rounded-full" /></div>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-9 w-36" />
+        </div>
+        <Skeleton className="h-24 w-full" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-black">Ağırlıklandırma Ayarları</h1>
-          <p className="text-sm text-neutral-500 mt-1">Anket sonuçlarını düzeltmek için kullanılan yöntemleri yönetin.</p>
+          <h1 className="text-xl font-bold">Agirliklandirma Ayarlari</h1>
+          <p className="text-sm text-muted-foreground mt-1">Anket sonuclarini duzeltmek icin kullanilan yontemleri yonetin.</p>
         </div>
-        <button
-          onClick={handlePreview}
-          disabled={previewing}
-          className="border border-black bg-black text-white px-4 h-9 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
-        >
-          {previewing ? 'Hesaplanıyor...' : 'Sonuçları Önizle'}
-        </button>
+        <Button onClick={handlePreview} disabled={previewing}>
+          {previewing ? 'Hesaplaniyor...' : 'Sonuclari Onizle'}
+        </Button>
       </div>
 
-      <div className="bg-neutral-50 border border-neutral-100 p-4 mb-8">
-        <p className="text-sm text-neutral-700 leading-relaxed mb-2">
-          Aşağıdaki yöntemler, online anketin örneklem sapmalarını düzeltmek için kullanılır. Her yöntemi açıp kapatabilir ve parametrelerini ayarlayabilirsiniz. Değişiklikler anında kaydedilir.
-        </p>
-        <p className="text-xs text-neutral-500 mb-2">
-          Aktif yöntemler sırayla uygulanır ve çarpılarak birleştirilir. Sonuç &quot;Ağırlık Sınırı&quot; ile alt-üst limit arasına çekilir. Değişiklik yapmadan önce &quot;Sonuçları Önizle&quot; butonuyla etkiyi görebilirsiniz — önizleme kaydetmeden hesaplama yapar.
-        </p>
-        <div className="text-xs text-neutral-400 space-y-1">
-          <p>Sıralama: Raking/Post-Strat → Katılım Niyeti → Zaman Ağırlığı → Partizan Sapma → Bölgesel Kota → Sahtecilik → Ağırlık Sınırı</p>
-        </div>
-      </div>
-
-      {/* Preview Results */}
-      {previewResult && (
-        <div className="border border-neutral-200 p-4 mb-8">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-bold text-black">Önizleme Sonuçları</h3>
-            <button onClick={() => setPreviewResult(null)} className="text-xs text-neutral-400 hover:text-black">&times; Kapat</button>
-          </div>
-          <p className="text-xs text-neutral-500 mb-4">
-            Bu sonuçlar mevcut konfigürasyonla hesaplanmıştır. &quot;Ham&quot; sütunu ağırlıklandırma olmadan, &quot;Ağırlıklı&quot; sütunu aktif yöntemler uygulandıktan sonraki yüzdeleri gösterir. Delta farkı gösterir (+1.2 = ağırlıklandırmayla 1.2 puan arttı).
+      <Card className="mb-8">
+        <CardContent>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+            Asagidaki yontemler, online anketin orneklem sapmalarini duzeltmek icin kullanilir. Her yontemi acip kapatabilir ve parametrelerini ayarlayabilirsiniz. Degisiklikler aninda kaydedilir.
           </p>
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-neutral-500">Örneklem</p>
-              <p className="text-lg font-bold">{(previewResult as { sampleSize?: number }).sampleSize?.toLocaleString('tr-TR')}</p>
-              <p className="text-[11px] text-neutral-400">Toplam geçerli oy sayısı</p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-500">Efektif Örneklem</p>
-              <p className="text-lg font-bold">{(previewResult as { effectiveSampleSize?: number }).effectiveSampleSize?.toLocaleString('tr-TR')}</p>
-              <p className="text-[11px] text-neutral-400">Ağırlıklandırma sonrası etkin büyüklük</p>
-            </div>
-            <div>
-              <p className="text-xs text-neutral-500">Güven Skoru</p>
-              <p className="text-lg font-bold">{((previewResult as { confidence?: { overall?: number } }).confidence?.overall ?? 0).toFixed(1)}/100</p>
-              <p className="text-[11px] text-neutral-400">0=güvenilmez, 100=çok güvenilir</p>
-            </div>
-          </div>
-          {Array.isArray((previewResult as { parties?: unknown[] }).parties) && (
-            <div className="space-y-1">
-              {((previewResult as { parties: Array<{ party: string; rawPct: number; weightedPct: number; delta: number }> }).parties).map(p => (
-                <div key={p.party} className="flex items-center justify-between text-sm">
-                  <span className="font-medium w-32">{p.party}</span>
-                  <span className="text-neutral-500">Ham: %{p.rawPct.toFixed(1)}</span>
-                  <span>Ağırlıklı: %{p.weightedPct.toFixed(1)}</span>
-                  <span className={`text-xs ${p.delta > 0 ? 'text-neutral-700' : 'text-neutral-400'}`}>
-                    {p.delta > 0 ? '+' : ''}{p.delta.toFixed(1)}
-                  </span>
+          <p className="text-xs text-muted-foreground mb-2">
+            Aktif yontemler sirayla uygulanir ve carpilarak birlestirilir. Sonuc &quot;Agirlik Siniri&quot; ile alt-ust limit arasina cekilir. Degisiklik yapmadan once &quot;Sonuclari Onizle&quot; butonuyla etkiyi gorebilirsiniz -- onizleme kaydetmeden hesaplama yapar.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Siralama: Raking/Post-Strat &rarr; Katilim Niyeti &rarr; Zaman Agirligi &rarr; Partizan Sapma &rarr; Bolgesel Kota &rarr; Sahtecilik &rarr; Agirlik Siniri
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Onizleme Sonuclari</DialogTitle>
+            <DialogDescription>
+              Bu sonuclar mevcut konfigurasyon ile hesaplanmistir. &quot;Ham&quot; sutunu agirliklandirma olmadan, &quot;Agirlikli&quot; sutunu aktif yontemler uygulandiktan sonraki yuzdeleri gosterir.
+            </DialogDescription>
+          </DialogHeader>
+          {previewResult && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Orneklem</p>
+                  <p className="text-lg font-bold">{(previewResult as { sampleSize?: number }).sampleSize?.toLocaleString('tr-TR')}</p>
+                  <p className="text-[11px] text-muted-foreground">Toplam gecerli oy sayisi</p>
                 </div>
-              ))}
+                <div>
+                  <p className="text-xs text-muted-foreground">Efektif Orneklem</p>
+                  <p className="text-lg font-bold">{(previewResult as { effectiveSampleSize?: number }).effectiveSampleSize?.toLocaleString('tr-TR')}</p>
+                  <p className="text-[11px] text-muted-foreground">Agirliklandirma sonrasi etkin buyukluk</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Guven Skoru</p>
+                  <p className="text-lg font-bold">{((previewResult as { confidence?: { overall?: number } }).confidence?.overall ?? 0).toFixed(1)}/100</p>
+                  <p className="text-[11px] text-muted-foreground">0=guvenilmez, 100=cok guvenilir</p>
+                </div>
+              </div>
+              {Array.isArray((previewResult as { parties?: unknown[] }).parties) && (
+                <div className="space-y-1">
+                  {((previewResult as { parties: Array<{ party: string; rawPct: number; weightedPct: number; delta: number }> }).parties).map(p => (
+                    <div key={p.party} className="flex items-center justify-between text-sm">
+                      <span className="font-medium w-32">{p.party}</span>
+                      <span className="text-muted-foreground">Ham: %{p.rawPct.toFixed(1)}</span>
+                      <span>Agirlikli: %{p.weightedPct.toFixed(1)}</span>
+                      <span className={`text-xs ${p.delta > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {p.delta > 0 ? '+' : ''}{p.delta.toFixed(1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Config Sections */}
-      <div className="space-y-3">
+      <Accordion type="single" collapsible className="space-y-3">
         {CONFIG_ORDER.map(key => {
           const config = getConfig(key);
           const info = CONFIG_LABELS[key];
-          const isExpanded = expanded === key;
 
           return (
-            <div key={key} className="border border-neutral-200">
-              <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50"
-                onClick={() => setExpanded(isExpanded ? null : key)}
-              >
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateConfig(key, { is_enabled: !config.is_enabled });
-                    }}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${
-                      config.is_enabled ? 'bg-black' : 'bg-neutral-300'
-                    }`}
-                  >
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                      config.is_enabled ? 'left-5' : 'left-0.5'
-                    }`} />
-                  </button>
-                  <div>
-                    <h3 className="text-sm font-medium text-black">{info?.title || key}</h3>
-                    <p className="text-xs text-neutral-400">{info?.description}</p>
+            <AccordionItem key={key} value={key} className="border border-border rounded-lg">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <Switch
+                  checked={config.is_enabled}
+                  onCheckedChange={(checked) => updateConfig(key, { is_enabled: checked })}
+                />
+                <AccordionTrigger className="flex-1 hover:no-underline py-0">
+                  <div className="text-left">
+                    <h3 className="text-sm font-medium">{info?.title || key}</h3>
+                    <p className="text-xs text-muted-foreground">{info?.description}</p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {saving === key && <span className="text-xs text-neutral-400">Kaydediliyor...</span>}
-                  <span className="text-neutral-300 text-sm">{isExpanded ? '▲' : '▼'}</span>
-                </div>
+                  {saving === key && <span className="text-xs text-muted-foreground mr-2">Kaydediliyor...</span>}
+                </AccordionTrigger>
               </div>
 
-              {isExpanded && (
-                <div className="px-4 py-4 border-t border-neutral-100 space-y-4">
-                  {/* Detaylı Açıklama */}
-                  <div className="bg-neutral-50 border border-neutral-100 p-4 space-y-3">
-                    <p className="text-sm text-neutral-700 leading-relaxed">{info?.detail}</p>
-                    {info?.formula && (
-                      <div className="bg-white border border-neutral-200 px-3 py-2">
-                        <p className="text-[11px] text-neutral-400 mb-0.5">Formül</p>
-                        <code className="text-xs font-mono text-black">{info.formula}</code>
-                      </div>
-                    )}
-                    {info?.warning && (
-                      <p className="text-xs text-neutral-500 border-l-2 border-neutral-300 pl-3">{info.warning}</p>
-                    )}
-                  </div>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-4">
+                  {/* Detail Card */}
+                  <Card className="bg-muted/50">
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{info?.detail}</p>
+                      {info?.formula && (
+                        <div className="bg-background border border-border rounded-md px-3 py-2">
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Formul</p>
+                          <code className="bg-muted rounded px-2 py-1 text-xs font-mono">{info.formula}</code>
+                        </div>
+                      )}
+                      {info?.warning && (
+                        <p className="text-xs text-muted-foreground border-l-2 border-border pl-3">{info.warning}</p>
+                      )}
+                    </CardContent>
+                  </Card>
 
                   {key === 'post_stratification' && (
                     <DimensionSelector
@@ -298,12 +308,12 @@ export default function WeightingPage() {
                         onChange={(dims) => updateParam(key, 'dimensions', dims)}
                       />
                       <NumberInput
-                        label="Max İterasyon"
+                        label="Max Iterasyon"
                         value={(config.parameters.maxIterations as number) ?? 50}
                         onChange={(v) => updateParam(key, 'maxIterations', v)}
                       />
                       <NumberInput
-                        label="Yakınsama Eşiği"
+                        label="Yakinsama Esigi"
                         value={(config.parameters.convergenceThreshold as number) ?? 0.001}
                         onChange={(v) => updateParam(key, 'convergenceThreshold', v)}
                         step={0.001}
@@ -316,7 +326,7 @@ export default function WeightingPage() {
                       {(['T1', 'T2', 'T3', 'T4'] as const).map(t => (
                         <NumberInput
                           key={t}
-                          label={t === 'T1' ? 'Kesin' : t === 'T2' ? 'Muhtemel' : t === 'T3' ? 'Belki' : 'Hayır'}
+                          label={t === 'T1' ? 'Kesin' : t === 'T2' ? 'Muhtemel' : t === 'T3' ? 'Belki' : 'Hayir'}
                           value={((config.parameters.weights as Record<string, number>) ?? {})[t] ?? (t === 'T1' ? 1 : t === 'T2' ? 0.6 : t === 'T3' ? 0.3 : 0)}
                           onChange={(v) => {
                             const weights = { ...((config.parameters.weights as Record<string, number>) ?? {}), [t]: v };
@@ -332,7 +342,7 @@ export default function WeightingPage() {
 
                   {key === 'recency' && (
                     <NumberInput
-                      label="Lambda (0.001 = yavaş bozunma, 0.1 = hızlı bozunma)"
+                      label="Lambda (0.001 = yavas bozunma, 0.1 = hizli bozunma)"
                       value={(config.parameters.lambda as number) ?? 0.01}
                       onChange={(v) => updateParam(key, 'lambda', v)}
                       step={0.001}
@@ -344,12 +354,12 @@ export default function WeightingPage() {
                   {key === 'bayesian' && (
                     <>
                       <NumberInput
-                        label="Minimum Örneklem Boyutu"
+                        label="Minimum Orneklem Boyutu"
                         value={(config.parameters.minSampleSize as number) ?? 30}
                         onChange={(v) => updateParam(key, 'minSampleSize', v)}
                       />
                       <NumberInput
-                        label="Prior Gücü"
+                        label="Prior Gucu"
                         value={(config.parameters.priorStrength as number) ?? 10}
                         onChange={(v) => updateParam(key, 'priorStrength', v)}
                       />
@@ -359,7 +369,7 @@ export default function WeightingPage() {
                   {key === 'weight_cap' && (
                     <div className="grid grid-cols-2 gap-4">
                       <NumberInput
-                        label="Minimum Ağırlık"
+                        label="Minimum Agirlik"
                         value={(config.parameters.min as number) ?? 0.2}
                         onChange={(v) => updateParam(key, 'min', v)}
                         step={0.1}
@@ -367,7 +377,7 @@ export default function WeightingPage() {
                         max={1}
                       />
                       <NumberInput
-                        label="Maksimum Ağırlık"
+                        label="Maksimum Agirlik"
                         value={(config.parameters.max as number) ?? 5}
                         onChange={(v) => updateParam(key, 'max', v)}
                         step={0.5}
@@ -379,7 +389,7 @@ export default function WeightingPage() {
 
                   {key === 'fraud_detection' && (
                     <NumberInput
-                      label="Eşik Puanı (üstü → ağırlık 0)"
+                      label="Esik Puani (ustu → agirlik 0)"
                       value={(config.parameters.threshold as number) ?? 80}
                       onChange={(v) => updateParam(key, 'threshold', v)}
                       min={0}
@@ -387,44 +397,41 @@ export default function WeightingPage() {
                     />
                   )}
                 </div>
-              )}
-            </div>
+              </AccordionContent>
+            </AccordionItem>
           );
         })}
-      </div>
+      </Accordion>
     </div>
   );
 }
 
 function DimensionSelector({ dimensions, onChange }: { dimensions: string[]; onChange: (dims: string[]) => void }) {
   const ALL_DIMS = [
-    { value: 'age', label: 'Yaş' },
+    { value: 'age', label: 'Yas' },
     { value: 'gender', label: 'Cinsiyet' },
-    { value: 'education', label: 'Eğitim' },
-    { value: 'region', label: 'Bölge' },
+    { value: 'education', label: 'Egitim' },
+    { value: 'region', label: 'Bolge' },
   ];
 
   return (
     <div>
-      <p className="text-xs text-neutral-500 mb-2">Boyutlar</p>
+      <Label className="text-xs text-muted-foreground mb-2">Boyutlar</Label>
       <div className="flex flex-wrap gap-2">
         {ALL_DIMS.map(d => (
-          <button
+          <Button
             key={d.value}
+            variant={dimensions.includes(d.value) ? 'default' : 'outline'}
+            size="sm"
             onClick={() => {
               const next = dimensions.includes(d.value)
                 ? dimensions.filter(x => x !== d.value)
                 : [...dimensions, d.value];
               onChange(next);
             }}
-            className={`px-3 py-1.5 text-xs transition-colors ${
-              dimensions.includes(d.value)
-                ? 'border-2 border-black bg-neutral-50 text-black'
-                : 'border border-neutral-200 text-neutral-500 hover:border-black'
-            }`}
           >
             {d.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -437,15 +444,14 @@ function NumberInput({ label, value, onChange, step = 1, min, max }: {
 }) {
   return (
     <div>
-      <label className="text-xs text-neutral-500 block mb-1">{label}</label>
-      <input
+      <Label className="text-xs text-muted-foreground mb-1">{label}</Label>
+      <Input
         type="number"
         value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
         step={step}
         min={min}
         max={max}
-        className="border border-neutral-200 px-3 py-1.5 text-sm w-full focus:outline-none focus:border-black"
       />
     </div>
   );

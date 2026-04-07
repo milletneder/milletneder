@@ -1,7 +1,23 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { badge, btn, table } from '@/lib/ui';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface UserDetail {
   id: number;
@@ -38,6 +54,48 @@ function getAdminHeaders() {
   return headers;
 }
 
+function UserDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-6 w-48" />
+      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-32" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i}>
+                <Skeleton className="h-3 w-16 mb-1.5" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <div className="flex gap-3">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-8 w-36" />
+      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-24" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -71,15 +129,6 @@ export default function UserDetailPage() {
   }, [id]);
 
   async function handleAction(action: string) {
-    const messages: Record<string, string> = {
-      flag: 'Bu kullanıcıyı şüpheli olarak işaretlemek istediğinize emin misiniz?',
-      unflag: 'Şüpheli işaretini kaldırmak istediğinize emin misiniz?',
-      deactivate: 'Bu kullanıcıyı devre dışı bırakmak istediğinize emin misiniz? Giriş yapamayacak.',
-      activate: 'Bu kullanıcıyı etkinleştirmek istediğinize emin misiniz?',
-    };
-
-    if (!window.confirm(messages[action] || 'Emin misiniz?')) return;
-
     setActionLoading(true);
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
@@ -91,19 +140,16 @@ export default function UserDetailPage() {
         await fetchUser();
       } else {
         const data = await res.json();
-        alert(data.error || 'İşlem başarısız');
+        alert(data.error || 'Islem basarisiz');
       }
     } catch {
-      alert('Bir hata oluştu');
+      alert('Bir hata olustu');
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz! Tüm oyları, cihaz kayıtları ve profil bilgileri silinecektir.')) return;
-    if (!window.confirm('Son kez onaylayın: Kullanıcı #' + id + ' kalıcı olarak silinecek.')) return;
-
     setActionLoading(true);
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
@@ -111,274 +157,362 @@ export default function UserDetailPage() {
         headers: getAdminHeaders(),
       });
       if (res.ok) {
-        alert('Kullanıcı başarıyla silindi.');
+        alert('Kullanici basariyla silindi.');
         router.push('/admin/users');
       } else {
         const data = await res.json();
-        alert(data.error || 'Silme işlemi başarısız');
+        alert(data.error || 'Silme islemi basarisiz');
       }
     } catch {
-      alert('Bir hata oluştu');
+      alert('Bir hata olustu');
     } finally {
       setActionLoading(false);
     }
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-black border-t-transparent" />
-      </div>
-    );
+    return <UserDetailSkeleton />;
   }
 
   if (!user) {
-    return <div className="text-neutral-500 text-sm py-10 text-center">Kullanıcı bulunamadı.</div>;
+    return <div className="text-muted-foreground text-sm py-10 text-center">Kullanici bulunamadi.</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Başlık */}
+      {/* Baslik */}
       <div className="flex items-center gap-3">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.push('/admin/users')}
-          className="text-sm text-neutral-400 hover:text-black transition-colors"
         >
-          ← Kullanıcılar
-        </button>
-        <h1 className="text-lg font-bold text-black font-mono">
+          &larr; Kullanicilar
+        </Button>
+        <h1 className="text-lg font-bold text-foreground font-mono">
           {user.identity_hash ? user.identity_hash.substring(0, 16) + '...' : `#${user.id}`}
         </h1>
       </div>
 
-      {/* Kullanıcı Bilgileri */}
-      <div className="border border-neutral-200 p-5">
-        <h2 className="text-sm font-medium text-black mb-4">Kullanıcı Bilgileri</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-sm">
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Kimlik Hash</div>
-            <div className="text-black font-mono text-xs break-all">{user.identity_hash || '—'}</div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Giriş Yöntemi</div>
-            <div className="text-black">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">İl</div>
-            <div className="text-black">{user.city}</div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">İlçe</div>
-            <div className="text-black">{user.district || '-'}</div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Kayıt tarihi</div>
-            <div className="text-black">
-              {new Date(user.created_at).toLocaleDateString('tr-TR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                timeZone: 'Europe/Istanbul',
-              })}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Son giriş</div>
-            <div className="text-black">
-              {user.last_login_at
-                ? new Date(user.last_login_at).toLocaleDateString('tr-TR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: 'Europe/Istanbul',
-                  })
-                : '-'}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Şüpheli</div>
-            <div>
-              {user.is_flagged ? (
-                <span className={badge.negative}>
-                  Evet
-                </span>
-              ) : (
-                <span className="text-neutral-300 text-xs">—</span>
-              )}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Hesap durumu</div>
-            <div>
-              {user.is_active ? (
-                <span className={badge.positive}>
-                  Etkin
-                </span>
-              ) : (
-                <span className={badge.negative}>
-                  Devre dışı
-                </span>
-              )}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Referans kodu</div>
-            <div className="text-black font-mono text-xs">{user.referral_code}</div>
-          </div>
-          <div>
-            <div className="text-neutral-400 text-xs mb-0.5">Referans sayısı</div>
-            <div className="text-black font-medium">{referralCount}</div>
-          </div>
-        </div>
-      </div>
+      <Tabs defaultValue="info">
+        <TabsList>
+          <TabsTrigger value="info">Bilgiler</TabsTrigger>
+          <TabsTrigger value="votes">Oylar ({votes.length})</TabsTrigger>
+          <TabsTrigger value="devices">Cihazlar ({deviceLogs.length})</TabsTrigger>
+        </TabsList>
 
-      {/* İşlem Butonları */}
-      <div className="flex gap-3">
-        {user.is_flagged ? (
-          <button
-            onClick={() => handleAction('unflag')}
-            disabled={actionLoading}
-            className={btn.secondary}
-          >
-            Şüpheli işaretini kaldır
-          </button>
-        ) : (
-          <button
-            onClick={() => handleAction('flag')}
-            disabled={actionLoading}
-            className={btn.primary}
-          >
-            Şüpheli işaretle
-          </button>
-        )}
-        {user.is_active ? (
-          <button
-            onClick={() => handleAction('deactivate')}
-            disabled={actionLoading}
-            className={btn.secondary}
-          >
-            Devre dışı bırak
-          </button>
-        ) : (
-          <button
-            onClick={() => handleAction('activate')}
-            disabled={actionLoading}
-            className={btn.primary}
-          >
-            Etkinleştir
-          </button>
-        )}
-      </div>
-
-      {/* Oy Geçmişi */}
-      <div className={table.container}>
-        <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-black">Oy geçmişi</h2>
-          <span className="text-xs text-neutral-400">{votes.length} kayıt</span>
-        </div>
-        <table className="w-full text-sm">
-          <thead className={`border-b border-neutral-200 bg-neutral-50`}>
-            <tr>
-              <th className={table.th}>Parti</th>
-              <th className={table.th}>Tur</th>
-              <th className={table.th}>Durum</th>
-              <th className={table.th}>Değişiklik</th>
-              <th className={table.th}>Tarih</th>
-            </tr>
-          </thead>
-          <tbody>
-            {votes.length > 0 ? (
-              votes.map((vote) => (
-                <tr key={vote.id} className="border-b border-neutral-100">
-                  <td className="px-4 py-2.5 text-black font-medium">{vote.party}</td>
-                  <td className="px-4 py-2.5 text-black">Tur #{vote.round_id}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={vote.is_valid ? badge.positive : badge.negative}>
-                      {vote.is_valid ? 'Geçerli' : 'Geçersiz'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-black">{vote.change_count}x</td>
-                  <td className="px-4 py-2.5 text-neutral-500">
-                    {new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className={table.empty}>
-                  Oy kaydı bulunamadı.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Hesap Sil */}
-      <div className="border border-red-200 bg-red-50 p-5">
-        <h2 className="text-sm font-medium text-red-800 mb-2">Tehlikeli Bölge</h2>
-        <p className="text-xs text-red-600 mb-3">
-          Bu kullanıcıyı silmek geri alınamaz. Tüm oyları, cihaz kayıtları ve profil bilgileri kalıcı olarak silinecektir.
-        </p>
-        <button
-          onClick={handleDelete}
-          disabled={actionLoading}
-          className="bg-red-600 text-white px-4 py-2 text-xs font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
-        >
-          Kullanıcıyı Sil
-        </button>
-      </div>
-
-      {/* Cihaz Kayıtları */}
-      <div className={table.container}>
-        <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-black">Cihaz kayıtları</h2>
-          <span className="text-xs text-neutral-400">{deviceLogs.length} kayıt</span>
-        </div>
-        <table className="w-full text-sm">
-          <thead className={`border-b border-neutral-200 bg-neutral-50`}>
-            <tr>
-              <th className={table.th}>Fingerprint</th>
-              <th className={table.th}>IP</th>
-              <th className={table.th}>User Agent</th>
-              <th className={table.th}>Tarih</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deviceLogs.length > 0 ? (
-              deviceLogs.map((log) => (
-                <tr key={log.id} className="border-b border-neutral-100">
-                  <td className="px-4 py-2.5 text-black font-mono text-xs">
-                    {log.fingerprint ? log.fingerprint.substring(0, 16) + '...' : '-'}
-                  </td>
-                  <td className="px-4 py-2.5 text-black font-mono text-xs">{log.ip_address || '-'}</td>
-                  <td className="px-4 py-2.5 text-neutral-500 text-xs max-w-xs truncate">
-                    {log.user_agent || '-'}
-                  </td>
-                  <td className="px-4 py-2.5 text-neutral-500">
-                    {new Date(log.created_at).toLocaleDateString('tr-TR', {
+        {/* Bilgiler Sekmesi */}
+        <TabsContent value="info" className="space-y-6">
+          {/* Kullanici Bilgileri */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Kullanici Bilgileri</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 text-sm">
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Kimlik Hash</div>
+                  <div className="text-foreground font-mono text-xs break-all">{user.identity_hash || '\u2014'}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Giris Yontemi</div>
+                  <div className="text-foreground">{user.auth_provider === 'phone' ? 'SMS' : 'E-posta'}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Il</div>
+                  <div className="text-foreground">{user.city}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Ilce</div>
+                  <div className="text-foreground">{user.district || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Kayit tarihi</div>
+                  <div className="text-foreground">
+                    {new Date(user.created_at).toLocaleDateString('tr-TR', {
                       day: 'numeric',
-                      month: 'short',
+                      month: 'long',
                       year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
                       timeZone: 'Europe/Istanbul',
                     })}
-                  </td>
-                </tr>
-              ))
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Son giris</div>
+                  <div className="text-foreground">
+                    {user.last_login_at
+                      ? new Date(user.last_login_at).toLocaleDateString('tr-TR', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          timeZone: 'Europe/Istanbul',
+                        })
+                      : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Supheli</div>
+                  <div>
+                    {user.is_flagged ? (
+                      <Badge variant="destructive">Evet</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">\u2014</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Hesap durumu</div>
+                  <div>
+                    {user.is_active ? (
+                      <Badge variant="default">Etkin</Badge>
+                    ) : (
+                      <Badge variant="destructive">Devre disi</Badge>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Referans kodu</div>
+                  <div className="text-foreground font-mono text-xs">{user.referral_code}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground text-xs mb-0.5">Referans sayisi</div>
+                  <div className="text-foreground font-medium">{referralCount}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Islem Butonlari */}
+          <div className="flex gap-3">
+            {user.is_flagged ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={actionLoading}>
+                    Supheli isaretini kaldir
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Isareti Kaldir</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Supheli isaretini kaldirmak istediginize emin misiniz?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleAction('unflag')}>
+                      Onayla
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ) : (
-              <tr>
-                <td colSpan={4} className={table.empty}>
-                  Cihaz kaydı bulunamadı.
-                </td>
-              </tr>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={actionLoading}>
+                    Supheli isaretle
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supheli Isaretle</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu kullaniciyi supheli olarak isaretlemek istediginize emin misiniz?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleAction('flag')}>
+                      Onayla
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
-          </tbody>
-        </table>
-      </div>
+            {user.is_active ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={actionLoading}>
+                    Devre disi birak
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Devre Disi Birak</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu kullaniciyi devre disi birakmak istediginize emin misiniz? Giris yapamayacak.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleAction('deactivate')}>
+                      Onayla
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={actionLoading}>
+                    Etkinlestir
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Etkinlestir</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu kullaniciyi etkinlestirmek istediginize emin misiniz?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleAction('activate')}>
+                      Onayla
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+
+          {/* Tehlikeli Bolge */}
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="text-sm text-destructive">Tehlikeli Bolge</CardTitle>
+              <CardDescription className="text-destructive/80">
+                Bu kullaniciyi silmek geri alinamaz. Tum oylari, cihaz kayitlari ve profil bilgileri kalici olarak silinecektir.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={actionLoading}>
+                    Kullaniciyi Sil
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Kullaniciyi Kalici Olarak Sil</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu islem geri alinamaz! Kullanici #{id} ile ilgili tum oylar, cihaz kayitlari ve profil bilgileri kalici olarak silinecektir.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgec</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                      Kalici Olarak Sil
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Oylar Sekmesi */}
+        <TabsContent value="votes">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Oy gecmisi</CardTitle>
+              <span className="text-xs text-muted-foreground">{votes.length} kayit</span>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Parti</TableHead>
+                    <TableHead>Tur</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead>Degisiklik</TableHead>
+                    <TableHead>Tarih</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {votes.length > 0 ? (
+                    votes.map((vote) => (
+                      <TableRow key={vote.id}>
+                        <TableCell className="font-medium">{vote.party}</TableCell>
+                        <TableCell>Tur #{vote.round_id}</TableCell>
+                        <TableCell>
+                          <Badge variant={vote.is_valid ? 'default' : 'destructive'}>
+                            {vote.is_valid ? 'Gecerli' : 'Gecersiz'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{vote.change_count}x</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(vote.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        Oy kaydi bulunamadi.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Cihazlar Sekmesi */}
+        <TabsContent value="devices">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Cihaz kayitlari</CardTitle>
+              <span className="text-xs text-muted-foreground">{deviceLogs.length} kayit</span>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fingerprint</TableHead>
+                    <TableHead>IP</TableHead>
+                    <TableHead>User Agent</TableHead>
+                    <TableHead>Tarih</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {deviceLogs.length > 0 ? (
+                    deviceLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-xs">
+                          {log.fingerprint ? log.fingerprint.substring(0, 16) + '...' : '-'}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{log.ip_address || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs max-w-xs truncate">
+                          {log.user_agent || '-'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(log.created_at).toLocaleDateString('tr-TR', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Europe/Istanbul',
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        Cihaz kaydi bulunamadi.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,27 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { badge, btn, input, table } from '@/lib/ui';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface Party {
   id: number;
@@ -161,7 +182,7 @@ export default function PartiesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Bir hata oluştu');
+        setError(data.error || 'Bir hata olustu');
         setSaving(false);
         return;
       }
@@ -169,7 +190,7 @@ export default function PartiesPage() {
       cancelForm();
       await fetchParties();
     } catch {
-      setError('Bir hata oluştu');
+      setError('Bir hata olustu');
     }
     setSaving(false);
   }
@@ -178,279 +199,268 @@ export default function PartiesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-black">Partiler</h1>
-        {!showForm && (
-          <button
-            onClick={openAddForm}
-            className={btn.primary}
-          >
-            Yeni parti ekle
-          </button>
-        )}
+        <Button onClick={openAddForm}>Yeni parti ekle</Button>
       </div>
 
-      {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="border border-neutral-200 p-4 space-y-4"
-        >
-          <h2 className="text-sm font-bold text-black">
-            {editingId ? 'Partiyi Düzenle' : 'Yeni Parti'}
-          </h2>
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) cancelForm(); }}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? 'Partiyi Duzenle' : 'Yeni Parti'}
+            </DialogTitle>
+          </DialogHeader>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Ad
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                required
-                className={input.text}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Kısaltma
-              </label>
-              <input
-                type="text"
-                value={form.short_name}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, short_name: e.target.value }))
-                }
-                required
-                className={input.text}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Slug
-              </label>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                required
-                className={input.text}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Sıralama
-              </label>
-              <input
-                type="number"
-                value={form.sort_order}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    sort_order: parseInt(e.target.value) || 0,
-                  }))
-                }
-                className={input.text}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Renk
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={form.color}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, color: e.target.value }))
-                  }
-                  className="w-10 h-10 border border-neutral-200 p-0 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={form.color}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, color: e.target.value }))
-                  }
-                  className="flex-1 border border-neutral-200 px-3 py-2 text-sm text-black focus:outline-none focus:border-black"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Yazı rengi
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={form.text_color}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, text_color: e.target.value }))
-                  }
-                  className="w-10 h-10 border border-neutral-200 p-0 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={form.text_color}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, text_color: e.target.value }))
-                  }
-                  className="flex-1 border border-neutral-200 px-3 py-2 text-sm text-black focus:outline-none focus:border-black"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">
-                Logo
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogoChange}
-                className="text-sm text-black"
-              />
-            </div>
-            {logoPreview && (
-              <div className="border border-neutral-200 p-1">
-                <img
-                  src={logoPreview}
-                  alt="Logo önizleme"
-                  className="w-10 h-10 object-contain"
-                />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="border border-neutral-300 bg-neutral-50 text-neutral-800 px-3 py-2 text-sm">
+                {error}
               </div>
             )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={form.is_active}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, is_active: e.target.checked }))
-              }
-              className="accent-black"
-            />
-            <label htmlFor="is_active" className="text-sm text-black">
-              Etkin
-            </label>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="party-name">Ad</Label>
+                <Input
+                  id="party-name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="party-short-name">Kisaltma</Label>
+                <Input
+                  id="party-short-name"
+                  type="text"
+                  value={form.short_name}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, short_name: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="party-slug">Slug</Label>
+                <Input
+                  id="party-slug"
+                  type="text"
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, slug: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="party-sort-order">Siralama</Label>
+                <Input
+                  id="party-sort-order"
+                  type="number"
+                  value={form.sort_order}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      sort_order: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Renk</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, color: e.target.value }))
+                    }
+                    className="w-10 h-8 rounded-lg border border-input p-0 cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={form.color}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, color: e.target.value }))
+                    }
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Yazi rengi</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.text_color}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        text_color: e.target.value,
+                      }))
+                    }
+                    className="w-10 h-8 rounded-lg border border-input p-0 cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={form.text_color}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        text_color: e.target.value,
+                      }))
+                    }
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className={btn.primary}
-            >
-              {saving ? 'Kaydediliyor...' : 'Kaydet'}
-            </button>
-            <button
-              type="button"
-              onClick={cancelForm}
-              className={btn.secondary}
-            >
-              İptal
-            </button>
-          </div>
-        </form>
-      )}
+            <div className="flex items-center gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="party-logo">Logo</Label>
+                <Input
+                  id="party-logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                />
+              </div>
+              {logoPreview && (
+                <div className="border border-input rounded-lg p-1">
+                  <img
+                    src={logoPreview}
+                    alt="Logo onizleme"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="is_active"
+                checked={form.is_active}
+                onCheckedChange={(checked) =>
+                  setForm((prev) => ({ ...prev, is_active: !!checked }))
+                }
+              />
+              <Label htmlFor="is_active">Etkin</Label>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={cancelForm}
+              >
+                Iptal
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
-        <div className="text-neutral-500 text-sm">Yükleniyor...</div>
+        <Card>
+          <CardContent className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-8" />
+                <Skeleton className="h-10 w-10 rounded" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+                <Skeleton className="h-8 w-16 rounded-lg" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       ) : (
-        <div className={table.container}>
-          <table className="w-full text-sm">
-            <thead className={table.head}>
-              <tr>
-                <th className={table.th}>Sıra</th>
-                <th className={table.th}>Logo</th>
-                <th className={table.th}>Ad</th>
-                <th className={table.th}>Kısaltma</th>
-                <th className={table.th}>Renk</th>
-                <th className={table.th}>Durum</th>
-                <th className={table.th}>İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parties.map((party) => (
-                <tr
-                  key={party.id}
-                  className={table.row}
-                >
-                  <td className={table.td}>{party.sort_order}</td>
-                  <td className="px-4 py-3">
-                    {party.logo_url ? (
-                      <img
-                        src={party.logo_url}
-                        alt={party.name}
-                        className="w-10 h-10 object-contain"
-                      />
-                    ) : (
-                      <div
-                        className="w-10 h-10"
-                        style={{ backgroundColor: party.color }}
-                      />
-                    )}
-                  </td>
-                  <td className={`${table.td} font-medium`}>
-                    {party.name}
-                  </td>
-                  <td className={table.td}>{party.short_name}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 border border-neutral-200"
-                        style={{ backgroundColor: party.color }}
-                      />
-                      <span className="text-neutral-500 text-xs">
-                        {party.color}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {party.is_active ? (
-                      <span className={badge.positive}>
-                        Etkin
-                      </span>
-                    ) : (
-                      <span className={badge.neutral}>
-                        Devre dışı
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => openEditForm(party)}
-                      className={btn.small}
+        <Card>
+          <CardHeader>
+            <CardTitle>Parti Listesi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sira</TableHead>
+                  <TableHead>Logo</TableHead>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>Kisaltma</TableHead>
+                  <TableHead>Renk</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Islemler</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {parties.map((party) => (
+                  <TableRow key={party.id}>
+                    <TableCell>{party.sort_order}</TableCell>
+                    <TableCell>
+                      {party.logo_url ? (
+                        <img
+                          src={party.logo_url}
+                          alt={party.name}
+                          className="w-10 h-10 object-contain"
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded"
+                          style={{ backgroundColor: party.color }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{party.name}</TableCell>
+                    <TableCell>{party.short_name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-6 h-6 rounded border border-input"
+                          style={{ backgroundColor: party.color }}
+                        />
+                        <span className="text-muted-foreground text-xs">
+                          {party.color}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {party.is_active ? (
+                        <Badge variant="default">Etkin</Badge>
+                      ) : (
+                        <Badge variant="secondary">Devre disi</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditForm(party)}
+                      >
+                        Duzenle
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {parties.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-muted-foreground py-8"
                     >
-                      Düzenle
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {parties.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className={table.empty}
-                  >
-                    Henüz parti bulunmuyor.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      Henuz parti bulunmuyor.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

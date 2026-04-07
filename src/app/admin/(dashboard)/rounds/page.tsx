@@ -2,7 +2,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { badge, btn, table } from '@/lib/ui';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
 
 interface Round {
   id: number;
@@ -19,20 +29,31 @@ function getRoundStatus(round: Round) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    active: badge.positive,
-    closed: badge.neutral,
-    published: badge.dark,
+  const variants: Record<string, 'default' | 'secondary' | 'outline'> = {
+    active: 'default',
+    closed: 'secondary',
+    published: 'outline',
   };
   const labels: Record<string, string> = {
     active: 'Aktif',
-    closed: 'Kapanmış',
-    published: 'Yayınlandı',
+    closed: 'Kapanmis',
+    published: 'Yayinlandi',
   };
   return (
-    <span className={styles[status] || badge.neutral}>
+    <Badge variant={variants[status] || 'secondary'}>
       {labels[status] || status}
-    </span>
+    </Badge>
+  );
+}
+
+function TableSkeleton() {
+  return (
+    <div className="space-y-3">
+      <Skeleton className="h-10 w-full" />
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ))}
+    </div>
   );
 }
 
@@ -62,56 +83,51 @@ export default function RoundsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-black">Turlar</h1>
-        <Link
-          href="/admin/rounds/new"
-          className={btn.primary}
-        >
-          Yeni Tur
-        </Link>
+        <Button asChild>
+          <Link href="/admin/rounds/new">Yeni Tur</Link>
+        </Button>
       </div>
 
       {loading ? (
-        <div className="text-neutral-500 text-sm">Yükleniyor...</div>
+        <TableSkeleton />
       ) : (
-        <div className={table.container}>
-          <table className="w-full text-sm">
-            <thead className={table.head}>
-              <tr>
-                <th className={table.th}>ID</th>
-                <th className={table.th}>Başlangıç</th>
-                <th className={table.th}>Bitiş</th>
-                <th className={table.th}>Durum</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rounds.map((round) => (
-                <tr
-                  key={round.id}
-                  onClick={() => router.push(`/admin/rounds/${round.id}`)}
-                  className={table.row}
-                >
-                  <td className={table.td}>#{round.id}</td>
-                  <td className={table.td}>
-                    {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-                  </td>
-                  <td className={table.td}>
-                    {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={getRoundStatus(round)} />
-                  </td>
-                </tr>
-              ))}
-              {rounds.length === 0 && (
-                <tr>
-                  <td colSpan={4} className={table.empty}>
-                    Henüz tur bulunmuyor.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Baslangic</TableHead>
+              <TableHead>Bitis</TableHead>
+              <TableHead>Durum</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rounds.map((round) => (
+              <TableRow
+                key={round.id}
+                onClick={() => router.push(`/admin/rounds/${round.id}`)}
+                className="cursor-pointer"
+              >
+                <TableCell>#{round.id}</TableCell>
+                <TableCell>
+                  {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+                </TableCell>
+                <TableCell>
+                  {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={getRoundStatus(round)} />
+                </TableCell>
+              </TableRow>
+            ))}
+            {rounds.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  Henuz tur bulunmuyor.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

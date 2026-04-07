@@ -1,7 +1,18 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { btn, table } from '@/lib/ui';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
 
 interface RoundDetail {
   id: number;
@@ -24,6 +35,38 @@ function getRoundStatus(round: RoundDetail) {
 function getAdminHeaders() {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   return headers;
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-8 w-48" />
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-7 w-16" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export default function RoundDetailPage() {
@@ -61,17 +104,17 @@ export default function RoundDetailPage() {
 
   async function handleAction(action: string) {
     const confirmMessages: Record<string, string> = {
-      close: 'Bu turu kapatmak istediğinize emin misiniz?',
-      extend: 'Bu turun süresini uzatmak istediğinize emin misiniz?',
-      publish: 'Sonuçları yayınlamak istediğinize emin misiniz?',
-      unpublish: 'Yayını geri almak istediğinize emin misiniz?',
+      close: 'Bu turu kapatmak istediginize emin misiniz?',
+      extend: 'Bu turun suresini uzatmak istediginize emin misiniz?',
+      publish: 'Sonuclari yayinlamak istediginize emin misiniz?',
+      unpublish: 'Yayini geri almak istediginize emin misiniz?',
     };
 
     if (!window.confirm(confirmMessages[action] || 'Emin misiniz?')) return;
 
     let body: Record<string, string> = { action };
     if (action === 'extend') {
-      const newEnd = window.prompt('Yeni bitiş tarihi (YYYY-MM-DDTHH:mm):');
+      const newEnd = window.prompt('Yeni bitis tarihi (YYYY-MM-DDTHH:mm):');
       if (!newEnd) return;
       body = { action, end_date: newEnd };
     }
@@ -86,26 +129,31 @@ export default function RoundDetailPage() {
         fetchRound();
       } else {
         const data = await res.json();
-        alert(data.error || 'İşlem başarısız');
+        alert(data.error || 'Islem basarisiz');
       }
     } catch {
-      alert('Bir hata oluştu');
+      alert('Bir hata olustu');
     }
   }
 
   if (loading) {
-    return <div className="text-neutral-500 text-sm">Yükleniyor...</div>;
+    return <DetailSkeleton />;
   }
 
   if (!round) {
-    return <div className="text-neutral-500 text-sm">Tur bulunamadı.</div>;
+    return <div className="text-muted-foreground text-sm">Tur bulunamadi.</div>;
   }
 
   const status = getRoundStatus(round);
   const statusLabels: Record<string, string> = {
     active: 'Aktif',
-    closed: 'Kapanmış',
-    published: 'Yayınlandı',
+    closed: 'Kapanmis',
+    published: 'Yayinlandi',
+  };
+  const statusVariants: Record<string, 'default' | 'secondary' | 'outline'> = {
+    active: 'default',
+    closed: 'secondary',
+    published: 'outline',
   };
 
   return (
@@ -113,135 +161,117 @@ export default function RoundDetailPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/admin/rounds')}
-          className="text-sm text-neutral-500 hover:text-black transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           &larr; Turlar
         </button>
         <h1 className="text-lg font-bold text-black">Tur #{round.id}</h1>
       </div>
 
-      <div className="border border-neutral-200 p-4 space-y-3">
-        <h2 className="text-sm font-medium text-black">Tur Bilgileri</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <div className="text-neutral-500">Başlangıç</div>
-            <div className="text-black">
-              {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+      <Card>
+        <CardContent>
+          <h2 className="text-sm font-medium text-black mb-3">Tur Bilgileri</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <div className="text-muted-foreground">Baslangic</div>
+              <div className="text-black">
+                {round.start_date ? new Date(round.start_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Bitis</div>
+              <div className="text-black">
+                {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Durum</div>
+              <div>
+                <Badge variant={statusVariants[status] || 'secondary'}>
+                  {statusLabels[status] || status}
+                </Badge>
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-neutral-500">Bitiş</div>
-            <div className="text-black">
-              {round.end_date ? new Date(round.end_date).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-500">Durum</div>
-            <div className="text-black">
-              {statusLabels[status] || status}
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="border border-neutral-200 p-4 space-y-3">
-        <h2 className="text-sm font-medium text-black">Oy İstatistikleri</h2>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-neutral-500">Toplam Oy</div>
-            <div className="text-xl font-bold text-black">
-              {(round.totalVotes ?? 0).toLocaleString('tr-TR')}
+      <Card>
+        <CardContent>
+          <h2 className="text-sm font-medium text-black mb-3">Oy Istatistikleri</h2>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <div className="text-muted-foreground">Toplam Oy</div>
+              <div className="text-xl font-bold text-black">
+                {(round.totalVotes ?? 0).toLocaleString('tr-TR')}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Gecerli Oy</div>
+              <div className="text-xl font-bold text-black">
+                {(round.validVotes ?? 0).toLocaleString('tr-TR')}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Gecersiz Oy</div>
+              <div className="text-xl font-bold text-black">
+                {(round.invalidVotes ?? 0).toLocaleString('tr-TR')}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-neutral-500">Geçerli Oy</div>
-            <div className="text-xl font-bold text-black">
-              {(round.validVotes ?? 0).toLocaleString('tr-TR')}
-            </div>
-          </div>
-          <div>
-            <div className="text-neutral-500">Geçersiz Oy</div>
-            <div className="text-xl font-bold text-black">
-              {(round.invalidVotes ?? 0).toLocaleString('tr-TR')}
-            </div>
-          </div>
-        </div>
 
-        {round.votesByParty && round.votesByParty.length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-medium text-black mb-2">
-              Partilere Göre
-            </h3>
-            <div className={table.container}>
-              <table className="w-full text-sm">
-                <thead className={table.head}>
-                  <tr>
-                    <th className={table.th}>
-                      Parti
-                    </th>
-                    <th className={`${table.th} text-right`}>
-                      Oy
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+          {round.votesByParty && round.votesByParty.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-black mb-2">
+                Partilere Gore
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Parti</TableHead>
+                    <TableHead className="text-right">Oy</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {round.votesByParty.map((vp) => (
-                    <tr
-                      key={vp.party}
-                      className="border-b border-neutral-100"
-                    >
-                      <td className={table.td}>{vp.party}</td>
-                      <td className={`${table.td} text-right`}>
+                    <TableRow key={vp.party}>
+                      <TableCell>{vp.party}</TableCell>
+                      <TableCell className="text-right">
                         {(vp.count ?? 0).toLocaleString('tr-TR')}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex gap-3 flex-wrap">
         {status === 'active' && (
           <>
-            <button
-              onClick={() => handleAction('close')}
-              className={btn.primary}
-            >
+            <Button onClick={() => handleAction('close')}>
               Kapat
-            </button>
-            <button
-              onClick={() => handleAction('extend')}
-              className={btn.secondary}
-            >
+            </Button>
+            <Button variant="outline" onClick={() => handleAction('extend')}>
               Uzat
-            </button>
+            </Button>
           </>
         )}
         {status === 'closed' && (
-          <button
-            onClick={() => handleAction('publish')}
-            className={btn.primary}
-          >
-            Yayınla
-          </button>
+          <Button onClick={() => handleAction('publish')}>
+            Yayinla
+          </Button>
         )}
         {status === 'published' && (
           <>
-            <button
-              onClick={() => handleAction('publish')}
-              className={btn.primary}
-            >
-              Tekrar Yayınla
-            </button>
-            <button
-              onClick={() => handleAction('unpublish')}
-              className={btn.secondary}
-            >
-              Yayını Geri Al
-            </button>
+            <Button onClick={() => handleAction('publish')}>
+              Tekrar Yayinla
+            </Button>
+            <Button variant="outline" onClick={() => handleAction('unpublish')}>
+              Yayini Geri Al
+            </Button>
           </>
         )}
       </div>
