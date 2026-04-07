@@ -100,7 +100,7 @@ export default function VoterCountsPage() {
     a.city.localeCompare(b.city, 'tr') || a.district.localeCompare(b.district, 'tr')
   );
 
-  // Il bazli ilce gruplama
+  // İl bazlı ilçe gruplama
   const districtsByCity: Record<string, DistrictVoterCountRow[]> = {};
   for (const d of districtRows) {
     if (!districtsByCity[d.city]) districtsByCity[d.city] = [];
@@ -124,27 +124,27 @@ export default function VoterCountsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-2">Secmen Sayilari</h1>
+      <h1 className="text-xl font-bold mb-2">Seçmen Sayıları</h1>
       <p className="text-sm text-muted-foreground mb-4">
-        Il ve ilce bazli kayitli secmen sayilari. Temsil Orani Siralamasi hesaplamalarinda kullanilir.
+        İl ve ilçe bazlı kayıtlı seçmen sayıları. Temsil Oranı Sıralaması hesaplamalarında kullanılır.
       </p>
 
       <Card className="mb-6">
         <CardContent>
           <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            Temsil orani = oy sayisi / secmen sayisi. Bu tablo YSK 2023 verilerine dayanmaktadir.
+            Temsil oranı = oy sayısı / seçmen sayısı. Bu tablo YSK 2023 verilerine dayanmaktadır.
           </p>
           <div className="flex gap-6 text-xs text-muted-foreground">
-            <span>Il toplam: <span className="font-mono font-medium text-foreground">{totalVoters.toLocaleString('tr-TR')}</span> ({rows.length} il)</span>
-            <span>Ilce toplam: <span className="font-mono font-medium text-foreground">{totalDistrictVoters.toLocaleString('tr-TR')}</span> ({districtRows.length} ilce)</span>
+            <span>İl toplam: <span className="font-mono font-medium text-foreground">{totalVoters.toLocaleString('tr-TR')}</span> ({rows.length} il)</span>
+            <span>İlçe toplam: <span className="font-mono font-medium text-foreground">{totalDistrictVoters.toLocaleString('tr-TR')}</span> ({districtRows.length} ilçe)</span>
           </div>
         </CardContent>
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="il">Il Bazli ({rows.length})</TabsTrigger>
-          <TabsTrigger value="ilce">Ilce Bazli ({districtRows.length})</TabsTrigger>
+          <TabsTrigger value="il">İl Bazlı ({rows.length})</TabsTrigger>
+          <TabsTrigger value="ilce">İlçe Bazlı ({districtRows.length})</TabsTrigger>
         </TabsList>
 
         <div className="mb-4">
@@ -152,20 +152,20 @@ export default function VoterCountsPage() {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder={activeTab === 'il' ? 'Il ara...' : 'Il veya ilce ara...'}
+            placeholder={activeTab === 'il' ? 'İl ara...' : 'İl veya ilçe ara...'}
             className="w-64"
           />
         </div>
 
         <TabsContent value="il">
-          {/* Il Tablosu */}
+          {/* İl Tablosu */}
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-[11px] uppercase">Il</TableHead>
-                  <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
-                  <TableHead className="text-[11px] uppercase">Ilce Sayisi</TableHead>
+                  <TableHead className="text-[11px] uppercase">İl</TableHead>
+                  <TableHead className="text-[11px] uppercase">Seçmen Sayısı</TableHead>
+                  <TableHead className="text-[11px] uppercase">İlçe Sayısı</TableHead>
                   <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
                   <TableHead className="text-[11px] uppercase">İşlem</TableHead>
                 </TableRow>
@@ -209,7 +209,7 @@ export default function VoterCountsPage() {
                               Kaydet
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => setEditingId(null)}>
-                              Iptal
+                              İptal
                             </Button>
                           </div>
                         ) : (
@@ -219,7 +219,7 @@ export default function VoterCountsPage() {
                             className="text-muted-foreground"
                             onClick={() => { setEditingId(r.id); setEditType('city'); setEditValue(String(r.voter_count)); }}
                           >
-                            Duzenle
+                            Düzenle
                           </Button>
                         )}
                       </TableCell>
@@ -232,15 +232,15 @@ export default function VoterCountsPage() {
         </TabsContent>
 
         <TabsContent value="ilce">
-          {/* Ilce Tablosu */}
+          {/* İlçe Tablosu */}
           <Card>
             <div className="max-h-[70vh] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="text-[11px] uppercase">Il</TableHead>
-                    <TableHead className="text-[11px] uppercase">Ilce</TableHead>
-                    <TableHead className="text-[11px] uppercase">Secmen Sayisi</TableHead>
+                    <TableHead className="text-[11px] uppercase">İl</TableHead>
+                    <TableHead className="text-[11px] uppercase">İlçe</TableHead>
+                    <TableHead className="text-[11px] uppercase">Seçmen Sayısı</TableHead>
                     <TableHead className="text-[11px] uppercase">Kaynak</TableHead>
                     <TableHead className="text-[11px] uppercase">İşlem</TableHead>
                   </TableRow>
@@ -271,7 +271,7 @@ export default function VoterCountsPage() {
                               Kaydet
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => setEditingId(null)}>
-                              Iptal
+                              İptal
                             </Button>
                           </div>
                         ) : (
@@ -281,7 +281,7 @@ export default function VoterCountsPage() {
                             className="text-muted-foreground"
                             onClick={() => { setEditingId(r.id); setEditType('district'); setEditValue(String(r.voter_count)); }}
                           >
-                            Duzenle
+                            Düzenle
                           </Button>
                         )}
                       </TableCell>

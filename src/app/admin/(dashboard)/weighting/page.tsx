@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Info } from 'lucide-react';
 
 interface ConfigItem {
   config_key: string;
@@ -165,7 +168,7 @@ export default function WeightingPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="max-w-4xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <Skeleton className="h-6 w-64" />
@@ -182,72 +185,84 @@ export default function WeightingPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold">Agirliklandirma Ayarlari</h1>
-          <p className="text-sm text-muted-foreground mt-1">Anket sonuclarini duzeltmek icin kullanilan yontemleri yonetin.</p>
+          <h1 className="text-xl font-bold">Ağırlıklandırma Ayarları</h1>
+          <p className="text-sm text-muted-foreground mt-1">Anket sonuçlarını düzeltmek için kullanılan yöntemleri yönetin.</p>
         </div>
         <Button onClick={handlePreview} disabled={previewing}>
-          {previewing ? 'Hesaplaniyor...' : 'Sonuclari Onizle'}
+          {previewing ? 'Hesaplanıyor...' : 'Sonuçları Önizle'}
         </Button>
       </div>
 
-      <Card className="mb-8">
-        <CardContent>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-2">
-            Asagidaki yontemler, online anketin orneklem sapmalarini duzeltmek icin kullanilir. Her yontemi acip kapatabilir ve parametrelerini ayarlayabilirsiniz. Degisiklikler aninda kaydedilir.
+      <Alert className="mb-8">
+        <Info className="size-4" />
+        <AlertTitle>Nasıl Çalışır?</AlertTitle>
+        <AlertDescription>
+          <p>
+            Aşağıdaki yöntemler, online anketin örneklem sapmalarını düzeltmek için kullanılır. Her yöntemi açıp kapatabilir ve parametrelerini ayarlayabilirsiniz. Değişiklikler anında kaydedilir.
           </p>
-          <p className="text-xs text-muted-foreground mb-2">
-            Aktif yontemler sirayla uygulanir ve carpilarak birlestirilir. Sonuc &quot;Agirlik Siniri&quot; ile alt-ust limit arasina cekilir. Degisiklik yapmadan once &quot;Sonuclari Onizle&quot; butonuyla etkiyi gorebilirsiniz -- onizleme kaydetmeden hesaplama yapar.
+          <p>
+            Aktif yöntemler sırayla uygulanır ve çarpılarak birleştirilir. Sonuç &quot;Ağırlık Sınırı&quot; ile alt-üst limit arasına çekilir. Değişiklik yapmadan önce &quot;Sonuçları Önizle&quot; butonuyla etkiyi görebilirsiniz — önizleme kaydetmeden hesaplama yapar.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Siralama: Raking/Post-Strat &rarr; Katilim Niyeti &rarr; Zaman Agirligi &rarr; Partizan Sapma &rarr; Bolgesel Kota &rarr; Sahtecilik &rarr; Agirlik Siniri
+          <p className="text-xs">
+            Sıralama: Raking/Post-Strat &rarr; Katılım Niyeti &rarr; Zaman Ağırlığı &rarr; Partizan Sapma &rarr; Bölgesel Kota &rarr; Sahtecilik &rarr; Ağırlık Sınırı
           </p>
-        </CardContent>
-      </Card>
+        </AlertDescription>
+      </Alert>
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Onizleme Sonuclari</DialogTitle>
+            <DialogTitle>Önizleme Sonuçları</DialogTitle>
             <DialogDescription>
-              Bu sonuclar mevcut konfigurasyon ile hesaplanmistir. &quot;Ham&quot; sutunu agirliklandirma olmadan, &quot;Agirlikli&quot; sutunu aktif yontemler uygulandiktan sonraki yuzdeleri gosterir.
+              Bu sonuçlar mevcut konfigürasyon ile hesaplanmıştır. &quot;Ham&quot; sütunu ağırlıklandırma olmadan, &quot;Ağırlıklı&quot; sütunu aktif yöntemler uygulandıktan sonraki yüzdeleri gösterir.
             </DialogDescription>
           </DialogHeader>
           {previewResult && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Orneklem</p>
+                  <p className="text-xs text-muted-foreground">Örneklem</p>
                   <p className="text-lg font-bold">{(previewResult as { sampleSize?: number }).sampleSize?.toLocaleString('tr-TR')}</p>
-                  <p className="text-[11px] text-muted-foreground">Toplam gecerli oy sayisi</p>
+                  <p className="text-[11px] text-muted-foreground">Toplam geçerli oy sayısı</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Efektif Orneklem</p>
+                  <p className="text-xs text-muted-foreground">Efektif Örneklem</p>
                   <p className="text-lg font-bold">{(previewResult as { effectiveSampleSize?: number }).effectiveSampleSize?.toLocaleString('tr-TR')}</p>
-                  <p className="text-[11px] text-muted-foreground">Agirliklandirma sonrasi etkin buyukluk</p>
+                  <p className="text-[11px] text-muted-foreground">Ağırlıklandırma sonrası etkin büyüklük</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Guven Skoru</p>
+                  <p className="text-xs text-muted-foreground">Güven Skoru</p>
                   <p className="text-lg font-bold">{((previewResult as { confidence?: { overall?: number } }).confidence?.overall ?? 0).toFixed(1)}/100</p>
-                  <p className="text-[11px] text-muted-foreground">0=guvenilmez, 100=cok guvenilir</p>
+                  <p className="text-[11px] text-muted-foreground">0=güvenilmez, 100=çok güvenilir</p>
                 </div>
               </div>
               {Array.isArray((previewResult as { parties?: unknown[] }).parties) && (
-                <div className="space-y-1">
-                  {((previewResult as { parties: Array<{ party: string; rawPct: number; weightedPct: number; delta: number }> }).parties).map(p => (
-                    <div key={p.party} className="flex items-center justify-between text-sm">
-                      <span className="font-medium w-32">{p.party}</span>
-                      <span className="text-muted-foreground">Ham: %{p.rawPct.toFixed(1)}</span>
-                      <span>Agirlikli: %{p.weightedPct.toFixed(1)}</span>
-                      <span className={`text-xs ${p.delta > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {p.delta > 0 ? '+' : ''}{p.delta.toFixed(1)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Parti</TableHead>
+                      <TableHead className="text-right">Ham %</TableHead>
+                      <TableHead className="text-right">Ağırlıklı %</TableHead>
+                      <TableHead className="text-right">Fark</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {((previewResult as { parties: Array<{ party: string; rawPct: number; weightedPct: number; delta: number }> }).parties).map(p => (
+                      <TableRow key={p.party}>
+                        <TableCell className="font-medium">{p.party}</TableCell>
+                        <TableCell className="text-right text-muted-foreground">%{p.rawPct.toFixed(1)}</TableCell>
+                        <TableCell className="text-right">%{p.weightedPct.toFixed(1)}</TableCell>
+                        <TableCell className={`text-right ${p.delta > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {p.delta > 0 ? '+' : ''}{p.delta.toFixed(1)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </div>
           )}
@@ -261,12 +276,19 @@ export default function WeightingPage() {
           const info = CONFIG_LABELS[key];
 
           return (
-            <AccordionItem key={key} value={key} className="border border-border rounded-lg">
+            <AccordionItem key={key} value={key} className="border border-border rounded-lg overflow-hidden">
               <div className="flex items-center gap-3 px-4 py-3">
-                <Switch
-                  checked={config.is_enabled}
-                  onCheckedChange={(checked) => updateConfig(key, { is_enabled: checked })}
-                />
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+                  }}
+                >
+                  <Switch
+                    checked={config.is_enabled}
+                    onCheckedChange={(checked) => updateConfig(key, { is_enabled: checked })}
+                  />
+                </div>
                 <AccordionTrigger className="flex-1 hover:no-underline py-0">
                   <div className="text-left">
                     <h3 className="text-sm font-medium">{info?.title || key}</h3>
@@ -284,7 +306,7 @@ export default function WeightingPage() {
                       <p className="text-sm text-muted-foreground leading-relaxed">{info?.detail}</p>
                       {info?.formula && (
                         <div className="bg-background border border-border rounded-md px-3 py-2">
-                          <p className="text-[11px] text-muted-foreground mb-0.5">Formul</p>
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Formül</p>
                           <code className="bg-muted rounded px-2 py-1 text-xs font-mono">{info.formula}</code>
                         </div>
                       )}
@@ -313,7 +335,7 @@ export default function WeightingPage() {
                         onChange={(v) => updateParam(key, 'maxIterations', v)}
                       />
                       <NumberInput
-                        label="Yakinsama Esigi"
+                        label="Yakınsama Eşiği"
                         value={(config.parameters.convergenceThreshold as number) ?? 0.001}
                         onChange={(v) => updateParam(key, 'convergenceThreshold', v)}
                         step={0.001}
@@ -322,11 +344,11 @@ export default function WeightingPage() {
                   )}
 
                   {key === 'turnout' && (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {(['T1', 'T2', 'T3', 'T4'] as const).map(t => (
                         <NumberInput
                           key={t}
-                          label={t === 'T1' ? 'Kesin' : t === 'T2' ? 'Muhtemel' : t === 'T3' ? 'Belki' : 'Hayir'}
+                          label={t === 'T1' ? 'Kesin' : t === 'T2' ? 'Muhtemel' : t === 'T3' ? 'Belki' : 'Hayır'}
                           value={((config.parameters.weights as Record<string, number>) ?? {})[t] ?? (t === 'T1' ? 1 : t === 'T2' ? 0.6 : t === 'T3' ? 0.3 : 0)}
                           onChange={(v) => {
                             const weights = { ...((config.parameters.weights as Record<string, number>) ?? {}), [t]: v };
@@ -342,7 +364,7 @@ export default function WeightingPage() {
 
                   {key === 'recency' && (
                     <NumberInput
-                      label="Lambda (0.001 = yavas bozunma, 0.1 = hizli bozunma)"
+                      label="Lambda (0.001 = yavaş bozunma, 0.1 = hızlı bozunma)"
                       value={(config.parameters.lambda as number) ?? 0.01}
                       onChange={(v) => updateParam(key, 'lambda', v)}
                       step={0.001}
@@ -354,12 +376,12 @@ export default function WeightingPage() {
                   {key === 'bayesian' && (
                     <>
                       <NumberInput
-                        label="Minimum Orneklem Boyutu"
+                        label="Minimum Örneklem Boyutu"
                         value={(config.parameters.minSampleSize as number) ?? 30}
                         onChange={(v) => updateParam(key, 'minSampleSize', v)}
                       />
                       <NumberInput
-                        label="Prior Gucu"
+                        label="Prior Gücü"
                         value={(config.parameters.priorStrength as number) ?? 10}
                         onChange={(v) => updateParam(key, 'priorStrength', v)}
                       />
@@ -369,7 +391,7 @@ export default function WeightingPage() {
                   {key === 'weight_cap' && (
                     <div className="grid grid-cols-2 gap-4">
                       <NumberInput
-                        label="Minimum Agirlik"
+                        label="Minimum Ağırlık"
                         value={(config.parameters.min as number) ?? 0.2}
                         onChange={(v) => updateParam(key, 'min', v)}
                         step={0.1}
@@ -377,7 +399,7 @@ export default function WeightingPage() {
                         max={1}
                       />
                       <NumberInput
-                        label="Maksimum Agirlik"
+                        label="Maksimum Ağırlık"
                         value={(config.parameters.max as number) ?? 5}
                         onChange={(v) => updateParam(key, 'max', v)}
                         step={0.5}
@@ -389,7 +411,7 @@ export default function WeightingPage() {
 
                   {key === 'fraud_detection' && (
                     <NumberInput
-                      label="Esik Puani (ustu → agirlik 0)"
+                      label="Eşik Puanı (üstü → ağırlık 0)"
                       value={(config.parameters.threshold as number) ?? 80}
                       onChange={(v) => updateParam(key, 'threshold', v)}
                       min={0}
@@ -408,15 +430,15 @@ export default function WeightingPage() {
 
 function DimensionSelector({ dimensions, onChange }: { dimensions: string[]; onChange: (dims: string[]) => void }) {
   const ALL_DIMS = [
-    { value: 'age', label: 'Yas' },
+    { value: 'age', label: 'Yaş' },
     { value: 'gender', label: 'Cinsiyet' },
-    { value: 'education', label: 'Egitim' },
-    { value: 'region', label: 'Bolge' },
+    { value: 'education', label: 'Eğitim' },
+    { value: 'region', label: 'Bölge' },
   ];
 
   return (
-    <div>
-      <Label className="text-xs text-muted-foreground mb-2">Boyutlar</Label>
+    <div className="space-y-2">
+      <Label className="text-xs text-muted-foreground">Boyutlar</Label>
       <div className="flex flex-wrap gap-2">
         {ALL_DIMS.map(d => (
           <Button
@@ -443,8 +465,8 @@ function NumberInput({ label, value, onChange, step = 1, min, max }: {
   step?: number; min?: number; max?: number;
 }) {
   return (
-    <div>
-      <Label className="text-xs text-muted-foreground mb-1">{label}</Label>
+    <div className="space-y-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
       <Input
         type="number"
         value={value}
