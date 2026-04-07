@@ -214,7 +214,7 @@ export default function UcretlerPage() {
                 <span className="text-4xl font-bold tabular-nums">₺0</span>
               </div>
 
-              <Button variant="outline" className="w-full mb-6">Katıl</Button>
+              <Button variant="outline" className="w-full mb-6">Ücretsiz Katıl</Button>
               <FeatureList features={UCRETSIZ_FEATURES} />
             </CardContent>
           </Card>
