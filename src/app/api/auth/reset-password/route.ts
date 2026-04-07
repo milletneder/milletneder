@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!user) {
-      return NextResponse.json({ error: 'Bu e-posta adresiyle kayıtlı bir hesap bulunamadı. Henüz kayıt olmadıysanız ana sayfadan "Oy Ver" butonuyla kayıt olabilirsiniz.' }, { status: 404 });
+      return NextResponse.json({ error: 'Bu e-posta adresiyle kayıtlı bir hesap bulunamadı. Henüz kayıt olmadıysanız ana sayfadan "Katıl" butonuyla kayıt olabilirsiniz.' }, { status: 404 });
     }
 
     // Tam kullanıcı bilgilerini al (VEK + recovery codes için)

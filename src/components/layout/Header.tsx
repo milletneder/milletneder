@@ -64,7 +64,11 @@ export default function Header() {
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const update = () => setHeaderHeight(el.offsetHeight);
+    const update = () => {
+      const h = el.offsetHeight;
+      setHeaderHeight(h);
+      document.documentElement.style.setProperty('--header-height', `${h}px`);
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);

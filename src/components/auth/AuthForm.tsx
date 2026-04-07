@@ -254,7 +254,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           if (onRegistrationNeeded) {
             onRegistrationNeeded();
           } else {
-            setError('Bu e-posta ile kayıtlı hesap bulunamadı. Kayıt olmak için Oy Ver butonunu kullanın.');
+            setError('Bu e-posta ile kayıtlı hesap bulunamadı. Kayıt olmak için Katıl butonunu kullanın.');
           }
         } else {
           // Send email OTP via Twilio Verify
@@ -1344,7 +1344,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 onClick={() => { setShowRegisterHint(false); onRegistrationNeeded(); }}
                 className="w-full mt-2"
               >
-                Oy Ver &amp; Kayıt Ol
+                Katıl &amp; Kayıt Ol
               </Button>
             </Alert>
           )}

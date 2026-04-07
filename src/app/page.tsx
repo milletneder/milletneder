@@ -514,8 +514,8 @@ export default function Home() {
     <main className="min-h-screen overflow-x-hidden">
       <Header />
 
-      {/* MAP — true fullscreen, no padding */}
-      <section className="md:h-screen w-full overflow-hidden">
+      {/* MAP — viewport yüksekliği header hariç */}
+      <section className="w-full overflow-hidden md:h-[calc(100dvh-var(--header-height,48px))]">
         <TurkeyMap
           cityData={cityData}
           isActiveRound={!!isActiveRound}
