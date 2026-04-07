@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Check, Mail, Lock, ShieldCheck, Ban } from 'lucide-react';
 // Multi-provider OTP: Firebase (primary, client-side) + Twilio/VatanSMS (fallback, server-side)
 
@@ -834,11 +835,11 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             Bağımsız bir platform olarak devam edebilmemiz bireysel desteklere bağlıdır.
           </p>
         </div>
-        <div className="bg-muted/50 border border-border p-4 text-left">
-          <p className="text-sm text-muted-foreground">
+        <Alert>
+          <AlertDescription>
             <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
         <Button
           onClick={() => {
             const el = document.getElementById('bagis-yap');
@@ -849,7 +850,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           Destekçimiz Ol
         </Button>
         {onBack && (
-          <Button onClick={onBack} variant="ghost" size="sm" className="text-muted-foreground">
+          <Button onClick={onBack} variant="ghost" className="text-muted-foreground">
             Geri
           </Button>
         )}
@@ -1066,19 +1067,17 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
     if (emailStep === 'email') {
       return (
         <div className="w-full max-w-md mx-auto space-y-5">
-          <div className="bg-muted/50 border border-border p-4">
-            <div className="flex items-start gap-2">
-              <Lock className="size-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium text-foreground mb-1">Bilgilerin güvende</p>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>E-postan sadece doğrulama ve giriş için kullanılır.</li>
-                  <li>Oyun veya kişisel bilgilerin ile asla eşleştirilmez.</li>
-                  <li>E-postan hiçbir yerde saklanmaz — sadece şifreli hash&apos;i tutulur.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <Alert>
+            <Lock />
+            <AlertTitle>Bilgilerin güvende</AlertTitle>
+            <AlertDescription>
+              <ul className="space-y-1 mt-1">
+                <li>E-postan sadece doğrulama ve giriş için kullanılır.</li>
+                <li>Oyun veya kişisel bilgilerin ile asla eşleştirilmez.</li>
+                <li>E-postan hiçbir yerde saklanmaz — sadece şifreli hash&apos;i tutulur.</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
           <div>
             <Label className="mb-1.5">E-posta</Label>
             <Input
@@ -1116,15 +1115,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       return (
         <div className="w-full max-w-md mx-auto space-y-5">
           <h3 className="text-xl font-bold text-foreground">Giriş Yap</h3>
-          <div className="bg-muted/50 border border-border p-3">
-            <div className="flex items-center justify-between">
+          <Alert>
+            <div className="flex items-center justify-between w-full">
               <div>
                 <p className="text-xs text-muted-foreground">E-posta</p>
                 <p className="text-sm font-medium text-foreground">{email}</p>
               </div>
-              <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} variant="ghost" size="xs" className="text-muted-foreground">Değiştir</Button>
+              <Button onClick={() => { setEmailStep('email'); setPassword(''); setError(''); }} variant="ghost" className="text-muted-foreground">Değiştir</Button>
             </div>
-          </div>
+          </Alert>
           <div>
             <Label className="mb-1.5">Şifre</Label>
             <Input
@@ -1197,8 +1196,8 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
         <div className="w-full max-w-md mx-auto space-y-5">
           <h3 className="text-xl font-bold text-foreground">Şifre Belirle</h3>
           <p className="text-sm text-muted-foreground">E-postan doğrulandı. Şimdi hesabın için bir şifre belirle.</p>
-          <div className="bg-muted/50 border border-border p-3">
-            <div className="flex items-center justify-between">
+          <Alert>
+            <div className="flex items-center justify-between w-full">
               <div>
                 <p className="text-xs text-muted-foreground">E-posta</p>
                 <p className="text-sm font-medium text-foreground">{email}</p>
@@ -1208,7 +1207,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 Doğrulandı
               </span>
             </div>
-          </div>
+          </Alert>
           <div>
             <Label className="mb-1.5">Şifre belirle</Label>
             <Input
@@ -1246,23 +1245,17 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
       {phoneStep === 'input' && (
         <div className="space-y-4">
           {!loginOnly && (
-          <div className="bg-muted/50 border border-border p-3 space-y-2">
-            <p className="text-xs font-bold text-foreground">Numaran bizde saklanmaz</p>
-            <div className="space-y-1.5">
-              <div className="flex items-start gap-2">
-                <Lock className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground leading-snug">Numaran sadece doğrulama kodu göndermek için kullanılır</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <Ban className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground leading-snug">Numaranı kaydetmiyoruz — sistemimizde telefon numarası tutulmaz</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <ShieldCheck className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground leading-snug">Oyun tamamen anonim, kimliğinle eşleştirilemez</p>
-              </div>
-            </div>
-          </div>
+          <Alert>
+            <Lock />
+            <AlertTitle>Numaran bizde saklanmaz</AlertTitle>
+            <AlertDescription>
+              <ul className="space-y-1 mt-1">
+                <li>Numaran sadece doğrulama kodu göndermek için kullanılır</li>
+                <li>Numaranı kaydetmiyoruz — sistemimizde telefon numarası tutulmaz</li>
+                <li>Oyun tamamen anonim, kimliğinle eşleştirilemez</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
           )}
 
           <div>
@@ -1297,27 +1290,27 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           )}
 
           {existingUserDetected && (
-            <div className="bg-muted/50 border border-border p-3">
-              <p className="text-xs text-muted-foreground">Bu numarayla kayıtlı hesap bulundu. Şifrenizi girerek devam edin.</p>
-            </div>
+            <Alert>
+              <AlertDescription>Bu numarayla kayıtlı hesap bulundu. Şifrenizi girerek devam edin.</AlertDescription>
+            </Alert>
           )}
 
           {error && <p className="text-destructive text-xs">{error}</p>}
 
           {needsPasswordSetup && (
-            <div className="bg-muted/50 border border-border p-4 rounded-lg space-y-3">
-              <p className="text-sm text-foreground font-medium">Şifre belirlemeniz gerekiyor</p>
-              <p className="text-xs text-muted-foreground">
+            <Alert>
+              <AlertTitle>Şifre belirlemeniz gerekiyor</AlertTitle>
+              <AlertDescription>
                 Hesabınızda henüz şifre tanımlı değil. Telefonunuza doğrulama kodu göndereceğiz, ardından bir şifre belirleyebilirsiniz.
-              </p>
+              </AlertDescription>
               <Button
                 onClick={handleMigrationOtp}
                 disabled={loading}
-                className="w-full"
+                className="w-full mt-2"
               >
                 {loading ? 'Gönderiliyor...' : 'Doğrulama Kodu Gönder'}
               </Button>
-            </div>
+            </Alert>
           )}
 
           {!needsPasswordSetup && (
@@ -1345,25 +1338,27 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           )}
 
           {showRegisterHint && onRegistrationNeeded && (
-            <div className="bg-muted/50 border border-border p-3 text-center space-y-2">
-              <p className="text-xs text-muted-foreground">Henüz hesabınız yok mu?</p>
+            <Alert className="text-center">
+              <AlertDescription>Henüz hesabınız yok mu?</AlertDescription>
               <Button
                 onClick={() => { setShowRegisterHint(false); onRegistrationNeeded(); }}
-                className="w-full"
+                className="w-full mt-2"
               >
                 Oy Ver &amp; Kayıt Ol
               </Button>
-            </div>
+            </Alert>
           )}
         </div>
       )}
 
       {phoneStep === 'otp' && (
         <div className="space-y-5">
-          <div className="bg-muted/50 border border-border p-3 text-center">
-            <p className="text-sm text-muted-foreground">Kod <strong>SMS</strong> ile gönderildi</p>
-            <p className="text-xs text-muted-foreground mt-1">+90 {phone}</p>
-          </div>
+          <Alert className="text-center">
+            <AlertDescription>
+              Kod <strong>SMS</strong> ile gönderildi
+              <p className="text-xs text-muted-foreground mt-1">+90 {phone}</p>
+            </AlertDescription>
+          </Alert>
           <div>
             <Label className="mb-1.5">Doğrulama Kodu</Label>
             <Input
@@ -1415,8 +1410,8 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             Telefon doğrulandı! Bir sonraki girişte SMS yerine şifreyle giriş yapabilirsin.
           </p>
 
-          <div className="bg-muted/50 border border-border p-3">
-            <div className="flex items-center justify-between">
+          <Alert>
+            <div className="flex items-center justify-between w-full">
               <div>
                 <p className="text-xs text-muted-foreground">Telefon</p>
                 <p className="text-sm font-medium text-foreground">+90 {phone}</p>
@@ -1426,7 +1421,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
                 Doğrulandı
               </span>
             </div>
-          </div>
+          </Alert>
 
           <div>
             <Label className="mb-1.5">Şifre</Label>

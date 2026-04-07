@@ -141,8 +141,7 @@ export default function DemographicBanner() {
           </p>
           <Button
             variant="secondary"
-            size="xs"
-            onClick={() => setShowModal(true)}
+                       onClick={() => setShowModal(true)}
           >
             Tamamla
           </Button>

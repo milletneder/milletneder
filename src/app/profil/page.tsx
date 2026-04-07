@@ -353,17 +353,17 @@ export default function ProfilPage() {
       {editingField === field ? (
         <div className="flex-1 flex items-center gap-2">
           {editContent}
-          <Button size="sm" onClick={() => handleSave(field)} disabled={saving}>
+          <Button onClick={() => handleSave(field)} disabled={saving}>
             Kaydet
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
+          <Button variant="outline" onClick={() => setEditingField(null)}>
             İptal
           </Button>
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-between">
           <span className="text-sm">{displayValue}</span>
-          <Button variant="ghost" size="sm" onClick={() => startEdit(field)} className="text-xs text-muted-foreground">
+          <Button variant="ghost" onClick={() => startEdit(field)} className="text-xs text-muted-foreground">
             <Pencil className="size-3 mr-1" />
             Düzenle
           </Button>
@@ -509,14 +509,14 @@ export default function ProfilPage() {
                           return getPreviousVoteLabel(profile.previous_vote_2023);
                         })()}
                       </span>
-                      <Button variant="ghost" size="sm" onClick={() => { startEdit('previous_vote_2023'); setPartySearch(''); }} className="text-xs text-muted-foreground">
+                      <Button variant="ghost" onClick={() => { startEdit('previous_vote_2023'); setPartySearch(''); }} className="text-xs text-muted-foreground">
                         <Pencil className="size-3 mr-1" />
                         Düzenle
                       </Button>
                     </div>
                   ) : (
                     <div className="flex-1 flex justify-end">
-                      <Button variant="ghost" size="sm" onClick={() => { setEditingField(null); setPartySearch(''); }} className="text-xs text-muted-foreground">
+                      <Button variant="ghost" onClick={() => { setEditingField(null); setPartySearch(''); }} className="text-xs text-muted-foreground">
                         İptal
                       </Button>
                     </div>
@@ -643,7 +643,7 @@ export default function ProfilPage() {
                 <code className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm font-mono">
                   {profile.referral_code}
                 </code>
-                <Button variant="outline" size="sm" onClick={copyReferralCode}>
+                <Button variant="outline" onClick={copyReferralCode}>
                   {copied ? (
                     <>
                       <Check className="size-3.5 mr-1" />

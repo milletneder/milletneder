@@ -9,7 +9,7 @@ export default function RecoveryCodesSection() {
 
   return (
     <>
-      <Button size="sm" onClick={() => setShowModal(true)}>
+      <Button onClick={() => setShowModal(true)}>
         <ShieldCheck className="size-4 mr-1.5" />
         Kurtarma Kodlarını Yönet
       </Button>

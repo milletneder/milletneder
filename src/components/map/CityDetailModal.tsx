@@ -175,7 +175,7 @@ function CityDetailModal({ isOpen, onClose, cityName, showPartyColors }: CityDet
                 {totalCityVotes.toLocaleString('tr-TR')} toplam oy — {districts.length} ilçe
               </p>
             </div>
-            <Button variant="ghost" size="icon-sm" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="size-4" />
             </Button>
           </div>

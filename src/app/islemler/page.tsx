@@ -196,28 +196,28 @@ function IslemlerPage() {
               {statusFilter && (
                 <Badge variant="default">
                   {STATUS_LABELS[statusFilter] || statusFilter}
-                  <Button variant="ghost" size="icon-xs" onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {partyFilter && (
                 <Badge variant="default">
                   Parti: {partyFilter}
-                  <Button variant="ghost" size="icon-xs" onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {typeFilter && (
                 <Badge variant="default">
                   {TYPE_LABELS[typeFilter]}
-                  <Button variant="ghost" size="icon-xs" onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {cityFilter && (
                 <Badge variant="default">
                   İl: {cityFilter}
-                  <Button variant="ghost" size="icon-xs" onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
-              <Button variant="link" size="xs" onClick={clearAllFilters}>
+              <Button variant="link" onClick={clearAllFilters}>
                 Tümünü temizle
               </Button>
             </div>
@@ -229,8 +229,7 @@ function IslemlerPage() {
               <Button
                 key={t}
                 variant={typeFilter === t ? 'default' : 'outline'}
-                size="xs"
-                onClick={() => handleTypeChange(t)}
+                               onClick={() => handleTypeChange(t)}
               >
                 {TYPE_LABELS[t]}
               </Button>
@@ -242,8 +241,7 @@ function IslemlerPage() {
               <Button
                 key={s}
                 variant={statusFilter === s ? 'default' : 'outline'}
-                size="xs"
-                onClick={() => handleStatusChange(s)}
+                               onClick={() => handleStatusChange(s)}
               >
                 {STATUS_LABELS[s]}
               </Button>
@@ -255,14 +253,14 @@ function IslemlerPage() {
                 placeholder="Parti ara..."
                 value={partyFilter}
                 onChange={(e) => { setPartyFilter(e.target.value); setPage(1); }}
-                className="h-7 text-xs w-28"
+                className="w-28"
               />
               <Input
                 type="text"
                 placeholder="İl ara..."
                 value={cityFilter}
                 onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
-                className="h-7 text-xs w-28"
+                className="w-28"
               />
             </div>
           </div>
@@ -415,8 +413,7 @@ function IslemlerPage() {
           <div className="flex items-center justify-between mt-4">
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+                           onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
               <ChevronLeft className="size-3.5" data-icon="inline-start" />
@@ -439,7 +436,7 @@ function IslemlerPage() {
                   <Button
                     key={p}
                     variant={p === page ? 'default' : 'ghost'}
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => setPage(p)}
                   >
                     {p}
@@ -450,8 +447,7 @@ function IslemlerPage() {
 
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                           onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page === pagination.totalPages}
             >
               Sonraki

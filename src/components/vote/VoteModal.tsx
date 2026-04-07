@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import {
   X,
@@ -331,7 +332,7 @@ export default function VoteModal({
             {step === 'party-select' && (
               <>
                 <div className="sticky top-0 bg-background z-10 p-6 pb-3 border-b border-border">
-                  <Button variant="ghost" size="icon-sm" onClick={onClose} className="absolute top-3 right-3">
+                  <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-3 right-3">
                     <X className="size-4" />
                   </Button>
                   <h2 className="text-xl font-bold mb-1">Oyunu Kullan</h2>
@@ -378,7 +379,7 @@ export default function VoteModal({
                     </p>
                   )}
                   <Button
-                    className="w-full h-12 text-base font-bold"
+                    className="w-full font-bold"
                     onClick={() => {
                       if (!selectedParty) { setShowSelectWarning(true); return; }
                       handleVoteConfirm();
@@ -392,7 +393,7 @@ export default function VoteModal({
             )}
 
             {step !== 'party-select' && (
-              <Button variant="ghost" size="icon-sm" onClick={onClose} className="absolute top-3 right-3 z-10">
+              <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-3 right-3 z-10">
                 <X className="size-4" />
               </Button>
             )}
@@ -409,11 +410,9 @@ export default function VoteModal({
                     için her kişi yalnızca bir hesap kullanabilir.
                   </p>
                 </div>
-                <div className="bg-muted rounded-lg p-4">
-                  <p className="text-sm">
-                    Mevcut hesabınla giriş yap ve oyunu kullan.
-                  </p>
-                </div>
+                <Alert>
+                  <AlertDescription>Mevcut hesabınla giriş yap ve oyunu kullan.</AlertDescription>
+                </Alert>
                 <div className="pt-1 space-y-3">
                   <Button
                     className="w-full"
@@ -440,12 +439,12 @@ export default function VoteModal({
                     Ancak bağımsız bir platform olarak SMS gönderim bakiyemiz şu an tükenmiş durumda.
                   </p>
                 </div>
-                <div className="bg-muted rounded-lg p-4 text-left">
-                  <p className="text-sm leading-relaxed">
+                <Alert className="text-left">
+                  <AlertDescription>
                     <strong>milletneder.com</strong> hiçbir siyasi partiye, kuruma veya şirkete bağlı değildir.
                     Platformun devam edebilmesi tamamen bireysel bağışlara bağlıdır.
-                  </p>
-                </div>
+                  </AlertDescription>
+                </Alert>
                 <div className="pt-1 space-y-3">
                   <Button
                     className="w-full"
@@ -506,7 +505,7 @@ export default function VoteModal({
                     </p>
                     <div className="flex gap-2">
                       <Input readOnly value={referralLink} className="flex-1 text-sm" />
-                      <Button variant="outline" size="default" onClick={copyReferralLink}>
+                      <Button variant="outline" onClick={copyReferralLink}>
                         {copied ? <Check className="size-3.5" data-icon="inline-start" /> : <Copy className="size-3.5" data-icon="inline-start" />}
                         {copied ? 'Kopyalandı' : 'Kopyala'}
                       </Button>

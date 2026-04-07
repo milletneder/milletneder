@@ -254,8 +254,7 @@ export default function OnerilerPage() {
           <div className="mb-6">
             <Button
               variant="ghost"
-              size="sm"
-              onClick={() => setSelectedId(null)}
+                           onClick={() => setSelectedId(null)}
               className="text-muted-foreground mb-4"
             >
               <ArrowLeft className="size-4" />
@@ -276,8 +275,7 @@ export default function OnerilerPage() {
                   <span className="text-xs font-medium text-muted-foreground">Bu öneriyi destekliyor musun?</span>
                   <div className="flex items-center gap-2">
                     <Button
-                      size="sm"
-                      variant={selectedItem.user_vote === 'up' ? 'default' : 'outline'}
+                                           variant={selectedItem.user_vote === 'up' ? 'default' : 'outline'}
                       onClick={() => handleVote(selectedItem.id, true)}
                       disabled={!isLoggedIn}
                     >
@@ -285,8 +283,7 @@ export default function OnerilerPage() {
                       Evet
                     </Button>
                     <Button
-                      size="sm"
-                      variant={selectedItem.user_vote === 'down' ? 'default' : 'outline'}
+                                           variant={selectedItem.user_vote === 'down' ? 'default' : 'outline'}
                       onClick={() => handleVote(selectedItem.id, false)}
                       disabled={!isLoggedIn}
                     >
@@ -356,15 +353,13 @@ export default function OnerilerPage() {
             {/* Siralama */}
             <div className="flex gap-2 mb-4">
               <Button
-                size="sm"
-                variant={sort === 'votes' ? 'default' : 'outline'}
+                               variant={sort === 'votes' ? 'default' : 'outline'}
                 onClick={() => setSort('votes')}
               >
                 En Çok Oylanan
               </Button>
               <Button
-                size="sm"
-                variant={sort === 'new' ? 'default' : 'outline'}
+                               variant={sort === 'new' ? 'default' : 'outline'}
                 onClick={() => setSort('new')}
               >
                 En Yeni
@@ -409,8 +404,7 @@ export default function OnerilerPage() {
                       <Separator className="my-3" />
                       <div className="flex items-center gap-2">
                         <Button
-                          size="xs"
-                          variant={item.user_vote === 'up' ? 'default' : 'outline'}
+                                                   variant={item.user_vote === 'up' ? 'default' : 'outline'}
                           onClick={(e) => { e.stopPropagation(); handleVote(item.id, true); }}
                           disabled={!isLoggedIn}
                         >
@@ -418,8 +412,7 @@ export default function OnerilerPage() {
                           Evet
                         </Button>
                         <Button
-                          size="xs"
-                          variant={item.user_vote === 'down' ? 'default' : 'outline'}
+                                                   variant={item.user_vote === 'down' ? 'default' : 'outline'}
                           onClick={(e) => { e.stopPropagation(); handleVote(item.id, false); }}
                           disabled={!isLoggedIn}
                         >

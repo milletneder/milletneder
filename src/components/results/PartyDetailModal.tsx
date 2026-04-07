@@ -48,7 +48,7 @@ export default function PartyDetailModal({ party, totalVotes, onClose }: PartyDe
               <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: party.color }} />
               <h2 className="text-lg font-bold">{party.partyName}</h2>
             </div>
-            <Button variant="ghost" size="icon-sm" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="size-4" />
             </Button>
           </div>

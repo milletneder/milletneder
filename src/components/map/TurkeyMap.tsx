@@ -502,8 +502,7 @@ function TurkeyMap({
         <div className="max-w-screen-2xl mx-auto px-6 pt-4 flex items-start justify-between">
           <Button
             variant="outline"
-            size="sm"
-            onClick={handleBack}
+                       onClick={handleBack}
             className="pointer-events-auto"
             style={{
               opacity: showBackButton ? 1 : 0,

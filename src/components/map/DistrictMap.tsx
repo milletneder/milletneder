@@ -62,8 +62,7 @@ export default function DistrictMap({
       <div className="flex items-center gap-3 mb-6">
         <Button
           variant="ghost"
-          size="sm"
-          onClick={onBack}
+                   onClick={onBack}
           className="text-muted-foreground"
         >
           <ChevronLeft className="size-4" />
