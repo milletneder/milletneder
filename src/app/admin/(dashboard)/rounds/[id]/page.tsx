@@ -129,7 +129,7 @@ export default function RoundDetailPage() {
         fetchRound();
       } else {
         const data = await res.json();
-        alert(data.error || 'Islem basarisiz');
+        alert(data.error || 'İşlem başarısız');
       }
     } catch {
       alert('Bir hata olustu');

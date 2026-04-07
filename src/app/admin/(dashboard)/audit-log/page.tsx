@@ -104,7 +104,7 @@ export default function AuditLogPage() {
         />
         <Input
           type="text"
-          placeholder="Islem tipi..."
+          placeholder="İşlem tipi..."
           value={actionFilter}
           onChange={(e) => {
             setActionFilter(e.target.value);
@@ -131,7 +131,7 @@ export default function AuditLogPage() {
               <TableRow>
                 <TableHead>Tarih</TableHead>
                 <TableHead>Admin</TableHead>
-                <TableHead>Islem</TableHead>
+                <TableHead>İşlem</TableHead>
                 <TableHead>Hedef</TableHead>
                 <TableHead>Detay</TableHead>
               </TableRow>
@@ -167,7 +167,7 @@ export default function AuditLogPage() {
                     colSpan={5}
                     className="text-center text-muted-foreground py-8"
                   >
-                    Denetim kaydi bulunamadi.
+                    Denetim kaydı bulunamadı.
                   </TableCell>
                 </TableRow>
               )}
@@ -187,7 +187,7 @@ export default function AuditLogPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
           >
-            Onceki
+            Önceki
           </Button>
           <Button
             variant="outline"

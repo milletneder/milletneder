@@ -33,17 +33,17 @@ interface Summary {
 }
 
 const eventTypeLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  login: { label: 'Giris', variant: 'default' },
-  login_fail: { label: 'Basarisiz Giris', variant: 'secondary' },
-  register: { label: 'Kayit', variant: 'default' },
-  register_fail: { label: 'Basarisiz Kayit', variant: 'secondary' },
-  register_incomplete: { label: 'Tamamlanmamis', variant: 'secondary' },
+  login: { label: 'Giriş', variant: 'default' },
+  login_fail: { label: 'Başarısız Giriş', variant: 'secondary' },
+  register: { label: 'Kayıt', variant: 'default' },
+  register_fail: { label: 'Başarısız Kayıt', variant: 'secondary' },
+  register_incomplete: { label: 'Tamamlanmamış', variant: 'secondary' },
   register_blocked: { label: 'Engellendi', variant: 'secondary' },
-  password_reset: { label: 'Sifre Sifirlama', variant: 'outline' },
-  password_change: { label: 'Sifre Degisikligi', variant: 'outline' },
+  password_reset: { label: 'Şifre Sıfırlama', variant: 'outline' },
+  password_change: { label: 'Şifre Değişikliği', variant: 'outline' },
   client_error: { label: 'Client Hata', variant: 'secondary' },
-  otp_sent: { label: 'OTP Gonderim', variant: 'outline' },
-  otp_verified: { label: 'OTP Dogrulama', variant: 'default' },
+  otp_sent: { label: 'OTP Gönderim', variant: 'outline' },
+  otp_verified: { label: 'OTP Doğrulama', variant: 'default' },
 };
 
 export default function AuthLogsPage() {
@@ -144,8 +144,8 @@ export default function AuthLogsPage() {
               <TableRow>
                 <TableHead className="text-xs">Tarih</TableHead>
                 <TableHead className="text-xs">Olay</TableHead>
-                <TableHead className="text-xs">Yontem</TableHead>
-                <TableHead className="text-xs">Saglayici</TableHead>
+                <TableHead className="text-xs">Yöntem</TableHead>
+                <TableHead className="text-xs">Sağlayıcı</TableHead>
                 <TableHead className="text-xs">Kimlik</TableHead>
                 <TableHead className="text-xs">User ID</TableHead>
                 <TableHead className="text-xs">IP</TableHead>
@@ -158,14 +158,14 @@ export default function AuthLogsPage() {
                   <TableCell colSpan={8} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
                       <Skeleton className="h-4 w-24" />
-                      <span className="text-muted-foreground text-xs">Yukleniyor...</span>
+                      <span className="text-muted-foreground text-xs">Yükleniyor...</span>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : logs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Log bulunamadi
+                    Log bulunamadı
                   </TableCell>
                 </TableRow>
               ) : (
@@ -218,7 +218,7 @@ export default function AuthLogsPage() {
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page <= 1}
           >
-            Onceki
+            Önceki
           </Button>
           <span className="text-xs text-muted-foreground">
             Sayfa {page} / {totalPages}
