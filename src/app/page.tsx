@@ -608,23 +608,21 @@ export default function Home() {
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           {/* Ham / Ağırlıklı toggle — sadece login kullanıcılar */}
           {isLoggedIn && !selectedCity && weightedResults && weightedResults.methodology.length > 0 && (
-            <div className="flex items-center gap-0 mb-6 border border-border rounded-md w-fit overflow-hidden">
-              <button
+            <div data-slot="button-group" className="flex items-center mb-6 w-fit">
+              <Button
+                size="sm"
+                variant={!showWeighted ? 'default' : 'ghost'}
                 onClick={() => handleShowWeightedChange(false)}
-                className={`px-4 py-2 text-xs font-medium transition-colors ${
-                  !showWeighted ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
               >
                 Ham Sonuçlar
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant={showWeighted ? 'default' : 'ghost'}
                 onClick={() => handleShowWeightedChange(true)}
-                className={`px-4 py-2 text-xs font-medium transition-colors ${
-                  showWeighted ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
               >
                 Ağırlıklı Sonuçlar
-              </button>
+              </Button>
             </div>
           )}
 

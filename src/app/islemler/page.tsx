@@ -196,25 +196,25 @@ function IslemlerPage() {
               {statusFilter && (
                 <Badge variant="default">
                   {STATUS_LABELS[statusFilter] || statusFilter}
-                  <button onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => { setStatusFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {partyFilter && (
                 <Badge variant="default">
                   Parti: {partyFilter}
-                  <button onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => { setPartyFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {typeFilter && (
                 <Badge variant="default">
                   {TYPE_LABELS[typeFilter]}
-                  <button onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => { setTypeFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               {cityFilter && (
                 <Badge variant="default">
                   İl: {cityFilter}
-                  <button onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1.5"><X className="size-3" /></button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => { setCityFilter(''); setPage(1); }} className="ml-1 size-4"><X className="size-3" /></Button>
                 </Badge>
               )}
               <Button variant="link" size="xs" onClick={clearAllFilters}>

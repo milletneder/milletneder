@@ -48,9 +48,9 @@ export default function ParticipationLeaderboard({ entries, title, subtitle }: P
         </h2>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
               <HelpCircle className="size-4" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <p className="font-semibold mb-1">Bu sıralama nasıl hesaplanır?</p>

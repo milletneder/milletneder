@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { ViewMode, DataMode } from '@/types/map';
 
 interface MapToolbarProps {
@@ -21,7 +21,7 @@ interface MapToolbarProps {
 
 function ToggleGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center border border-border rounded-md overflow-hidden">
+    <div data-slot="button-group" className="flex items-center">
       {children}
     </div>
   );
@@ -37,16 +37,13 @@ function ToggleButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
+    <Button
+      size="sm"
+      variant={active ? 'default' : 'ghost'}
       onClick={onClick}
-      className={`px-3 h-8 text-xs font-medium transition-colors ${
-        active
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-      }`}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -121,25 +118,13 @@ export default function MapToolbar({
             </ToggleGroup>
 
             {/* Kararsızları Dağıt */}
-            <button
-              onClick={() => onDistributeUndecidedChange(!distributeUndecided)}
-              className={`flex items-center gap-2 px-3 h-8 text-xs font-medium border rounded-md transition-colors ${
-                distributeUndecided
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'text-muted-foreground hover:text-foreground border-border hover:border-foreground/30'
-              }`}
-            >
-              <span className={`w-3.5 h-3.5 flex items-center justify-center border rounded-sm transition-colors ${
-                distributeUndecided
-                  ? 'bg-primary-foreground border-primary-foreground'
-                  : 'border-border'
-              }`}>
-                {distributeUndecided && (
-                  <Check className="size-2.5 text-primary" />
-                )}
-              </span>
-              Kararsızları Dağıt
-            </button>
+            <label className="flex items-center gap-2 px-2 cursor-pointer">
+              <Checkbox
+                checked={distributeUndecided}
+                onCheckedChange={(v) => onDistributeUndecidedChange(v === true)}
+              />
+              <span className="text-xs font-medium select-none">Kararsızları Dağıt</span>
+            </label>
           </>
         )}
       </div>

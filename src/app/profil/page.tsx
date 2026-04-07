@@ -536,13 +536,14 @@ export default function ProfilPage() {
                     <div className="max-h-72 overflow-y-auto space-y-1.5">
                       {/* Oy kullanmadım seçeneği */}
                       {(!partySearch || 'oy kullanmadım'.includes(partySearch.toLowerCase())) && (
-                        <button
+                        <Button
+                          variant="outline"
                           onClick={() => handlePreviousVoteSave('yok')}
                           disabled={saving}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all ${
+                          className={`w-full flex items-center gap-3 h-auto px-3 py-2.5 text-left ${
                             profile.previous_vote_2023 === 'yok'
                               ? 'ring-2 ring-ring bg-accent'
-                              : 'border border-border bg-background hover:bg-accent'
+                              : ''
                           }`}
                         >
                           <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-muted rounded-full">
@@ -554,7 +555,7 @@ export default function ProfilPage() {
                               <Check className="size-4" />
                             </span>
                           )}
-                        </button>
+                        </Button>
                       )}
                       {/* Parti listesi */}
                       {partyList
@@ -570,14 +571,15 @@ export default function ProfilPage() {
                         .map(party => {
                           const isSelected = profile.previous_vote_2023 === party.id;
                           return (
-                            <button
+                            <Button
                               key={party.id}
+                              variant="outline"
                               onClick={() => handlePreviousVoteSave(party.id)}
                               disabled={saving}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all ${
+                              className={`w-full flex items-center gap-3 h-auto px-3 py-2.5 text-left ${
                                 isSelected
                                   ? 'ring-2 ring-ring bg-accent'
-                                  : 'border border-border bg-background hover:bg-accent'
+                                  : ''
                               }`}
                             >
                               <div
@@ -602,7 +604,7 @@ export default function ProfilPage() {
                                   <Check className="size-4" />
                                 </span>
                               )}
-                            </button>
+                            </Button>
                           );
                         })}
                     </div>
