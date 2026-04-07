@@ -41,6 +41,7 @@ export const users = pgTable(
     vote_encryption_version: integer("vote_encryption_version").default(0).notNull(),
     recovery_codes_confirmed: boolean("recovery_codes_confirmed").default(false).notNull(),
     recovery_codes_generated_at: timestamp("recovery_codes_generated_at"),
+    subscription_tier: varchar("subscription_tier", { length: 20 }).default("free").notNull(),
     badges: text("badges").default("[]").notNull(),
     last_login_at: timestamp("last_login_at"),
     created_at: timestamp("created_at").defaultNow().notNull(),
@@ -447,3 +448,46 @@ export const smsSendLog = pgTable("sms_send_log", {
 ]);
 
 export type SmsSendLog = typeof smsSendLog.$inferSelect;
+
+// ── Subscriptions ───────────────────────────────────────────────
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  lemon_squeezy_subscription_id: varchar("lemon_squeezy_subscription_id", { length: 50 }).notNull().unique(),
+  lemon_squeezy_customer_id: varchar("lemon_squeezy_customer_id", { length: 50 }),
+  lemon_squeezy_order_id: varchar("lemon_squeezy_order_id", { length: 50 }),
+  variant_id: varchar("variant_id", { length: 50 }),
+  plan_tier: varchar("plan_tier", { length: 20 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull(),
+  billing_interval: varchar("billing_interval", { length: 10 }),
+  current_period_start: timestamp("current_period_start"),
+  current_period_end: timestamp("current_period_end"),
+  renews_at: timestamp("renews_at"),
+  ends_at: timestamp("ends_at"),
+  cancelled_at: timestamp("cancelled_at"),
+  custom_data: jsonb("custom_data"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("subscriptions_user_id_idx").on(table.user_id),
+  index("subscriptions_status_idx").on(table.status),
+  index("subscriptions_plan_tier_idx").on(table.plan_tier),
+]);
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
+
+export const subscriptionEvents = pgTable("subscription_events", {
+  id: serial("id").primaryKey(),
+  subscription_id: integer("subscription_id").references(() => subscriptions.id),
+  user_id: integer("user_id").references(() => users.id),
+  event_type: varchar("event_type", { length: 50 }).notNull(),
+  payload: jsonb("payload"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("sub_events_subscription_id_idx").on(table.subscription_id),
+  index("sub_events_user_id_idx").on(table.user_id),
+  index("sub_events_created_at_idx").on(table.created_at),
+]);
+
+export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;

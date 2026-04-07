@@ -7,6 +7,7 @@ export interface JwtPayload {
   userId: number;
   vp?: string;   // decrypted vote party slug (oy kullanmışsa)
   vk?: string;   // base64-encoded VEK (Vote Encryption Key)
+  st?: string;   // subscription tier (free, vatandas, ogrenci, arastirmaci, parti)
 }
 
 export function signToken(payload: JwtPayload): string {

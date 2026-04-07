@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,18 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Check, GraduationCap } from 'lucide-react';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { type PlanTier } from '@/lib/billing/plans';
+
+declare global {
+  interface Window {
+    LemonSqueezy?: {
+      Url?: {
+        Open?: (url: string) => void;
+      };
+    };
+  }
+}
 
 const VATANDAS_FEATURES = [
   'Aylık raporlara anında erişim',
@@ -73,8 +86,91 @@ function FeatureList({ features }: { features: string[] }) {
 export default function UcretlerPage() {
   const [yearly, setYearly] = useState(false);
   const [members, setMembers] = useState(500000);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [currentTier, setCurrentTier] = useState<PlanTier | null>(null);
+
+  const { isLoggedIn, token } = useAuth();
+  const router = useRouter();
 
   const partyPrice = members < 100000 ? 1000 : Math.round(members * 0.01);
+
+  /* Fetch current subscription to mark active plan */
+  const fetchCurrentTier = useCallback(async () => {
+    if (!isLoggedIn || !token) {
+      setCurrentTier(null);
+      return;
+    }
+    try {
+      const res = await fetch('/api/billing/subscription', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setCurrentTier('free');
+        return;
+      }
+      const data = await res.json();
+      setCurrentTier(data.subscription?.plan_tier ?? 'free');
+    } catch {
+      setCurrentTier('free');
+    }
+  }, [isLoggedIn, token]);
+
+  useEffect(() => {
+    fetchCurrentTier();
+  }, [fetchCurrentTier]);
+
+  /* Start checkout */
+  async function handleCheckout(planTier: PlanTier) {
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('open-login'));
+      return;
+    }
+
+    setCheckoutLoading(planTier);
+    try {
+      const billingInterval = yearly ? 'yearly' : 'monthly';
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ planTier, billingInterval }),
+      });
+
+      if (!res.ok) return;
+      const data = await res.json();
+      const url = data.url;
+      if (!url) return;
+
+      // Try LemonSqueezy overlay first, fallback to new window
+      if (window.LemonSqueezy?.Url?.Open) {
+        window.LemonSqueezy.Url.Open(url);
+      } else {
+        window.open(url, '_blank');
+      }
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
+
+  function handleFreeJoin() {
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('open-login'));
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('open-vote-modal'));
+    router.push('/?vote=true');
+  }
+
+  function handleContact() {
+    router.push('/oneriler');
+  }
+
+  function CurrentPlanBadge({ tier }: { tier: PlanTier }) {
+    if (currentTier !== tier) return null;
+    return <Badge variant="secondary">Mevcut Plan</Badge>;
+  }
 
   return (
     <>
@@ -106,7 +202,10 @@ export default function UcretlerPage() {
           {/* Vatandaş */}
           <Card>
             <CardContent className="pt-6">
-              <p className="font-semibold">Vatandaş</p>
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">Vatandaş</p>
+                <CurrentPlanBadge tier="vatandas" />
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
                 İl/ilçe kırılımları ve raporlara anında erişim.
               </p>
@@ -123,7 +222,14 @@ export default function UcretlerPage() {
                 )}
               </div>
 
-              <Button variant="outline" className="w-full mb-6">Başla</Button>
+              <Button
+                variant="outline"
+                className="w-full mb-6"
+                onClick={() => handleCheckout('vatandas')}
+                disabled={checkoutLoading === 'vatandas' || currentTier === 'vatandas'}
+              >
+                {checkoutLoading === 'vatandas' ? 'Yönlendiriliyor...' : currentTier === 'vatandas' ? 'Mevcut Plan' : 'Başla'}
+              </Button>
               <FeatureList features={VATANDAS_FEATURES} />
             </CardContent>
           </Card>
@@ -133,7 +239,10 @@ export default function UcretlerPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">Araştırmacı</p>
-                <Badge>Popüler</Badge>
+                <div className="flex items-center gap-2">
+                  <CurrentPlanBadge tier="arastirmaci" />
+                  {currentTier !== 'arastirmaci' && <Badge>Popüler</Badge>}
+                </div>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 API, export, arşiv ve analiz araçları.
@@ -151,7 +260,13 @@ export default function UcretlerPage() {
                 )}
               </div>
 
-              <Button className="w-full mb-6">Başla</Button>
+              <Button
+                className="w-full mb-6"
+                onClick={() => handleCheckout('arastirmaci')}
+                disabled={checkoutLoading === 'arastirmaci' || currentTier === 'arastirmaci'}
+              >
+                {checkoutLoading === 'arastirmaci' ? 'Yönlendiriliyor...' : currentTier === 'arastirmaci' ? 'Mevcut Plan' : 'Başla'}
+              </Button>
               <FeatureList features={ARASTIRMACI_FEATURES} />
             </CardContent>
           </Card>
@@ -159,7 +274,10 @@ export default function UcretlerPage() {
           {/* Siyasi Parti */}
           <Card>
             <CardContent className="pt-6">
-              <p className="font-semibold">Siyasi Parti</p>
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">Siyasi Parti</p>
+                <CurrentPlanBadge tier="parti" />
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Parti odaklı analiz paneli ve stratejik araçlar.
               </p>
@@ -194,7 +312,13 @@ export default function UcretlerPage() {
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full mb-6">İletişime Geç</Button>
+              <Button
+                variant="outline"
+                className="w-full mb-6"
+                onClick={handleContact}
+              >
+                İletişime Geç
+              </Button>
               <FeatureList features={PARTI_FEATURES} />
             </CardContent>
           </Card>
@@ -207,14 +331,23 @@ export default function UcretlerPage() {
           {/* Ücretsiz */}
           <Card>
             <CardContent className="pt-6">
-              <p className="font-semibold">Ücretsiz</p>
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">Ücretsiz</p>
+                <CurrentPlanBadge tier="free" />
+              </div>
               <p className="text-sm text-muted-foreground mt-1">Oy kullanan herkes için.</p>
 
               <div className="mt-5 mb-6">
                 <span className="text-4xl font-bold tabular-nums">₺0</span>
               </div>
 
-              <Button variant="outline" className="w-full mb-6">Ücretsiz Katıl</Button>
+              <Button
+                variant="outline"
+                className="w-full mb-6"
+                onClick={handleFreeJoin}
+              >
+                Ücretsiz Katıl
+              </Button>
               <FeatureList features={UCRETSIZ_FEATURES} />
             </CardContent>
           </Card>
@@ -222,9 +355,12 @@ export default function UcretlerPage() {
           {/* Öğrenci */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold">Öğrenci</p>
-                <GraduationCap className="size-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">Öğrenci</p>
+                  <GraduationCap className="size-4 text-muted-foreground" />
+                </div>
+                <CurrentPlanBadge tier="ogrenci" />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 .edu.tr uzantılı e-posta ile doğrulama gerekir.
@@ -245,7 +381,14 @@ export default function UcretlerPage() {
                 </p>
               </div>
 
-              <Button variant="outline" className="w-full mb-6">Başla</Button>
+              <Button
+                variant="outline"
+                className="w-full mb-6"
+                onClick={() => handleCheckout('ogrenci')}
+                disabled={checkoutLoading === 'ogrenci' || currentTier === 'ogrenci'}
+              >
+                {checkoutLoading === 'ogrenci' ? 'Yönlendiriliyor...' : currentTier === 'ogrenci' ? 'Mevcut Plan' : 'Başla'}
+              </Button>
               <FeatureList features={ARASTIRMACI_FEATURES} />
             </CardContent>
           </Card>

@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
       }).where(eq(users.id, user.id));
     }
 
-    const token = signToken({ userId: user.id, vp, vk });
+    const token = signToken({ userId: user.id, vp, vk, st: user.subscription_tier || 'free' });
 
     await logAuthEvent({ eventType: 'login', authMethod: 'phone', identityHint: `+90${rawPhone}`, userId: user.id, request });
 
