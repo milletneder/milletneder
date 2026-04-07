@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Copy, Check, Pencil, Loader2, Trash2, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CITIES, AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
 
 interface UserProfile {
@@ -321,7 +322,54 @@ export default function ProfilPage() {
     return (
       <>
         <Header />
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16" />
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
+          <PageHero title="Hesabım" subtitle="Hesap bilgilerin, oy geçmişin ve kişisel istatistiklerin." />
+          {/* Hesap Bilgileri skeleton */}
+          <section className="mb-12">
+            <Skeleton className="h-6 w-40 mb-6" />
+            <Card>
+              <CardContent className="p-0 divide-y divide-border">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+          {/* İstatistikler skeleton */}
+          <section className="mb-12">
+            <Skeleton className="h-6 w-32 mb-6" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="pt-5">
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-3 w-20 mt-2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+          {/* Oy Geçmişi skeleton */}
+          <section className="mb-12">
+            <Skeleton className="h-6 w-28 mb-6" />
+            <Card>
+              <CardContent className="p-0">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0">
+                    <Skeleton className="h-3 w-8" />
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+        </main>
       </>
     );
   }

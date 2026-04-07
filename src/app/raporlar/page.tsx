@@ -7,6 +7,7 @@ import PageHero from '@/components/layout/PageHero';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ReportSummary {
   id: number;
@@ -41,8 +42,17 @@ export default function RaporlarPage() {
           />
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="pt-5">
+                    <Skeleton className="h-5 w-2/3 mb-2" />
+                    <Skeleton className="h-3 w-24 mb-3" />
+                    <Skeleton className="h-3 w-full mb-1" />
+                    <Skeleton className="h-3 w-4/5" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : reports.length === 0 ? (
             <Card>

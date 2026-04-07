@@ -6,6 +6,7 @@ import PageHero from '@/components/layout/PageHero';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MethodologyData {
   weighting: {
@@ -93,7 +94,57 @@ export default function MetodolojiPage() {
         />
 
         {loading ? (
-          <div className="h-64" />
+          <div className="space-y-12">
+            {/* Genel Bilgi skeleton */}
+            <section>
+              <Skeleton className="h-6 w-56 mb-4" />
+              <Card>
+                <CardContent className="pt-5 space-y-2">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </CardContent>
+              </Card>
+            </section>
+            {/* Yöntemler skeleton */}
+            <section>
+              <Skeleton className="h-6 w-40 mb-4" />
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-5 w-12 rounded-full" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-2/3" />
+                      <div className="bg-muted rounded-lg px-3 py-2">
+                        <Skeleton className="h-3 w-12 mb-1" />
+                        <Skeleton className="h-3 w-48" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+            {/* İstatistikler skeleton */}
+            <section>
+              <Skeleton className="h-6 w-44 mb-4" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="pt-5">
+                      <Skeleton className="h-8 w-16" />
+                      <Skeleton className="h-3 w-20 mt-2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          </div>
         ) : (
           <>
             {/* Genel Bilgi */}

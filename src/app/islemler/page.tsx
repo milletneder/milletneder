@@ -276,8 +276,25 @@ function IslemlerPage() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            <div>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 border-b border-border/50 items-center">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-28 ml-auto" />
+                </div>
+              ))}
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="sm:hidden px-4 py-3 border-b border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-3 w-3/4 mb-1" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              ))}
             </div>
           ) : transactions.length === 0 ? (
             <div className="py-16 text-center text-muted-foreground text-sm">
