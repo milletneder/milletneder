@@ -1,36 +1,61 @@
 'use client';
-import { useState, useEffect } from 'react';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarRail,
+} from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
+import {
+  LayoutDashboard,
+  Users,
+  Vote,
+  CalendarDays,
+  Flag,
+  Database,
+  Scale,
+  Settings,
+  ScrollText,
+} from 'lucide-react';
 
-const navItems = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/rounds', label: 'Turlar' },
-  { href: '/admin/parties', label: 'Partiler' },
-  { href: '/admin/users', label: 'Kullanıcılar' },
-  { href: '/admin/votes', label: 'Oylar' },
-  { href: '/admin/weighting', label: 'Ağırlıklandırma' },
-  { href: '/admin/reference-data', label: 'Referans Veriler' },
-  { href: '/admin/voter-counts', label: 'Seçmen Sayıları' },
-  { href: '/admin/auth-logs', label: 'Auth Logları' },
-  { href: '/admin/audit-log', label: 'Denetim Kaydı' },
-  { href: '/admin/settings', label: 'Ayarlar' },
+const navGroups = [
+  {
+    label: 'Ana',
+    items: [
+      { href: '/admin', label: 'Genel Bakış', icon: LayoutDashboard },
+      { href: '/admin/users', label: 'Kullanıcılar', icon: Users },
+      { href: '/admin/votes', label: 'Oylar', icon: Vote },
+      { href: '/admin/rounds', label: 'Turlar', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Veri Yönetimi',
+    items: [
+      { href: '/admin/parties', label: 'Partiler', icon: Flag },
+      { href: '/admin/reference-data', label: 'Referans Verisi', icon: Database },
+      { href: '/admin/weighting', label: 'Ağırlıklandırma', icon: Scale },
+    ],
+  },
+  {
+    label: 'Sistem',
+    items: [
+      { href: '/admin/settings', label: 'Ayarlar', icon: Settings },
+      { href: '/admin/logs', label: 'Günlükler', icon: ScrollText },
+    ],
+  },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebarComponent() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('admin_sidebar_collapsed');
-    if (saved === 'true') setCollapsed(true);
-  }, []);
-
-  function toggleCollapse() {
-    const next = !collapsed;
-    setCollapsed(next);
-    localStorage.setItem('admin_sidebar_collapsed', String(next));
-  }
 
   function isActive(href: string) {
     if (href === '/admin') return pathname === '/admin';
@@ -38,40 +63,40 @@ export default function AdminSidebar() {
   }
 
   return (
-    <aside
-      className={`h-screen border-r border-neutral-200 bg-white flex flex-col transition-all duration-200 ${
-        collapsed ? 'w-12' : 'w-56'
-      }`}
-    >
-      <div className="flex items-center justify-between px-3 h-12 border-b border-neutral-200">
-        {!collapsed && (
-          <span className="text-sm font-bold text-black">Admin</span>
-        )}
-        <button
-          onClick={toggleCollapse}
-          className="text-black hover:bg-neutral-50 p-1 text-sm"
-          title={collapsed ? 'Genişlet' : 'Daralt'}
-        >
-          {collapsed ? '\u00BB' : '\u00AB'}
-        </button>
-      </div>
+    <Sidebar>
+      <SidebarHeader className="px-4 py-3">
+        <Link href="/admin" className="flex items-center gap-2">
+          <span className="text-sm font-bold">milletneder</span>
+          <Badge variant="outline" className="text-xs">Admin</Badge>
+        </Link>
+      </SidebarHeader>
 
-      <nav className="flex-1 py-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center px-4 py-2 text-sm transition-colors ${
-              isActive(item.href)
-                ? 'bg-neutral-100 text-black font-medium'
-                : 'text-neutral-600 hover:bg-neutral-50 hover:text-black'
-            }`}
-            title={collapsed ? item.label : undefined}
-          >
-            {!collapsed && <span>{item.label}</span>}
-          </Link>
+      <SidebarContent>
+        {navGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link href={item.href}>
+                      <item.icon className="size-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
         ))}
-      </nav>
-    </aside>
+      </SidebarContent>
+
+      <SidebarFooter className="px-4 py-3">
+        <p className="text-xs text-muted-foreground">
+          Yönetim Paneli
+        </p>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }
