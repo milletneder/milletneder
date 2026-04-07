@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
 
 interface SearchableSelectProps {
   options: string[];
@@ -49,10 +51,11 @@ export default function SearchableSelect({
 
   return (
     <div ref={containerRef} className="relative">
-      <div
-        className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background transition-colors cursor-pointer ${
-          isOpen ? 'border-ring ring-2 ring-ring ring-offset-2' : 'border-input'
-        } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+      <InputGroup
+        className={cn(
+          'cursor-pointer',
+          disabled && 'opacity-50 pointer-events-none'
+        )}
         onClick={() => {
           if (!disabled) {
             setIsOpen(true);
@@ -61,12 +64,11 @@ export default function SearchableSelect({
         }}
       >
         {isOpen ? (
-          <input
+          <InputGroupInput
             ref={inputRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full outline-none bg-transparent placeholder:text-muted-foreground"
             placeholder={value || placeholder}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
@@ -79,26 +81,31 @@ export default function SearchableSelect({
             }}
           />
         ) : (
-          <span className={`flex items-center ${value ? '' : 'text-muted-foreground'}`}>
+          <span className={cn('flex flex-1 items-center px-2.5 text-sm', value ? '' : 'text-muted-foreground')}>
             {value || placeholder}
           </span>
         )}
-        <ChevronDown className={`size-4 text-muted-foreground flex-shrink-0 ml-2 self-center transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>
+            <ChevronDown className={cn('size-4 transition-transform', isOpen && 'rotate-180')} />
+          </InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-popover border border-border shadow-lg rounded-md max-h-48 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-popover border border-border shadow-lg rounded-lg max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="px-4 py-3 text-muted-foreground text-sm">Sonuç bulunamadı</div>
+            <div className="px-3 py-2 text-muted-foreground text-sm">Sonuç bulunamadı</div>
           ) : (
             filtered.map((item) => (
               <div
                 key={item}
-                className={`px-4 py-2.5 cursor-pointer text-sm transition-colors rounded-sm mx-1 my-0.5 ${
+                className={cn(
+                  'px-3 py-1.5 cursor-pointer text-sm transition-colors rounded-md mx-1 my-0.5',
                   item === value
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-accent'
-                }`}
+                )}
                 onClick={() => handleSelect(item)}
               >
                 {item}

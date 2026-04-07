@@ -182,7 +182,7 @@ function PartySelect2023({ parties, value, onChange }: {
                 {party.logoUrl ? (
                   <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
                 ) : (
-                  <span className="text-[10px] font-bold">{party.shortName}</span>
+                  <span className="text-xs font-bold">{party.shortName}</span>
                 )}
               </div>
               <span className={cn("text-sm font-medium truncate", isSelected ? 'text-foreground' : 'text-foreground/80')}>
@@ -206,7 +206,7 @@ function PartySelect2023({ parties, value, onChange }: {
           )}
         >
           <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-muted rounded-full">
-            <span className="text-[10px] font-bold text-muted-foreground">-</span>
+            <span className="text-xs font-bold text-muted-foreground">-</span>
           </div>
           <span className={cn("text-sm font-medium", value === 'yok' ? 'text-foreground' : 'text-foreground/80')}>
             Oy kullanmadım

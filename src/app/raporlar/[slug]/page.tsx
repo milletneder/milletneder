@@ -269,25 +269,25 @@ export default function ReportDetailPage() {
                   <Card>
                     <CardContent className="pt-4 pb-3 text-center">
                       <div className="text-xl font-bold tabular-nums">{d.weighted.confidence.overall?.toFixed(0) || '-'}/100</div>
-                      <div className="text-[11px] text-muted-foreground mt-1">Güven Skoru</div>
+                      <div className="text-xs text-muted-foreground mt-1">Güven Skoru</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 pb-3 text-center">
                       <div className="text-xl font-bold tabular-nums">±{(d.weighted.confidence.marginOfError || 0).toFixed(1)}</div>
-                      <div className="text-[11px] text-muted-foreground mt-1">Hata Payı</div>
+                      <div className="text-xs text-muted-foreground mt-1">Hata Payı</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 pb-3 text-center">
                       <div className="text-xl font-bold tabular-nums">{(d.weighted.sampleSize || 0).toLocaleString('tr-TR')}</div>
-                      <div className="text-[11px] text-muted-foreground mt-1">Ham Örneklem</div>
+                      <div className="text-xs text-muted-foreground mt-1">Ham Örneklem</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 pb-3 text-center">
                       <div className="text-xl font-bold tabular-nums">{(d.weighted.effectiveSampleSize || 0).toLocaleString('tr-TR')}</div>
-                      <div className="text-[11px] text-muted-foreground mt-1">Efektif Örneklem</div>
+                      <div className="text-xs text-muted-foreground mt-1">Efektif Örneklem</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -358,7 +358,7 @@ export default function ReportDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-3 mt-1">
                         {dist.map((p: any, i: number) => (
-                          <div key={i} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
                             <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
                             {resolvePartyName(p.party || p.name)} %{(p.pct || p.percentage || 0).toFixed(1)}
                           </div>
@@ -401,7 +401,7 @@ export default function ReportDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-3 mt-1">
                         {dist.map((p: any, i: number) => (
-                          <div key={i} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
                             <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: partyColorMap[p.party || p.name] || '#999' }} />
                             {resolvePartyName(p.party || p.name)} %{(p.pct || p.percentage || 0).toFixed(1)}
                           </div>
@@ -461,7 +461,7 @@ export default function ReportDetailPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       {(transparency.total_votes || 0).toLocaleString('tr-TR')}
                     </div>
-                    <div className="text-muted-foreground text-[11px] mt-1">Toplam Oy</div>
+                    <div className="text-muted-foreground text-xs mt-1">Toplam Oy</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -469,7 +469,7 @@ export default function ReportDetailPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       {(transparency.valid_votes || 0).toLocaleString('tr-TR')}
                     </div>
-                    <div className="text-muted-foreground text-[11px] mt-1">Geçerli Oy</div>
+                    <div className="text-muted-foreground text-xs mt-1">Geçerli Oy</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -477,7 +477,7 @@ export default function ReportDetailPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       {(transparency.invalid_votes || 0).toLocaleString('tr-TR')}
                     </div>
-                    <div className="text-muted-foreground text-[11px] mt-1">Geçersiz Oy</div>
+                    <div className="text-muted-foreground text-xs mt-1">Geçersiz Oy</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -485,7 +485,7 @@ export default function ReportDetailPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       %{(transparency.clean_rate_pct || 100).toFixed(1)}
                     </div>
-                    <div className="text-muted-foreground text-[11px] mt-1">Temiz Oy Oranı</div>
+                    <div className="text-muted-foreground text-xs mt-1">Temiz Oy Oranı</div>
                   </CardContent>
                 </Card>
               </div>

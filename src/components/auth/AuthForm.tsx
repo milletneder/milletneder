@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Check, Mail, Lock, ShieldCheck, Ban } from 'lucide-react';
 // Multi-provider OTP: Firebase (primary, client-side) + Twilio/VatanSMS (fallback, server-side)
@@ -866,18 +867,19 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           <p className="text-sm text-muted-foreground">Telefon numaranıza doğrulama kodu göndereceğiz, ardından yeni şifre belirleyebilirsiniz.</p>
           <div>
             <Label className="mb-1.5">Cep Telefonu</Label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input text-muted-foreground text-sm">+90</span>
-              <Input
+            <InputGroup>
+              <InputGroupAddon>
+                <InputGroupText>+90</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
                 type="tel" data-clarity-mask="true"
                 value={phone}
                 onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && getRawPhone().length === 10 && handleForgotPhoneSendOtp()}
-                className="flex-1"
                 placeholder="5XX XXX XX XX"
                 autoFocus
               />
-            </div>
+            </InputGroup>
           </div>
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex gap-3">
@@ -1104,7 +1106,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             </Button>
           </div>
           {!loginOnly && (
-            <p className="text-[11px] text-muted-foreground text-center">Hesabın yoksa otomatik oluşturulur.</p>
+            <p className="text-xs text-muted-foreground text-center">Hesabın yoksa otomatik oluşturulur.</p>
           )}
         </div>
       );
@@ -1249,15 +1251,15 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
             <div className="space-y-1.5">
               <div className="flex items-start gap-2">
                 <Lock className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-[11px] text-muted-foreground leading-snug">Numaran sadece doğrulama kodu göndermek için kullanılır</p>
+                <p className="text-xs text-muted-foreground leading-snug">Numaran sadece doğrulama kodu göndermek için kullanılır</p>
               </div>
               <div className="flex items-start gap-2">
                 <Ban className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-[11px] text-muted-foreground leading-snug">Numaranı kaydetmiyoruz — sistemimizde telefon numarası tutulmaz</p>
+                <p className="text-xs text-muted-foreground leading-snug">Numaranı kaydetmiyoruz — sistemimizde telefon numarası tutulmaz</p>
               </div>
               <div className="flex items-start gap-2">
                 <ShieldCheck className="size-3.5 mt-px flex-shrink-0 text-muted-foreground" />
-                <p className="text-[11px] text-muted-foreground leading-snug">Oyun tamamen anonim, kimliğinle eşleştirilemez</p>
+                <p className="text-xs text-muted-foreground leading-snug">Oyun tamamen anonim, kimliğinle eşleştirilemez</p>
               </div>
             </div>
           </div>
@@ -1265,18 +1267,19 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
 
           <div>
             <Label className="mb-1.5">Cep Telefonu</Label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input text-muted-foreground text-sm">+90</span>
-              <Input
+            <InputGroup>
+              <InputGroupAddon>
+                <InputGroupText>+90</InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
                 type="tel" data-clarity-mask="true"
                 value={phone}
                 onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(''); setExistingUserDetected(false); setShowRegisterHint(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && (loginOnly || existingUserDetected) && getRawPhone().length === 10 && phonePassword.length >= 6 && handlePhonePasswordLogin()}
-                className="flex-1"
                 placeholder="5XX XXX XX XX"
                 autoFocus
               />
-            </div>
+            </InputGroup>
           </div>
 
           {(loginOnly || existingUserDetected) && (
@@ -1320,7 +1323,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
           {!needsPasswordSetup && (
             <div className="flex gap-2">
               {onBack && (
-                <Button onClick={onBack} variant="secondary" className="shrink-0 px-5">Geri</Button>
+                <Button onClick={onBack} variant="secondary" className="shrink-0">Geri</Button>
               )}
               <Button
                 onClick={(loginOnly || existingUserDetected) ? handlePhonePasswordLogin : handlePhoneCheck}
@@ -1436,7 +1439,7 @@ export default function AuthForm({ method, onAuthenticated, onDirectLogin, onBac
               placeholder="En az 6 karakter"
               autoFocus
             />
-            <p className="text-[11px] text-muted-foreground mt-1">Bir sonraki girişte SMS yerine bu şifreyle giriş yapabilirsiniz.</p>
+            <p className="text-xs text-muted-foreground mt-1">Bir sonraki girişte SMS yerine bu şifreyle giriş yapabilirsiniz.</p>
           </div>
 
           {error && <p className="text-destructive text-xs">{error}</p>}

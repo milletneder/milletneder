@@ -271,10 +271,10 @@ function IslemlerPage() {
         {/* Transaction list */}
         <Card>
           <div className="hidden sm:grid grid-cols-[140px_72px_minmax(0,1fr)_140px] gap-3 px-4 py-2.5 bg-muted/50 border-b border-border">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">İşlem Kimliği</span>
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Tür</span>
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Detay</span>
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold text-right">Zaman</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">İşlem Kimliği</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Tür</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Detay</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-right">Zaman</span>
           </div>
 
           {loading ? (
@@ -300,7 +300,7 @@ function IslemlerPage() {
                   <div className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                     {TYPE_LABELS[tx.type]}
                     {tx.isValid === false && (
-                      <Badge variant="destructive" className="text-[10px] px-1 py-0">GEÇERSİZ</Badge>
+                      <Badge variant="destructive" className="text-xs px-1 py-0">GEÇERSİZ</Badge>
                     )}
                   </div>
                   <div className="text-sm"><TxDetail tx={tx} /></div>
@@ -319,7 +319,7 @@ function IslemlerPage() {
                     <span className="text-xs font-medium text-muted-foreground">
                       {TYPE_LABELS[tx.type]}
                       {tx.isValid === false && (
-                        <Badge variant="destructive" className="text-[10px] px-1 py-0 ml-1.5">GEÇERSİZ</Badge>
+                        <Badge variant="destructive" className="text-xs px-1 py-0 ml-1.5">GEÇERSİZ</Badge>
                       )}
                     </span>
                     <span className="text-xs text-muted-foreground tabular-nums">{formatFullTime(tx.timestamp)}</span>
@@ -333,38 +333,38 @@ function IslemlerPage() {
                   <div className="px-4 py-3 bg-muted/50 border-b border-border">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">İşlem Kimliği</span>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">İşlem Kimliği</span>
                         <span className="font-mono text-muted-foreground break-all">{tx.hash}</span>
                       </div>
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Zaman</span>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Zaman</span>
                         <span className="tabular-nums">{formatFullTime(tx.timestamp)}</span>
                       </div>
                       <div>
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Durum</span>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Durum</span>
                         {tx.isValid === false ? (
-                          <Badge variant="destructive" className="text-[10px]">Geçersiz</Badge>
+                          <Badge variant="destructive" className="text-xs">Geçersiz</Badge>
                         ) : tx.isValid === true ? (
-                          <Badge variant="secondary" className="text-[10px]">Onaylandı</Badge>
+                          <Badge variant="secondary" className="text-xs">Onaylandı</Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </div>
                       {tx.city && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">İl</span>
+                          <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">İl</span>
                           <span>{tx.city}</span>
                         </div>
                       )}
                       {tx.roundId > 0 && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Tur</span>
+                          <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Tur</span>
                           <span>#{tx.roundId}</span>
                         </div>
                       )}
                       {tx.type === 'OY_KULLANIM' && tx.party && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
+                          <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
                           <span className="inline-flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />
                             <span className="font-medium">{tx.party}</span>
@@ -374,14 +374,14 @@ function IslemlerPage() {
                       {tx.type === 'OY_DEGISIKLIK' && (
                         <>
                           <div>
-                            <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Eski Parti</span>
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Eski Parti</span>
                             <span className="inline-flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.oldPartyColor || '#555' }} />
                               <span className="text-muted-foreground line-through">{tx.oldParty}</span>
                             </span>
                           </div>
                           <div>
-                            <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Yeni Parti</span>
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Yeni Parti</span>
                             <span className="inline-flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.newPartyColor || '#555' }} />
                               <span className="font-medium">{tx.newParty}</span>
@@ -391,7 +391,7 @@ function IslemlerPage() {
                       )}
                       {tx.type === 'OY_SILME' && (
                         <div>
-                          <span className="text-[11px] uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
+                          <span className="text-xs uppercase tracking-wider text-muted-foreground block mb-0.5">Parti</span>
                           {tx.party ? (
                             <span className="inline-flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: tx.partyColor || '#555' }} />

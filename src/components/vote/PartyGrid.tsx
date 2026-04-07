@@ -67,7 +67,7 @@ export default function PartyGrid({ parties, selectedParty, onSelect, searchQuer
               {party.logoUrl ? (
                 <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
               ) : (
-                <span className="text-[10px] font-bold">{party.shortName}</span>
+                <span className="text-xs font-bold">{party.shortName}</span>
               )}
             </div>
             <div className="flex-1 min-w-0">
