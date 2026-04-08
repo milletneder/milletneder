@@ -165,7 +165,7 @@ export default function DemoLinksPage() {
               Demo Link Olustur
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="overflow-visible">
             <DialogHeader>
               <DialogTitle>Yeni Demo Link</DialogTitle>
               <DialogDescription>
@@ -179,7 +179,7 @@ export default function DemoLinksPage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Parti secin..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="z-[200]">
                     {parties.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
                         {p.name} ({p.short_name})
@@ -194,7 +194,7 @@ export default function DemoLinksPage() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="z-[200]">
                     <SelectItem value="7">7 gun</SelectItem>
                     <SelectItem value="14">14 gun</SelectItem>
                     <SelectItem value="30">30 gun</SelectItem>
