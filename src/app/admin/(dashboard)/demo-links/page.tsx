@@ -51,11 +51,6 @@ interface DemoTokenItem {
   created_at: string;
 }
 
-function getAdminToken(): string {
-  const match = document.cookie.match(/(?:^|;\s*)admin_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : '';
-}
-
 export default function DemoLinksPage() {
   const [tokens, setTokens] = useState<DemoTokenItem[]>([]);
   const [parties, setParties] = useState<PartyOption[]>([]);
@@ -68,9 +63,7 @@ export default function DemoLinksPage() {
 
   const fetchTokens = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/demo-tokens', {
-        headers: { 'x-admin-token': getAdminToken() },
-      });
+      const res = await fetch('/api/admin/demo-tokens');
       if (res.ok) {
         const d = await res.json();
         setTokens(d.tokens || []);
@@ -95,7 +88,6 @@ export default function DemoLinksPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': getAdminToken(),
         },
         body: JSON.stringify({
           party_id: Number(selectedParty),
@@ -121,7 +113,6 @@ export default function DemoLinksPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': getAdminToken(),
         },
         body: JSON.stringify({ id, is_active: false }),
       });
@@ -158,14 +149,14 @@ export default function DemoLinksPage() {
             Parti dashboard demo erisimi icin link olusturun ve yonetin.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={false}>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-1.5" />
               Demo Link Olustur
             </Button>
           </DialogTrigger>
-          <DialogContent showOverlay={false}>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Yeni Demo Link</DialogTitle>
               <DialogDescription>
