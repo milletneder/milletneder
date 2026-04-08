@@ -24,6 +24,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFeature } from '@/hooks/useFeature';
+import { FEATURES } from '@/lib/billing/features';
+import { UpgradeModal } from '@/components/billing/UpgradeModal';
 
 const TurkeyMap = dynamic(() => import('@/components/map/TurkeyMap'), {
   ssr: false,
@@ -88,7 +91,9 @@ export default function Home() {
   }>>([]);
   const [roundInfo, setRoundInfo] = useState<RoundInfo | null>(null);
   const { isLoggedIn, token } = useAuth();
+  const { allowed: canViewCityBreakdown } = useFeature(FEATURES.CITY_BREAKDOWN);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [dbParties, setDbParties] = useState<PartyInfo[]>(PARTIES);
   const [userProfile, setUserProfile] = useState<{
@@ -521,7 +526,17 @@ export default function Home() {
           cityData={cityData}
           isActiveRound={!!isActiveRound}
           selectedCity={selectedCity}
-          onCityClick={(_id: string, name: string) => setSelectedCity(name)}
+          onCityClick={(_id: string, name: string) => {
+            if (!isLoggedIn) {
+              setIsVoteModalOpen(true);
+              return;
+            }
+            if (!canViewCityBreakdown) {
+              setShowUpgradeModal(true);
+              return;
+            }
+            setSelectedCity(name);
+          }}
           onBack={() => { setSelectedCity(null); setDistrictData([]); }}
           onDistrictsLoaded={handleDistrictsLoaded}
           showPartyColors={userHasVoted}
@@ -905,6 +920,14 @@ export default function Home() {
         party={selectedPartyDetail}
         totalVotes={totalVotes}
         onClose={() => setSelectedPartyDetail(null)}
+      />
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        feature={FEATURES.CITY_BREAKDOWN}
+        title="İl Kırılımı"
+        description="İl bazlı ilçe kırılımlarını, parti dağılımını ve katılım oranlarını görmek için Vatandaş planına yükseltin."
       />
     </main>
   );

@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Copy, Check, Pencil, Loader2, Trash2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import SubscriptionSection from '@/components/billing/SubscriptionSection';
 import { CITIES, AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
 
 interface UserProfile {
@@ -428,6 +429,12 @@ export default function ProfilPage() {
           title="Hesabım"
           subtitle="Hesap bilgilerin, oy geçmişin ve kişisel istatistiklerin."
         />
+        {/* Section: Abonelik */}
+        <section className="mb-12">
+          <h2 className="text-lg font-bold mb-6">Abonelik</h2>
+          <SubscriptionSection token={token || ''} />
+        </section>
+
         {/* Section 1: Hesap Bilgileri */}
         <section className="mb-12">
           <h2 className="text-lg font-bold mb-6">Hesap Bilgileri</h2>
