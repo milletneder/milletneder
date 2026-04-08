@@ -37,6 +37,8 @@ export async function GET(
         referred_by: users.referred_by,
         is_flagged: users.is_flagged,
         is_active: users.is_active,
+        is_dummy: users.is_dummy,
+        subscription_tier: users.subscription_tier,
         badges: users.badges,
         last_login_at: users.last_login_at,
         created_at: users.created_at,

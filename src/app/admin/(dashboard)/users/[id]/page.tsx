@@ -18,6 +18,21 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const TIER_LABELS: Record<string, string> = {
+  free: 'Ücretsiz',
+  vatandas: 'Vatandaş',
+  ogrenci: 'Öğrenci',
+  arastirmaci: 'Araştırmacı',
+  parti: 'Siyasi Parti',
+};
 
 interface UserDetail {
   id: number;
@@ -27,6 +42,8 @@ interface UserDetail {
   district: string;
   is_flagged: boolean;
   is_active: boolean;
+  is_dummy: boolean;
+  subscription_tier: string | null;
   referral_code: string;
   last_login_at: string | null;
   created_at: string;
@@ -280,6 +297,60 @@ export default function UserDetailPage() {
                   <div className="text-muted-foreground text-xs mb-0.5">Referans sayısı</div>
                   <div className="text-foreground font-medium">{referralCount}</div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Abonelik Yönetimi */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Abonelik Paketi</CardTitle>
+              <CardDescription>
+                Kullanıcının abonelik paketini manuel olarak değiştirin. Bu değişiklik anında uygulanır.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Mevcut:</span>
+                  <Badge variant="outline">
+                    {TIER_LABELS[user.subscription_tier || 'free'] || 'Ücretsiz'}
+                  </Badge>
+                </div>
+                <Select
+                  defaultValue={user.subscription_tier || 'free'}
+                  onValueChange={async (value) => {
+                    setActionLoading(true);
+                    try {
+                      const res = await fetch(`/api/admin/users/${id}`, {
+                        method: 'PATCH',
+                        headers: getAdminHeaders(),
+                        body: JSON.stringify({ action: 'set_tier', tier: value }),
+                      });
+                      if (res.ok) {
+                        await fetchUser();
+                      } else {
+                        const data = await res.json();
+                        alert(data.error || 'İşlem başarısız');
+                      }
+                    } catch {
+                      alert('Bir hata oluştu');
+                    } finally {
+                      setActionLoading(false);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Ücretsiz</SelectItem>
+                    <SelectItem value="vatandas">Vatandaş</SelectItem>
+                    <SelectItem value="ogrenci">Öğrenci</SelectItem>
+                    <SelectItem value="arastirmaci">Araştırmacı</SelectItem>
+                    <SelectItem value="parti">Siyasi Parti</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
