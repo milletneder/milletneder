@@ -3,14 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import DemographicForm from '@/components/vote/DemographicForm';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { AlertCircle } from 'lucide-react';
 
 const DEMOGRAPHIC_FIELDS = [
   'age_bracket',
@@ -69,12 +61,14 @@ export default function DemographicBanner() {
     checkProfile();
   }, [checkProfile]);
 
+  // Profil güncellendiğinde yeniden kontrol et
   useEffect(() => {
     const handler = () => checkProfile();
     window.addEventListener('profile-updated', handler);
     return () => window.removeEventListener('profile-updated', handler);
   }, [checkProfile]);
 
+  // Partileri yükle (modal açılınca lazım)
   useEffect(() => {
     if (!showModal || parties2023.length > 0) return;
     fetch('/api/parties')
@@ -121,21 +115,8 @@ export default function DemographicBanner() {
         }),
       });
       window.dispatchEvent(new Event('profile-updated'));
-      // Tüm alanlar doluysa modal'ı kapat, yoksa açık bırak (sonraki adıma geçsin)
-      const allFilled = data.ageBracket && data.incomeBracket && data.gender && data.education && data.turnoutIntention && data.previousVote2023;
-      if (allFilled) {
-        setShowModal(false);
-        setShow(false);
-      }
-      // existingData'yı güncelle ki form doğru adımdan devam etsin
-      setExistingData({
-        ageBracket: data.ageBracket,
-        incomeBracket: data.incomeBracket,
-        gender: data.gender,
-        education: data.education,
-        turnoutIntention: data.turnoutIntention,
-        previousVote2023: data.previousVote2023,
-      });
+      setShowModal(false);
+      setShow(false);
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
@@ -143,38 +124,36 @@ export default function DemographicBanner() {
 
   return (
     <>
-      <div className="bg-primary border-b border-primary/80">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
-          <p className="text-xs text-primary-foreground/70 flex items-center gap-2">
-            <AlertCircle className="size-3.5 shrink-0" />
-            <span>
-              <span className="text-primary-foreground font-medium">Profilinde {missingCount} eksik bilgi var.</span>
-              {' '}Demografik bilgiler anketin doğruluğunu artırır.
-            </span>
+      <div className="bg-black border-b border-neutral-800">
+        <div className="max-w-screen-2xl mx-auto px-6 py-2 flex items-center justify-between gap-3">
+          <p className="text-xs text-neutral-300 flex-1">
+            <span className="text-white font-medium">Profilinde {missingCount} eksik bilgi var.</span>
+            {' '}Demografik bilgiler anketin doğruluğunu artırır.
           </p>
-          <Button
-            variant="secondary"
-                       onClick={() => setShowModal(true)}
+          <button
+            onClick={() => setShowModal(true)}
+            className="text-xs font-bold text-black bg-white hover:bg-neutral-200 px-3 py-1 transition-colors whitespace-nowrap"
           >
-            Tamamla
-          </Button>
+            Sonuçları Güvenilir Hale Getir
+          </button>
         </div>
       </div>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Demografik Bilgilerini Tamamla</DialogTitle>
-          </DialogHeader>
-          <DemographicForm
-            loading={loading}
-            parties2023={parties2023}
-            existingData={existingData}
-            onSave={handleSave}
-            onSkip={() => setShowModal(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6">
+              <DemographicForm
+                loading={loading}
+                parties2023={parties2023}
+                existingData={existingData}
+                onSave={handleSave}
+                onSkip={() => setShowModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

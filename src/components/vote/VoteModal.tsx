@@ -558,10 +558,10 @@ export default function VoteModal({
                   onSave={async (data) => {
                     setLoading(true);
                     try {
-                      const authToken = localStorage.getItem('token');
+                      const token = localStorage.getItem('token');
                       await fetch('/api/user/profile', {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({
                           age_bracket: data.ageBracket,
                           income_bracket: data.incomeBracket,
@@ -573,9 +573,7 @@ export default function VoteModal({
                       });
                     } catch { /* silently ignore */ } finally {
                       setLoading(false);
-                      // Tüm alanlar doluysa modal'ı kapat
-                      const allFilled = data.ageBracket && data.incomeBracket && data.gender && data.education && data.turnoutIntention && data.previousVote2023;
-                      if (allFilled) onClose();
+                      onClose();
                     }
                   }}
                   onSkip={onClose}
