@@ -72,9 +72,10 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
     previousVote2023,
   });
 
-  const handleNext = async () => {
-    // Her adımda kaydet (tüm mevcut veriyi gönder)
-    await onSave(getCurrentData());
+  const handleNext = () => {
+    const data = getCurrentData();
+    // Her adımda kaydet — fire and forget, adım geçişini bloklamaz
+    try { Promise.resolve(onSave(data)).catch(() => {}); } catch { /* */ }
     if (step < TOTAL_STEPS) {
       setStep(step + 1);
     }
