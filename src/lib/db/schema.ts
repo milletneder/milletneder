@@ -465,6 +465,7 @@ export const subscriptions = pgTable("subscriptions", {
   renews_at: timestamp("renews_at"),
   ends_at: timestamp("ends_at"),
   cancelled_at: timestamp("cancelled_at"),
+  party_id: integer("party_id").references(() => parties.id),
   custom_data: jsonb("custom_data"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
@@ -491,3 +492,58 @@ export const subscriptionEvents = pgTable("subscription_events", {
 ]);
 
 export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
+
+// ── Demo Tokens ─────────────────────────────────────────────────
+export const demoTokens = pgTable("demo_tokens", {
+  id: serial("id").primaryKey(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  created_by: integer("created_by").references(() => admins.id),
+  party_id: integer("party_id").references(() => parties.id),
+  party_name: varchar("party_name", { length: 100 }),
+  expires_at: timestamp("expires_at").notNull(),
+  is_active: boolean("is_active").default(true).notNull(),
+  last_accessed_at: timestamp("last_accessed_at"),
+  access_count: integer("access_count").default(0).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("demo_tokens_token_idx").on(table.token),
+  index("demo_tokens_is_active_idx").on(table.is_active),
+]);
+
+export type DemoToken = typeof demoTokens.$inferSelect;
+
+// ── Embed Tokens ────────────────────────────────────────────────
+export const embedTokens = pgTable("embed_tokens", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  config: jsonb("config"),
+  is_active: boolean("is_active").default(true).notNull(),
+  view_count: integer("view_count").default(0).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("embed_tokens_token_idx").on(table.token),
+  index("embed_tokens_user_id_idx").on(table.user_id),
+]);
+
+export type EmbedToken = typeof embedTokens.$inferSelect;
+
+// ── Custom Report Requests ──────────────────────────────────────
+export const customReportRequests = pgTable("custom_report_requests", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  party_id: integer("party_id").references(() => parties.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  admin_notes: text("admin_notes"),
+  completed_at: timestamp("completed_at"),
+  report_url: text("report_url"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("custom_report_user_id_idx").on(table.user_id),
+  index("custom_report_status_idx").on(table.status),
+]);
+
+export type CustomReportRequest = typeof customReportRequests.$inferSelect;
