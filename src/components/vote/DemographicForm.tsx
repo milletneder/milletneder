@@ -15,7 +15,7 @@ interface DemographicFormProps {
     education?: string;
     turnoutIntention?: string;
     previousVote2023?: string;
-  }) => void;
+  }) => void | Promise<void>;
   onSkip: () => void;
   loading?: boolean;
   parties2023?: Array<{ id: string; name: string; shortName: string; color: string; logoUrl?: string }>;
@@ -72,13 +72,12 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
     previousVote2023,
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Her adımda kaydet (tüm mevcut veriyi gönder)
-    onSave(getCurrentData());
+    await onSave(getCurrentData());
     if (step < TOTAL_STEPS) {
       setStep(step + 1);
     }
-    // Son adımda onSave çağrılır, parent modal'ı kapatır
   };
 
   const handleBack = () => {
@@ -191,25 +190,17 @@ function PartySelect2023({ parties, value, onChange }: {
               variant="outline"
               onClick={() => onChange(party.id)}
               className={cn(
-                "relative flex items-center gap-3 h-auto px-3 py-2.5 text-left",
+                "relative flex items-center justify-start gap-3 h-auto px-3 py-2.5 w-full",
                 isSelected && 'ring-2 ring-ring bg-accent'
               )}
             >
               <div
-                className="w-8 h-8 shrink-0 flex items-center justify-center"
-                style={{
-                  backgroundColor: party.logoUrl ? 'transparent' : party.color,
-                  borderRadius: party.logoUrl ? '0' : '50%',
-                  color: '#ffffff',
-                }}
+                className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: party.color, color: '#ffffff' }}
               >
-                {party.logoUrl ? (
-                  <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
-                ) : (
-                  <span className="text-xs font-bold">{party.shortName}</span>
-                )}
+                <span className="text-[10px] font-bold">{party.shortName.slice(0, 3)}</span>
               </div>
-              <span className={cn("text-sm font-medium truncate", isSelected ? 'text-foreground' : 'text-foreground/80')}>
+              <span className={cn("text-sm font-medium truncate text-left", isSelected ? 'text-foreground' : 'text-foreground/80')}>
                 {party.name}
               </span>
               {isSelected && (
@@ -225,14 +216,14 @@ function PartySelect2023({ parties, value, onChange }: {
           variant="outline"
           onClick={() => onChange('yok')}
           className={cn(
-            "relative flex items-center gap-3 h-auto px-3 py-2.5 text-left",
+            "relative flex items-center justify-start gap-3 h-auto px-3 py-2.5 w-full",
             value === 'yok' && 'ring-2 ring-ring bg-accent'
           )}
         >
-          <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-muted rounded-full">
+          <div className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center bg-muted">
             <span className="text-xs font-bold text-muted-foreground">-</span>
           </div>
-          <span className={cn("text-sm font-medium", value === 'yok' ? 'text-foreground' : 'text-foreground/80')}>
+          <span className={cn("text-sm font-medium text-left", value === 'yok' ? 'text-foreground' : 'text-foreground/80')}>
             Oy kullanmadım
           </span>
           {value === 'yok' && (
