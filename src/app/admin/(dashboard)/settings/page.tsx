@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 type SmsProvider = 'twilio' | 'vatansms' | 'firebase';
@@ -338,7 +339,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="max-w-4xl">
       <h1 className="text-xl font-bold text-foreground mb-1">Ayarlar</h1>
       <p className="text-muted-foreground text-sm mb-6">Kimlik doğrulama ve servis ayarları</p>
 
@@ -362,59 +363,35 @@ export default function AdminSettingsPage() {
           {/* Doğrulama Yöntemi */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Kullanıcı Doğrulama Yöntemi</CardTitle>
+              <CardTitle className="text-sm">Doğrulama Yöntemi</CardTitle>
               <CardDescription className="text-xs">
-                Kullanıcıların giriş ve kayıt olurken kullanacağı doğrulama yöntemi.
+                Kullanıcıların giriş ve kayıt olurken kullanacağı yöntemi seçin.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setSelectedMethod('email')}
-                  className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
-                    selectedMethod === 'email'
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                  }`}
-                >
-                  <div className="text-center">
-                    <span className="block text-lg mb-1">E-posta</span>
-                    <span className="block text-[11px] opacity-70">E-posta + şifre ile giriş</span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setSelectedMethod('phone')}
-                  className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
-                    selectedMethod === 'phone'
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                  }`}
-                >
-                  <div className="text-center">
-                    <span className="block text-lg mb-1">SMS</span>
-                    <span className="block text-[11px] opacity-70">Telefon + OTP ile giriş</span>
-                  </div>
-                </button>
-              </div>
+            <CardContent className="space-y-4">
+              <RadioGroup value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as 'email' | 'phone')}>
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="email" id="auth-email" />
+                  <Label htmlFor="auth-email" className="cursor-pointer">
+                    <span className="font-medium">E-posta</span>
+                    <span className="text-xs text-muted-foreground ml-2">E-posta + şifre ile giriş</span>
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="phone" id="auth-phone" />
+                  <Label htmlFor="auth-phone" className="cursor-pointer">
+                    <span className="font-medium">SMS</span>
+                    <span className="text-xs text-muted-foreground ml-2">Telefon + OTP ile giriş</span>
+                  </Label>
+                </div>
+              </RadioGroup>
 
               {methodChanged && (
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Yöntem değiştirildi, kaydetmek için onaylayın.
-                  </p>
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">Yöntem değiştirildi.</p>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedMethod(authMethod)}
-                    >
-                      İptal
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveAuthMethod}
-                      disabled={saving}
-                    >
+                    <Button variant="outline" onClick={() => setSelectedMethod(authMethod)}>İptal</Button>
+                    <Button onClick={handleSaveAuthMethod} disabled={saving}>
                       {saving ? 'Kaydediliyor...' : 'Kaydet'}
                     </Button>
                   </div>
@@ -425,113 +402,77 @@ export default function AdminSettingsPage() {
 
           {/* SMS Sağlayıcı Seçimi (sadece SMS modu seçiliyken) */}
           {selectedMethod === 'phone' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Birincil SMS Sağlayıcı</CardTitle>
-                <CardDescription className="text-xs">
-                  SMS doğrulama kodları için kullanılacak servis sağlayıcısını seçin.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setSelectedProvider('firebase')}
-                    className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
-                      selectedProvider === 'firebase'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <span className="block text-lg mb-1">Firebase</span>
-                      <span className="block text-[11px] opacity-70">Google (ucuz, istemci taraflı)</span>
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Birincil SMS Sağlayıcı</CardTitle>
+                  <CardDescription className="text-xs">
+                    SMS doğrulama kodları için kullanılacak servis sağlayıcısını seçin.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <RadioGroup value={selectedProvider} onValueChange={(v) => setSelectedProvider(v as SmsProvider)}>
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="firebase" id="sms-firebase" />
+                      <Label htmlFor="sms-firebase" className="cursor-pointer">
+                        <span className="font-medium">Firebase</span>
+                        <span className="text-xs text-muted-foreground ml-2">Google (ucuz, istemci taraflı)</span>
+                      </Label>
                     </div>
-                  </button>
-                  <button
-                    onClick={() => setSelectedProvider('twilio')}
-                    className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
-                      selectedProvider === 'twilio'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <span className="block text-lg mb-1">Twilio</span>
-                      <span className="block text-[11px] opacity-70">Uluslararası (Verify API)</span>
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="twilio" id="sms-twilio" />
+                      <Label htmlFor="sms-twilio" className="cursor-pointer">
+                        <span className="font-medium">Twilio</span>
+                        <span className="text-xs text-muted-foreground ml-2">Uluslararası (Verify API)</span>
+                      </Label>
                     </div>
-                  </button>
-                  <button
-                    onClick={() => setSelectedProvider('vatansms')}
-                    className={`flex-1 py-3 px-4 text-sm font-medium border rounded-lg transition-colors ${
-                      selectedProvider === 'vatansms'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <span className="block text-lg mb-1">VatanSMS</span>
-                      <span className="block text-[11px] opacity-70">Yerli sağlayıcı (XML API)</span>
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="vatansms" id="sms-vatansms" />
+                      <Label htmlFor="sms-vatansms" className="cursor-pointer">
+                        <span className="font-medium">VatanSMS</span>
+                        <span className="text-xs text-muted-foreground ml-2">Yerli sağlayıcı (XML API)</span>
+                      </Label>
                     </div>
-                  </button>
-                </div>
+                  </RadioGroup>
 
-                {/* Yedek sağlayıcı (Firebase seçiliyken) */}
-                {selectedProvider === 'firebase' && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <h3 className="text-xs font-bold text-foreground mb-2">Yedek SMS Sağlayıcı</h3>
-                    <p className="text-[10px] text-muted-foreground mb-3">
-                      Firebase hata verdiğinde (Error 39, reCAPTCHA sorunu vb.) kullanıcı fark etmeden bu sağlayıcıya düşer.
-                    </p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setSelectedFallback('twilio')}
-                        className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-colors ${
-                          selectedFallback === 'twilio'
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                        }`}
-                      >
-                        Twilio (Yedek)
-                      </button>
-                      <button
-                        onClick={() => setSelectedFallback('vatansms')}
-                        className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-colors ${
-                          selectedFallback === 'vatansms'
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-                        }`}
-                      >
-                        VatanSMS (Yedek)
-                      </button>
+                  {providerChanged && (
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <p className="text-xs text-muted-foreground">Sağlayıcı değiştirildi.</p>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}>İptal</Button>
+                        <Button onClick={handleSaveProvider} disabled={saving}>
+                          {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </CardContent>
+              </Card>
 
-                {providerChanged && (
-                  <div className="mt-4 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      Sağlayıcı değiştirildi, kaydetmek için onaylayın.
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setSelectedProvider(smsProvider); setSelectedFallback(fallbackProvider); }}
-                      >
-                        İptal
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveProvider}
-                        disabled={saving}
-                      >
-                        {saving ? 'Kaydediliyor...' : 'Kaydet'}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              {/* Yedek sağlayıcı (Firebase seçiliyken) */}
+              {selectedProvider === 'firebase' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Yedek SMS Sağlayıcı</CardTitle>
+                    <CardDescription className="text-xs">
+                      Firebase hata verdiğinde kullanıcı fark etmeden bu sağlayıcıya düşer.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RadioGroup value={selectedFallback} onValueChange={(v) => setSelectedFallback(v as 'twilio' | 'vatansms')}>
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="twilio" id="fb-twilio" />
+                        <Label htmlFor="fb-twilio" className="cursor-pointer font-medium">Twilio</Label>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="vatansms" id="fb-vatansms" />
+                        <Label htmlFor="fb-vatansms" className="cursor-pointer font-medium">VatanSMS</Label>
+                      </div>
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
 
