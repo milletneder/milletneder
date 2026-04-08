@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
         is_flagged: users.is_flagged,
         is_dummy: users.is_dummy,
         referral_code: users.referral_code,
+        subscription_tier: users.subscription_tier,
         created_at: users.created_at,
         last_login_at: users.last_login_at,
       })

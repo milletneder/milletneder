@@ -145,9 +145,16 @@ export async function PATCH(
         updateData = { is_active: true, updated_at: new Date() };
         auditAction = 'activate_user';
         break;
+      case 'set_tier':
+        if (!body.tier || !['free', 'vatandas', 'ogrenci', 'arastirmaci', 'parti'].includes(body.tier)) {
+          return NextResponse.json({ error: 'Geçersiz tier değeri' }, { status: 400 });
+        }
+        updateData = { subscription_tier: body.tier, updated_at: new Date() };
+        auditAction = 'set_tier';
+        break;
       default:
         return NextResponse.json(
-          { error: 'Geçersiz işlem. İzin verilen işlemler: flag, unflag, deactivate, activate' },
+          { error: 'Geçersiz işlem. İzin verilen işlemler: flag, unflag, deactivate, activate, set_tier' },
           { status: 400 }
         );
     }

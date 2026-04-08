@@ -50,7 +50,7 @@ function GithubIcon({ className }: { className?: string }) {
 }
 
 export default function Header() {
-  const { isLoggedIn, login, logout } = useAuth();
+  const { isLoggedIn, login, logout, subscriptionTier } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -122,11 +122,16 @@ export default function Header() {
     window.location.href = '/';
   };
 
+  const tierHasResearcher = subscriptionTier === 'arastirmaci' || subscriptionTier === 'ogrenci';
+  const tierHasParty = subscriptionTier === 'parti';
+
   const mainNavLinks = [
     { href: '/', label: 'Keşfet' },
     { href: '/raporlar', label: 'Raporlar' },
     { href: '/islemler', label: 'İşlemler' },
     { href: '/ucretler', label: 'Ücretler' },
+    ...(tierHasResearcher ? [{ href: '/arastirmaci', label: 'Araştırmacı' }] : []),
+    ...(tierHasParty ? [{ href: '/parti', label: 'Parti Paneli' }] : []),
   ];
 
   const moreLinks = [
