@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Check, ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface DemographicFormProps {
   onSave: (data: {
@@ -61,19 +65,14 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-black mb-2">
+      <h2 className="text-xl font-bold mb-1">
         Anketin dogruluğuna katkı sağla
       </h2>
-      <p className="text-neutral-500 text-sm mb-6">
+      <p className="text-muted-foreground text-sm mb-6">
         Bu bilgiler anonim olarak saklanır ve sonuçları Türkiye gerçeğine yaklaştırmak için kullanılır.
       </p>
 
-      {/* Adım göstergesi */}
-      <div className="flex items-center gap-1 mb-6">
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-          <div key={i} className={`h-1 flex-1 transition-colors ${i < step ? 'bg-black' : 'bg-neutral-200'}`} />
-        ))}
-      </div>
+      <Progress value={(step / TOTAL_STEPS) * 100} className="h-1.5 mb-6" />
 
       <div className="mb-6">
         {step === 1 && (
@@ -100,22 +99,19 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
         )}
       </div>
 
-      <button
-        onClick={handleNext}
-        disabled={loading}
-        className="w-full border border-black bg-black text-white px-4 h-10 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50 inline-flex items-center justify-center"
-      >
+      <Button className="w-full" onClick={handleNext} disabled={loading}>
         {loading ? 'Kaydediliyor...' : isLastStep ? 'Kaydet' : 'Devam'}
-      </button>
+      </Button>
       <div className="flex gap-3 mt-3">
         {step > 1 && (
-          <button onClick={handleBack} className="flex-1 text-sm text-neutral-500 hover:text-black transition-colors">
+          <Button variant="ghost" className="flex-1" onClick={handleBack}>
+            <ArrowLeft className="size-3.5" data-icon="inline-start" />
             Geri
-          </button>
+          </Button>
         )}
-        <button onClick={onSkip} className="flex-1 text-sm text-neutral-400 hover:text-black transition-colors">
+        <Button variant="ghost" className="flex-1 text-muted-foreground" onClick={onSkip}>
           {currentValue ? 'Atla' : 'Şimdi değil'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -129,21 +125,20 @@ function SelectGrid({ label, options, value, onChange }: {
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-black mb-3">{label}</h3>
+      <h3 className="text-sm font-semibold mb-3">{label}</h3>
       <div className="grid grid-cols-2 gap-2">
         {options.map((b) => (
-          <button
+          <Button
             key={b.value}
             type="button"
+            variant="outline"
             onClick={() => onChange(b.value)}
-            className={`px-3 py-2 text-sm text-black transition-colors ${
-              value === b.value
-                ? 'border-2 border-black bg-neutral-50'
-                : 'border border-neutral-200 bg-white hover:border-black'
-            }`}
+            className={cn(
+              value === b.value && 'ring-2 ring-ring bg-accent'
+            )}
           >
             {b.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -159,68 +154,59 @@ function PartySelect2023({ parties, value, onChange }: {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-black mb-3">2023 seçiminde hangi partiye oy verdiniz?</h3>
+      <h3 className="text-sm font-semibold mb-3">2023 seçiminde hangi partiye oy verdiniz?</h3>
       <div className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto">
         {sorted.map((party) => {
           const isSelected = value === party.id;
           return (
-            <button
+            <Button
               key={party.id}
               type="button"
+              variant="outline"
               onClick={() => onChange(party.id)}
-              className={`relative flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
-                isSelected
-                  ? 'border-2 border-black bg-neutral-50'
-                  : 'border border-neutral-200 bg-white hover:border-black'
-              }`}
+              className={cn(
+                "justify-start gap-3 h-auto px-3 py-2.5 w-full",
+                isSelected && 'ring-2 ring-ring bg-accent'
+              )}
             >
               <div
-                className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
-                style={{
-                  backgroundColor: party.logoUrl ? 'transparent' : party.color,
-                  borderRadius: party.logoUrl ? '0' : '50%',
-                  color: '#ffffff',
-                }}
+                className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: party.color, color: '#ffffff' }}
               >
-                {party.logoUrl ? (
-                  <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
-                ) : (
-                  <span className="text-[10px] font-bold">{party.shortName}</span>
-                )}
+                <span className="text-[10px] font-bold">{party.shortName}</span>
               </div>
-              <span className={`text-sm font-medium truncate ${isSelected ? 'text-black' : 'text-neutral-700'}`}>
+              <span className={cn("text-sm font-medium truncate", isSelected ? 'text-foreground' : 'text-foreground/80')}>
                 {party.name}
               </span>
               {isSelected && (
-                <div className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs">{'\u2713'}</span>
+                <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
+                  <Check className="size-3 text-primary-foreground" />
                 </div>
               )}
-            </button>
+            </Button>
           );
         })}
-        {/* Oy kullanmadım seçeneği */}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => onChange('yok')}
-          className={`relative flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
-            value === 'yok'
-              ? 'border-2 border-black bg-neutral-50'
-              : 'border border-neutral-200 bg-white hover:border-black'
-          }`}
+          className={cn(
+            "justify-start gap-3 h-auto px-3 py-2.5 w-full",
+            value === 'yok' && 'ring-2 ring-ring bg-accent'
+          )}
         >
-          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-neutral-300 rounded-full">
-            <span className="text-[10px] font-bold text-white">-</span>
+          <div className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center bg-muted">
+            <span className="text-xs font-bold text-muted-foreground">-</span>
           </div>
-          <span className={`text-sm font-medium ${value === 'yok' ? 'text-black' : 'text-neutral-700'}`}>
+          <span className={cn("text-sm font-medium", value === 'yok' ? 'text-foreground' : 'text-foreground/80')}>
             Oy kullanmadım
           </span>
           {value === 'yok' && (
-            <div className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs">{'\u2713'}</span>
+            <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
+              <Check className="size-3 text-primary-foreground" />
             </div>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );
