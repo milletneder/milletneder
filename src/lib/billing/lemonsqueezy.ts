@@ -25,7 +25,7 @@ async function ensureInitialized() {
 
   let apiKey = process.env.LEMONSQUEEZY_API_KEY;
   if (!apiKey) {
-    apiKey = await getSetting('lemonsqueezy_api_key');
+    apiKey = await getSetting('lemonsqueezy_api_key') || undefined;
   }
 
   if (!apiKey) {
@@ -47,7 +47,7 @@ export function invalidateLSConfigCache() {
  * Store ID'yi al.
  */
 async function getStoreId(): Promise<string> {
-  const storeId = process.env.LEMONSQUEEZY_STORE_ID || await getSetting('lemonsqueezy_store_id');
+  const storeId = process.env.LEMONSQUEEZY_STORE_ID || (await getSetting('lemonsqueezy_store_id')) || '';
   if (!storeId) throw new Error('Lemon Squeezy Store ID tanımlı değil');
   return storeId;
 }
