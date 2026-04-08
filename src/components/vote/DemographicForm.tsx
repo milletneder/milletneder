@@ -29,16 +29,26 @@ interface DemographicFormProps {
   };
 }
 
-const TOTAL_STEPS = 6;
+// Step sırası: 1=gender, 2=ageBracket, 3=education, 4=incomeBracket, 5=turnoutIntention, 6=previousVote2023
+const STEP_KEYS = ['gender', 'ageBracket', 'education', 'incomeBracket', 'turnoutIntention', 'previousVote2023'] as const;
+const TOTAL_STEPS = STEP_KEYS.length;
+
+function findFirstMissingStep(data?: Record<string, string | undefined>): number {
+  if (!data) return 1;
+  for (let i = 0; i < STEP_KEYS.length; i++) {
+    if (!data[STEP_KEYS[i]]) return i + 1;
+  }
+  return 1; // hepsi doluysa yine 1'den başla
+}
 
 export default function DemographicForm({ onSave, onSkip, loading, parties2023, existingData }: DemographicFormProps) {
-  const [step, setStep] = useState(1);
   const [gender, setGender] = useState<string | undefined>(existingData?.gender);
   const [ageBracket, setAgeBracket] = useState<string | undefined>(existingData?.ageBracket);
   const [education, setEducation] = useState<string | undefined>(existingData?.education);
   const [incomeBracket, setIncomeBracket] = useState<string | undefined>(existingData?.incomeBracket);
   const [turnoutIntention, setTurnoutIntention] = useState<string | undefined>(existingData?.turnoutIntention);
   const [previousVote2023, setPreviousVote2023] = useState<string | undefined>(existingData?.previousVote2023);
+  const [step, setStep] = useState(() => findFirstMissingStep(existingData as Record<string, string | undefined>));
 
   useEffect(() => {
     if (existingData) {
@@ -48,12 +58,27 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
       if (existingData.incomeBracket) setIncomeBracket(existingData.incomeBracket);
       if (existingData.turnoutIntention) setTurnoutIntention(existingData.turnoutIntention);
       if (existingData.previousVote2023) setPreviousVote2023(existingData.previousVote2023);
+      setStep(findFirstMissingStep(existingData as Record<string, string | undefined>));
     }
   }, [existingData]);
 
+  // Her adımda mevcut tüm veriyi kaydet
+  const getCurrentData = () => ({
+    gender,
+    ageBracket,
+    incomeBracket,
+    education,
+    turnoutIntention,
+    previousVote2023,
+  });
+
   const handleNext = () => {
-    if (step < TOTAL_STEPS) setStep(step + 1);
-    else onSave({ gender, ageBracket, incomeBracket, education, turnoutIntention, previousVote2023 });
+    // Her adımda kaydet (tüm mevcut veriyi gönder)
+    onSave(getCurrentData());
+    if (step < TOTAL_STEPS) {
+      setStep(step + 1);
+    }
+    // Son adımda onSave çağrılır, parent modal'ı kapatır
   };
 
   const handleBack = () => {
@@ -133,7 +158,7 @@ function SelectGrid({ label, options, value, onChange }: {
             key={b.value}
             type="button"
             variant="outline"
-                       onClick={() => onChange(b.value)}
+            onClick={() => onChange(b.value)}
             className={cn(
               value === b.value && 'ring-2 ring-ring bg-accent'
             )}
