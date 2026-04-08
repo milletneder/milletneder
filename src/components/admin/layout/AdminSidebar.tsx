@@ -38,6 +38,7 @@ import {
   LogOut,
   MoreVertical,
   CreditCard,
+  Link2,
 } from 'lucide-react';
 
 const navMain = [
@@ -57,6 +58,7 @@ const navData = [
 const navSystem = [
   { href: '/admin/settings', label: 'Ayarlar', icon: Settings },
   { href: '/admin/logs', label: 'Günlükler', icon: ScrollText },
+  { href: '/admin/demo-links', label: 'Demo Linkleri', icon: Link2 },
 ];
 
 interface AdminSidebarProps {
