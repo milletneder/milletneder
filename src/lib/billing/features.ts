@@ -37,7 +37,7 @@ export const FEATURES = {
 } as const;
 
 // Feature → minimum gerekli tier mapping
-const FEATURE_MIN_TIER: Record<string, PlanTier> = {
+export const FEATURE_MIN_TIER: Record<string, PlanTier> = {
   [FEATURES.CITY_BREAKDOWN]: 'vatandas',
   [FEATURES.INSTANT_REPORTS]: 'vatandas',
   [FEATURES.DISTRICT_RANKING]: 'vatandas',
