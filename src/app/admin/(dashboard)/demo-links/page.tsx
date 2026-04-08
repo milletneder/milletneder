@@ -158,14 +158,14 @@ export default function DemoLinksPage() {
             Parti dashboard demo erisimi icin link olusturun ve yonetin.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={false}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-1.5" />
               Demo Link Olustur
             </Button>
           </DialogTrigger>
-          <DialogContent className="overflow-visible">
+          <DialogContent showOverlay={false}>
             <DialogHeader>
               <DialogTitle>Yeni Demo Link</DialogTitle>
               <DialogDescription>
@@ -179,7 +179,7 @@ export default function DemoLinksPage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Parti secin..." />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-[200]">
+                  <SelectContent>
                     {parties.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
                         {p.name} ({p.short_name})
@@ -194,7 +194,7 @@ export default function DemoLinksPage() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-[200]">
+                  <SelectContent>
                     <SelectItem value="7">7 gun</SelectItem>
                     <SelectItem value="14">14 gun</SelectItem>
                     <SelectItem value="30">30 gun</SelectItem>
