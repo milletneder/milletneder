@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -971,6 +972,74 @@ export default function AdminSettingsPage() {
                   handleSaveSetting('force_low_balance', String(checked), setForceLowMessage, setForceLowSaving);
                 }}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lemon Squeezy (Abonelik) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Lemon Squeezy (Abonelik Sistemi)</CardTitle>
+            <p className="text-xs text-muted-foreground">Abonelik ödeme altyapısı ayarları. API anahtarları şifrelenerek saklanır.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { key: 'lemonsqueezy_api_key', label: 'API Key', placeholder: 'lmsq_...' },
+              { key: 'lemonsqueezy_webhook_secret', label: 'Webhook Secret', placeholder: 'whsec_...' },
+              { key: 'lemonsqueezy_store_id', label: 'Store ID', placeholder: '12345' },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key} className="space-y-1.5">
+                <Label className="text-sm">{label}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder={placeholder}
+                    defaultValue=""
+                    onBlur={async (e) => {
+                      const val = e.target.value;
+                      if (!val) return;
+                      await fetch('/api/admin/settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key, value: val }),
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <Separator />
+            <p className="text-xs font-medium text-muted-foreground">Variant ID Eşlemeleri</p>
+            <p className="text-xs text-muted-foreground">Lemon Squeezy ürün variant ID&apos;lerini girin. Her plan/periyot için ayrı variant.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { key: 'lemonsqueezy_vatandas_monthly_variant', label: 'Vatandaş (Aylık)' },
+                { key: 'lemonsqueezy_vatandas_yearly_variant', label: 'Vatandaş (Yıllık)' },
+                { key: 'lemonsqueezy_ogrenci_monthly_variant', label: 'Öğrenci (Aylık)' },
+                { key: 'lemonsqueezy_ogrenci_yearly_variant', label: 'Öğrenci (Yıllık)' },
+                { key: 'lemonsqueezy_arastirmaci_monthly_variant', label: 'Araştırmacı (Aylık)' },
+                { key: 'lemonsqueezy_arastirmaci_yearly_variant', label: 'Araştırmacı (Yıllık)' },
+                { key: 'lemonsqueezy_parti_variant', label: 'Siyasi Parti' },
+              ].map(({ key, label }) => (
+                <div key={key} className="space-y-1">
+                  <Label className="text-xs">{label}</Label>
+                  <Input
+                    placeholder="Variant ID"
+                    className="text-sm"
+                    defaultValue=""
+                    onBlur={async (e) => {
+                      const val = e.target.value;
+                      if (!val) return;
+                      await fetch('/api/admin/settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key, value: val }),
+                      });
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

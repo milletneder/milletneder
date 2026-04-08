@@ -5,6 +5,7 @@ import { invalidateTwilioConfigCache } from '@/lib/sms/twilio';
 import { invalidateVatansmsConfigCache } from '@/lib/sms/vatansms';
 import { invalidateFirebaseConfigCache } from '@/lib/sms/firebase';
 import { invalidateProviderCache } from '@/lib/sms/provider';
+import { invalidateLSConfigCache } from '@/lib/billing/lemonsqueezy';
 import { db } from '@/lib/db';
 import { adminAuditLogs } from '@/lib/db/schema';
 
@@ -34,10 +35,21 @@ const ALLOWED_KEYS = [
   'smtp_pass',
   'smtp_from',
   'force_low_balance', // 'true' | 'false' — test icin bakiye dusuk simule eder
+  // Lemon Squeezy (Abonelik Sistemi)
+  'lemonsqueezy_api_key',
+  'lemonsqueezy_webhook_secret',
+  'lemonsqueezy_store_id',
+  'lemonsqueezy_vatandas_monthly_variant',
+  'lemonsqueezy_vatandas_yearly_variant',
+  'lemonsqueezy_ogrenci_monthly_variant',
+  'lemonsqueezy_ogrenci_yearly_variant',
+  'lemonsqueezy_arastirmaci_monthly_variant',
+  'lemonsqueezy_arastirmaci_yearly_variant',
+  'lemonsqueezy_parti_variant',
 ];
 
 // Sensitive keys — return masked values in GET
-const MASKED_KEYS = ['twilio_auth_token', 'vatansms_api_pass', 'smtp_pass'];
+const MASKED_KEYS = ['twilio_auth_token', 'vatansms_api_pass', 'smtp_pass', 'lemonsqueezy_api_key', 'lemonsqueezy_webhook_secret'];
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminFromRequest(request);
@@ -130,6 +142,9 @@ export async function PUT(request: NextRequest) {
   }
   if (key === 'sms_provider' || key === 'sms_provider_fallback') {
     invalidateProviderCache();
+  }
+  if (key.startsWith('lemonsqueezy_')) {
+    invalidateLSConfigCache();
   }
 
   // Audit log — hassas değerleri maskele
