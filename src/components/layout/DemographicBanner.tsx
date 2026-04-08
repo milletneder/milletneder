@@ -121,8 +121,21 @@ export default function DemographicBanner() {
         }),
       });
       window.dispatchEvent(new Event('profile-updated'));
-      setShowModal(false);
-      setShow(false);
+      // Tüm alanlar doluysa modal'ı kapat, yoksa açık bırak (sonraki adıma geçsin)
+      const allFilled = data.ageBracket && data.incomeBracket && data.gender && data.education && data.turnoutIntention && data.previousVote2023;
+      if (allFilled) {
+        setShowModal(false);
+        setShow(false);
+      }
+      // existingData'yı güncelle ki form doğru adımdan devam etsin
+      setExistingData({
+        ageBracket: data.ageBracket,
+        incomeBracket: data.incomeBracket,
+        gender: data.gender,
+        education: data.education,
+        turnoutIntention: data.turnoutIntention,
+        previousVote2023: data.previousVote2023,
+      });
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
