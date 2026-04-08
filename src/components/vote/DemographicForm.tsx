@@ -2,10 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { AGE_BRACKETS, INCOME_BRACKETS, GENDER_OPTIONS, EDUCATION_BRACKETS, TURNOUT_OPTIONS } from '@/lib/constants';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Check, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface DemographicFormProps {
   onSave: (data: {
@@ -15,7 +11,7 @@ interface DemographicFormProps {
     education?: string;
     turnoutIntention?: string;
     previousVote2023?: string;
-  }) => void | Promise<void>;
+  }) => void;
   onSkip: () => void;
   loading?: boolean;
   parties2023?: Array<{ id: string; name: string; shortName: string; color: string; logoUrl?: string }>;
@@ -29,26 +25,16 @@ interface DemographicFormProps {
   };
 }
 
-// Step sırası: 1=gender, 2=ageBracket, 3=education, 4=incomeBracket, 5=turnoutIntention, 6=previousVote2023
-const STEP_KEYS = ['gender', 'ageBracket', 'education', 'incomeBracket', 'turnoutIntention', 'previousVote2023'] as const;
-const TOTAL_STEPS = STEP_KEYS.length;
-
-function findFirstMissingStep(data?: Record<string, string | undefined>): number {
-  if (!data) return 1;
-  for (let i = 0; i < STEP_KEYS.length; i++) {
-    if (!data[STEP_KEYS[i]]) return i + 1;
-  }
-  return 1; // hepsi doluysa yine 1'den başla
-}
+const TOTAL_STEPS = 6;
 
 export default function DemographicForm({ onSave, onSkip, loading, parties2023, existingData }: DemographicFormProps) {
+  const [step, setStep] = useState(1);
   const [gender, setGender] = useState<string | undefined>(existingData?.gender);
   const [ageBracket, setAgeBracket] = useState<string | undefined>(existingData?.ageBracket);
   const [education, setEducation] = useState<string | undefined>(existingData?.education);
   const [incomeBracket, setIncomeBracket] = useState<string | undefined>(existingData?.incomeBracket);
   const [turnoutIntention, setTurnoutIntention] = useState<string | undefined>(existingData?.turnoutIntention);
   const [previousVote2023, setPreviousVote2023] = useState<string | undefined>(existingData?.previousVote2023);
-  const [step, setStep] = useState(() => findFirstMissingStep(existingData as Record<string, string | undefined>));
 
   useEffect(() => {
     if (existingData) {
@@ -58,27 +44,12 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
       if (existingData.incomeBracket) setIncomeBracket(existingData.incomeBracket);
       if (existingData.turnoutIntention) setTurnoutIntention(existingData.turnoutIntention);
       if (existingData.previousVote2023) setPreviousVote2023(existingData.previousVote2023);
-      setStep(findFirstMissingStep(existingData as Record<string, string | undefined>));
     }
   }, [existingData]);
 
-  // Her adımda mevcut tüm veriyi kaydet
-  const getCurrentData = () => ({
-    gender,
-    ageBracket,
-    incomeBracket,
-    education,
-    turnoutIntention,
-    previousVote2023,
-  });
-
   const handleNext = () => {
-    const data = getCurrentData();
-    // Her adımda kaydet — fire and forget, adım geçişini bloklamaz
-    try { Promise.resolve(onSave(data)).catch(() => {}); } catch { /* */ }
-    if (step < TOTAL_STEPS) {
-      setStep(step + 1);
-    }
+    if (step < TOTAL_STEPS) setStep(step + 1);
+    else onSave({ gender, ageBracket, incomeBracket, education, turnoutIntention, previousVote2023 });
   };
 
   const handleBack = () => {
@@ -90,15 +61,19 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-1">
-        Anketin doğruluğuna katkı sağla
+      <h2 className="text-2xl font-bold text-black mb-2">
+        Anketin dogruluğuna katkı sağla
       </h2>
-      <p className="text-muted-foreground text-sm mb-6">
+      <p className="text-neutral-500 text-sm mb-6">
         Bu bilgiler anonim olarak saklanır ve sonuçları Türkiye gerçeğine yaklaştırmak için kullanılır.
       </p>
 
-      {/* Step progress */}
-      <Progress value={(step / TOTAL_STEPS) * 100} className="h-1.5 mb-6" />
+      {/* Adım göstergesi */}
+      <div className="flex items-center gap-1 mb-6">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+          <div key={i} className={`h-1 flex-1 transition-colors ${i < step ? 'bg-black' : 'bg-neutral-200'}`} />
+        ))}
+      </div>
 
       <div className="mb-6">
         {step === 1 && (
@@ -125,19 +100,22 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
         )}
       </div>
 
-      <Button className="w-full" onClick={handleNext} disabled={loading}>
+      <button
+        onClick={handleNext}
+        disabled={loading}
+        className="w-full border border-black bg-black text-white px-4 h-10 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50 inline-flex items-center justify-center"
+      >
         {loading ? 'Kaydediliyor...' : isLastStep ? 'Kaydet' : 'Devam'}
-      </Button>
+      </button>
       <div className="flex gap-3 mt-3">
         {step > 1 && (
-          <Button variant="ghost" className="flex-1" onClick={handleBack}>
-            <ArrowLeft className="size-3.5" data-icon="inline-start" />
+          <button onClick={handleBack} className="flex-1 text-sm text-neutral-500 hover:text-black transition-colors">
             Geri
-          </Button>
+          </button>
         )}
-        <Button variant="ghost" className="flex-1 text-muted-foreground" onClick={onSkip}>
+        <button onClick={onSkip} className="flex-1 text-sm text-neutral-400 hover:text-black transition-colors">
           {currentValue ? 'Atla' : 'Şimdi değil'}
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -151,20 +129,21 @@ function SelectGrid({ label, options, value, onChange }: {
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-3">{label}</h3>
+      <h3 className="text-sm font-semibold text-black mb-3">{label}</h3>
       <div className="grid grid-cols-2 gap-2">
         {options.map((b) => (
-          <Button
+          <button
             key={b.value}
             type="button"
-            variant="outline"
             onClick={() => onChange(b.value)}
-            className={cn(
-              value === b.value && 'ring-2 ring-ring bg-accent'
-            )}
+            className={`px-3 py-2 text-sm text-black transition-colors ${
+              value === b.value
+                ? 'border-2 border-black bg-neutral-50'
+                : 'border border-neutral-200 bg-white hover:border-black'
+            }`}
           >
             {b.label}
-          </Button>
+          </button>
         ))}
       </div>
     </div>
@@ -180,59 +159,68 @@ function PartySelect2023({ parties, value, onChange }: {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-3">2023 seçiminde hangi partiye oy verdiniz?</h3>
+      <h3 className="text-sm font-semibold text-black mb-3">2023 seçiminde hangi partiye oy verdiniz?</h3>
       <div className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto">
         {sorted.map((party) => {
           const isSelected = value === party.id;
           return (
-            <Button
+            <button
               key={party.id}
               type="button"
-              variant="outline"
               onClick={() => onChange(party.id)}
-              className={cn(
-                "relative flex items-center justify-start gap-3 h-auto px-3 py-2.5 w-full",
-                isSelected && 'ring-2 ring-ring bg-accent'
-              )}
+              className={`relative flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
+                isSelected
+                  ? 'border-2 border-black bg-neutral-50'
+                  : 'border border-neutral-200 bg-white hover:border-black'
+              }`}
             >
               <div
-                className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: party.color, color: '#ffffff' }}
+                className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
+                style={{
+                  backgroundColor: party.logoUrl ? 'transparent' : party.color,
+                  borderRadius: party.logoUrl ? '0' : '50%',
+                  color: '#ffffff',
+                }}
               >
-                <span className="text-[10px] font-bold">{party.shortName.slice(0, 3)}</span>
+                {party.logoUrl ? (
+                  <img src={party.logoUrl} alt={party.name} className="max-w-full max-h-full object-contain" />
+                ) : (
+                  <span className="text-[10px] font-bold">{party.shortName}</span>
+                )}
               </div>
-              <span className={cn("text-sm font-medium truncate text-left", isSelected ? 'text-foreground' : 'text-foreground/80')}>
+              <span className={`text-sm font-medium truncate ${isSelected ? 'text-black' : 'text-neutral-700'}`}>
                 {party.name}
               </span>
               {isSelected && (
-                <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
-                  <Check className="size-3 text-primary-foreground" />
+                <div className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs">{'\u2713'}</span>
                 </div>
               )}
-            </Button>
+            </button>
           );
         })}
-        <Button
+        {/* Oy kullanmadım seçeneği */}
+        <button
           type="button"
-          variant="outline"
           onClick={() => onChange('yok')}
-          className={cn(
-            "relative flex items-center justify-start gap-3 h-auto px-3 py-2.5 w-full",
-            value === 'yok' && 'ring-2 ring-ring bg-accent'
-          )}
+          className={`relative flex items-center gap-3 px-3 py-2.5 text-left transition-all ${
+            value === 'yok'
+              ? 'border-2 border-black bg-neutral-50'
+              : 'border border-neutral-200 bg-white hover:border-black'
+          }`}
         >
-          <div className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center bg-muted">
-            <span className="text-xs font-bold text-muted-foreground">-</span>
+          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-neutral-300 rounded-full">
+            <span className="text-[10px] font-bold text-white">-</span>
           </div>
-          <span className={cn("text-sm font-medium text-left", value === 'yok' ? 'text-foreground' : 'text-foreground/80')}>
+          <span className={`text-sm font-medium ${value === 'yok' ? 'text-black' : 'text-neutral-700'}`}>
             Oy kullanmadım
           </span>
           {value === 'yok' && (
-            <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
-              <Check className="size-3 text-primary-foreground" />
+            <div className="ml-auto w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs">{'\u2713'}</span>
             </div>
           )}
-        </Button>
+        </button>
       </div>
     </div>
   );
