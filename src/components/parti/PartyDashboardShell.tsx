@@ -46,7 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: 'agirliklandirma', label: 'Agirliklandirma', icon: Sliders },
   { href: 'projeksiyon', label: 'Projeksiyon', icon: BarChart3 },
   { href: 'uyarilar', label: 'Uyarilar', icon: Bell },
-  { href: 'pdf-rapor', label: 'PDF Rapor', icon: FileText, comingSoon: true },
+  { href: 'pdf-rapor', label: 'PDF Rapor', icon: FileText },
   { href: 'ozel-rapor', label: 'Ozel Rapor', icon: FileEdit },
 ];
 
