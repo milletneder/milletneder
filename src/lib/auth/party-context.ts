@@ -1,64 +1,38 @@
 /**
  * Parti Dashboard Context Helper
  *
- * Hem auth kullanicisini (JWT + subscription) hem demo tokeni (query param)
- * destekler. Tum /api/parti/* rotalari bunu kullanir.
+ * Tum /api/parti/* rotalari bunu kullanir. Iki kaynak destekler:
+ *   1) Party account session (party_token cookie / x-party-token header)
+ *      -> kurumsal parti hesabi, tam erisim
+ *   2) Demo token (?demo_token=X query param)
+ *      -> admin tarafindan uretilen sureli preview linki, tam erisim
  *
- * - Auth modu: JWT dogrulanir, subscription.party_id okunur, hasFeature kontrol edilir
- * - Demo modu: demo_token query parametresi demo_tokens tablosundan dogrulanir
- *   (expires_at, is_active), party_id dondurulur
+ * NOT: Bireysel user JWT'si (AuthContext) parti rotalarina erismez.
+ * Eski subscription_tier='parti' yaklasimi kaldirildi.
  */
 
 import { NextRequest } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { subscriptions, demoTokens } from '@/lib/db/schema';
-import { getUserFromRequest } from './middleware';
-import { hasFeature, FEATURES } from '@/lib/billing/features';
-import type { PlanTier } from '@/lib/billing/plans';
+import { demoTokens } from '@/lib/db/schema';
+import { getPartyAccountFromRequest } from './party-account-middleware';
 
 export type PartyContext =
-  | { kind: 'auth'; userId: number; partyId: number; tier: PlanTier }
+  | { kind: 'party'; partyId: number; accountId: number }
   | { kind: 'demo'; partyId: number; token: string };
 
-/**
- * Request'ten parti context'ini cozer.
- * - Oncelik: Authorization header (JWT)
- * - Fallback: demo_token query parametresi
- *
- * Donus degerleri:
- * - { kind: 'auth', ... } - gecerli auth kullanicisi + parti aboneligi
- * - { kind: 'demo', ... } - gecerli demo token
- * - null - yetkilendirme yok veya gecersiz
- */
 export async function getPartyContext(request: NextRequest): Promise<PartyContext | null> {
-  // 1) JWT dene
-  const user = await getUserFromRequest(request);
-  if (user) {
-    const tier = (user.subscription_tier || 'free') as PlanTier;
-    if (!hasFeature(tier, FEATURES.PARTY_DASHBOARD)) {
-      return null;
-    }
-
-    const [sub] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.user_id, user.id))
-      .limit(1);
-
-    if (!sub || !sub.party_id) {
-      return null;
-    }
-
+  // 1) Parti hesap session (cookie veya header)
+  const session = await getPartyAccountFromRequest(request);
+  if (session) {
     return {
-      kind: 'auth',
-      userId: user.id,
-      partyId: sub.party_id,
-      tier,
+      kind: 'party',
+      partyId: session.account.party_id,
+      accountId: session.account.id,
     };
   }
 
-  // 2) Demo token dene
+  // 2) Demo token (query param)
   const demoToken = request.nextUrl.searchParams.get('demo_token');
   if (!demoToken || typeof demoToken !== 'string' || demoToken.length < 16) {
     return null;
@@ -83,10 +57,10 @@ export async function getPartyContext(request: NextRequest): Promise<PartyContex
 }
 
 /**
- * Kisa yardimci: belirli bir ozelligin auth modunda gerekli oldugunu dogrular.
- * Demo modunda ozellik kontrolu yapilmaz (demo her seye erisir).
+ * Gecerli bir parti context (oturum veya demo) her zaman tum parti ozelliklerine
+ * erisir. Parametre imza geriye doniklik icin korunur — parti API rotalari hala
+ * FEATURES.X sabitlerine referans veriyor.
  */
-export function partyContextHasFeature(ctx: PartyContext, feature: string): boolean {
-  if (ctx.kind === 'demo') return true;
-  return hasFeature(ctx.tier, feature);
+export function partyContextHasFeature(_ctx: PartyContext, _feature: string): boolean {
+  return true;
 }

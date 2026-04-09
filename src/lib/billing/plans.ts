@@ -1,16 +1,18 @@
 /**
  * Plan tier tanımları ve yardımcı fonksiyonlar.
  * Variant ID mapping admin settings'ten runtime'da okunur.
+ *
+ * NOT: 'parti' tier'ı kaldırıldı. Siyasi parti panelleri artık kurumsal
+ * hesap modeliyle çalışır (party_accounts tablosu + /parti/giris).
  */
 
-export type PlanTier = 'free' | 'vatandas' | 'ogrenci' | 'arastirmaci' | 'parti';
+export type PlanTier = 'free' | 'vatandas' | 'ogrenci' | 'arastirmaci';
 
 export const TIER_RANK: Record<PlanTier, number> = {
   free: 0,
   vatandas: 1,
   ogrenci: 2,       // Araştırmacı ile aynı özellikler, indirimli fiyat
   arastirmaci: 3,
-  parti: 4,
 };
 
 export const PLAN_LABELS: Record<PlanTier, string> = {
@@ -18,7 +20,6 @@ export const PLAN_LABELS: Record<PlanTier, string> = {
   vatandas: 'Vatandaş',
   ogrenci: 'Öğrenci',
   arastirmaci: 'Araştırmacı',
-  parti: 'Siyasi Parti',
 };
 
 export const PLAN_PRICES: Record<PlanTier, { monthly: number; yearly: number | null }> = {
@@ -26,7 +27,6 @@ export const PLAN_PRICES: Record<PlanTier, { monthly: number; yearly: number | n
   vatandas: { monthly: 99, yearly: 999 },
   ogrenci: { monthly: 249, yearly: 2499 },
   arastirmaci: { monthly: 499, yearly: 4999 },
-  parti: { monthly: 0, yearly: null },   // Dinamik fiyat (üye sayısına göre)
 };
 
 // Admin settings'teki variant key'leri
@@ -37,7 +37,6 @@ export const VARIANT_SETTING_KEYS: Record<string, { tier: PlanTier; interval: 'm
   lemonsqueezy_ogrenci_yearly_variant: { tier: 'ogrenci', interval: 'yearly' },
   lemonsqueezy_arastirmaci_monthly_variant: { tier: 'arastirmaci', interval: 'monthly' },
   lemonsqueezy_arastirmaci_yearly_variant: { tier: 'arastirmaci', interval: 'yearly' },
-  lemonsqueezy_parti_variant: { tier: 'parti', interval: 'monthly' },
 };
 
 /**

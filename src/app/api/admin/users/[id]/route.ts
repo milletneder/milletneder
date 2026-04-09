@@ -148,7 +148,13 @@ export async function PATCH(
         auditAction = 'activate_user';
         break;
       case 'set_tier':
-        if (!body.tier || !['free', 'vatandas', 'ogrenci', 'arastirmaci', 'parti'].includes(body.tier)) {
+        if (body.tier === 'parti') {
+          return NextResponse.json(
+            { error: '"parti" seviyesi artık bireysel kullanıcılara verilemez. Parti hesapları /admin/parti-hesapları altından yönetilir.' },
+            { status: 400 },
+          );
+        }
+        if (!body.tier || !['free', 'vatandas', 'ogrenci', 'arastirmaci'].includes(body.tier)) {
           return NextResponse.json({ error: 'Geçersiz tier değeri' }, { status: 400 });
         }
         updateData = { subscription_tier: body.tier, updated_at: new Date() };

@@ -25,17 +25,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'planTier gerekli' }, { status: 400 });
   }
 
-  // --- Variant ID coz ---
-  let settingKey: string;
-
   if (planTier === 'parti') {
-    settingKey = 'lemonsqueezy_parti_variant';
-  } else {
-    if (!billingInterval || !['monthly', 'yearly'].includes(billingInterval)) {
-      return NextResponse.json({ error: 'billingInterval gerekli (monthly veya yearly)' }, { status: 400 });
-    }
-    settingKey = `lemonsqueezy_${planTier}_${billingInterval}_variant`;
+    return NextResponse.json(
+      {
+        error:
+          'Siyasi parti paneli kurumsal bir üründür. Lütfen iletisim@milletneder.com ile iletişime geçin.',
+      },
+      { status: 400 },
+    );
   }
+
+  if (!['vatandas', 'ogrenci', 'arastirmaci'].includes(planTier)) {
+    return NextResponse.json({ error: 'Geçersiz plan' }, { status: 400 });
+  }
+
+  // --- Variant ID coz ---
+  if (!billingInterval || !['monthly', 'yearly'].includes(billingInterval)) {
+    return NextResponse.json({ error: 'billingInterval gerekli (monthly veya yearly)' }, { status: 400 });
+  }
+  const settingKey = `lemonsqueezy_${planTier}_${billingInterval}_variant`;
 
   const variantId = await getSetting(settingKey);
   if (!variantId) {

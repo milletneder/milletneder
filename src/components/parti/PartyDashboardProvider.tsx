@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { usePartyAuth } from '@/lib/auth/PartyAuthContext';
 
 export type DashboardSource =
   | { kind: 'auth' }
@@ -13,7 +13,7 @@ interface PartyInfo {
   short_name: string;
   slug?: string;
   color?: string;
-  logo_url?: string;
+  logo_url?: string | null;
 }
 
 interface DashboardContextValue {
@@ -34,15 +34,32 @@ interface ProviderProps {
 
 /**
  * Parti dashboard provider.
- * - Auth modunda: useAuth()'dan token alir, Bearer header gonderir
- * - Demo modunda: ?demo_token=X query parametresi ekler
+ * - Auth modunda: party_token httpOnly cookie ile — JS token'a erisemez.
+ *   fetch credentials: 'include' ile cookie otomatik gonderilir.
+ * - Demo modunda: ?demo_token=X query parametresi ile.
  *
- * Tum bolumler bu provider altinda render edilir. useDashboard() ile erisilir.
+ * usePartyAuth'tan gelen party bilgisi partyInfo'ya hydrate edilir.
  */
 export function PartyDashboardProvider({ source, children }: ProviderProps) {
-  const { token } = useAuth();
+  const { party, isLoggedIn, hydrating } = usePartyAuth();
   const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null);
-  const [isReady, setIsReady] = useState(false);
+
+  // usePartyAuth'tan partyInfo'yu hydrate et
+  useEffect(() => {
+    if (source.kind !== 'auth') return;
+    if (party) {
+      setPartyInfo({
+        id: party.id,
+        name: party.name,
+        short_name: party.short_name,
+        slug: party.slug,
+        color: party.color,
+        logo_url: party.logo_url,
+      });
+    } else {
+      setPartyInfo(null);
+    }
+  }, [source.kind, party]);
 
   const buildUrl = useCallback(
     (path: string, params?: Record<string, string | number | boolean | undefined>) => {
@@ -61,21 +78,10 @@ export function PartyDashboardProvider({ source, children }: ProviderProps) {
     [source],
   );
 
-  const buildHeaders = useCallback(
-    (extra?: Record<string, string>) => {
-      const headers: Record<string, string> = { ...(extra ?? {}) };
-      if (source.kind === 'auth' && token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      return headers;
-    },
-    [source, token],
-  );
-
   const apiGet = useCallback(
     async <T,>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> => {
       const res = await fetch(buildUrl(path, params), {
-        headers: buildHeaders(),
+        credentials: 'include',
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -83,14 +89,15 @@ export function PartyDashboardProvider({ source, children }: ProviderProps) {
       }
       return res.json();
     },
-    [buildUrl, buildHeaders],
+    [buildUrl],
   );
 
   const apiPost = useCallback(
     async <T,>(path: string, body: unknown): Promise<T> => {
       const res = await fetch(buildUrl(path), {
         method: 'POST',
-        headers: buildHeaders({ 'Content-Type': 'application/json' }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
@@ -99,19 +106,12 @@ export function PartyDashboardProvider({ source, children }: ProviderProps) {
       }
       return res.json();
     },
-    [buildUrl, buildHeaders],
+    [buildUrl],
   );
 
-  // Auth modunda token hazir olunca, demo modunda hemen ready
-  useEffect(() => {
-    if (source.kind === 'demo') {
-      setIsReady(true);
-      return;
-    }
-    if (token) {
-      setIsReady(true);
-    }
-  }, [source, token]);
+  // Auth modunda: oturum hydrate olduktan ve login olunca ready.
+  // Demo modunda: hemen ready.
+  const isReady = source.kind === 'demo' ? true : !hydrating && isLoggedIn;
 
   const value = useMemo<DashboardContextValue>(
     () => ({ source, partyInfo, setPartyInfo, isReady, apiGet, apiPost }),

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Check, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { type PlanTier } from '@/lib/billing/plans';
@@ -85,14 +84,11 @@ function FeatureList({ features }: { features: string[] }) {
 
 export default function UcretlerPage() {
   const [yearly, setYearly] = useState(false);
-  const [members, setMembers] = useState(500000);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [currentTier, setCurrentTier] = useState<PlanTier | null>(null);
 
   const { isLoggedIn, token } = useAuth();
   const router = useRouter();
-
-  const partyPrice = members < 100000 ? 1000 : Math.round(members * 0.01);
 
   /* Fetch current subscription to mark active plan */
   const fetchCurrentTier = useCallback(async () => {
@@ -161,10 +157,6 @@ export default function UcretlerPage() {
     }
     window.dispatchEvent(new CustomEvent('open-vote-modal'));
     router.push('/?vote=true');
-  }
-
-  function handleContact() {
-    router.push('/oneriler');
   }
 
   function CurrentPlanBadge({ tier }: { tier: PlanTier }) {
@@ -271,53 +263,29 @@ export default function UcretlerPage() {
             </CardContent>
           </Card>
 
-          {/* Siyasi Parti */}
+          {/* Siyasi Parti — kurumsal, mailto CTA */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">Siyasi Parti</p>
-                <CurrentPlanBadge tier="parti" />
+                <Badge variant="outline" className="text-[10px]">Kurumsal</Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Parti odaklı analiz paneli ve stratejik araçlar.
               </p>
 
               <div className="mt-5 mb-1">
-                <span className="text-4xl font-bold tabular-nums">
-                  ₺{fmt(partyPrice)}
-                </span>
-                <span className="text-muted-foreground"> /ay</span>
+                <span className="text-3xl font-bold">Kurumsal</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                {members < 100000
-                  ? '100.000 üyeye kadar sabit ücret'
-                  : `${fmt(members)} üye × ₺0,01`}
+              <p className="text-sm text-muted-foreground mb-6">
+                Parti paneli kurumsal bir üründür. Hesap oluşturma, fiyatlandırma ve
+                demo için bizimle iletişime geçin.
               </p>
 
-              <div className="mb-6 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Resmî üye sayısı</span>
-                  <span className="font-medium tabular-nums">{fmt(members)}</span>
-                </div>
-                <Slider
-                  value={[members]}
-                  onValueChange={([v]) => setMembers(v)}
-                  min={100000}
-                  max={12000000}
-                  step={50000}
-                />
-                <div className="flex justify-between text-sm text-muted-foreground tabular-nums">
-                  <span>100.000</span>
-                  <span>12.000.000</span>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full mb-6"
-                onClick={handleContact}
-              >
-                İletişime Geç
+              <Button className="w-full mb-6" asChild>
+                <a href="mailto:iletisim@milletneder.com?subject=Siyasi%20Parti%20Paneli">
+                  İletişime Geç
+                </a>
               </Button>
               <FeatureList features={PARTI_FEATURES} />
             </CardContent>

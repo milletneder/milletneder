@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       created_at: customReportRequests.created_at,
     })
     .from(customReportRequests)
-    .where(eq(customReportRequests.user_id, ctx.userId))
+    .where(eq(customReportRequests.party_account_id, ctx.accountId))
     .orderBy(desc(customReportRequests.created_at));
 
   return NextResponse.json({ requests });
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     .from(customReportRequests)
     .where(
       and(
-        eq(customReportRequests.user_id, ctx.userId),
+        eq(customReportRequests.party_account_id, ctx.accountId),
         eq(customReportRequests.status, 'pending'),
       )
     );
@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
   const [newRequest] = await db
     .insert(customReportRequests)
     .values({
-      user_id: ctx.userId,
+      user_id: null,
+      party_account_id: ctx.accountId,
       party_id: ctx.partyId,
       title: title.trim(),
       description: description?.trim() || null,

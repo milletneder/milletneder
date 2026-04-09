@@ -25,6 +25,21 @@ jobs:
             npm install --production=false
             npm run db:migrate
 
+            # Manuel uygulanan ek migration'lar (Drizzle journal'da degil)
+            # Her biri IF NOT EXISTS / IF EXISTS ile idempotent
+            DB_URL=$(grep '^DATABASE_URL=' .env | cut -d= -f2- | tr -d '"' | tr -d "'")
+            if [ -n "$DB_URL" ]; then
+              for MIG in 0006_subscriptions.sql 0007_demo_and_tools.sql 0008_party_accounts.sql; do
+                MIG_FILE="src/lib/db/migrations/$MIG"
+                if [ -f "$MIG_FILE" ]; then
+                  echo ">> Applying $MIG (idempotent)..."
+                  psql "$DB_URL" -v ON_ERROR_STOP=0 -f "$MIG_FILE" 2>&1 | tail -5 || true
+                fi
+              done
+            else
+              echo ">> WARNING: DATABASE_URL not found in .env, skipping manual migrations"
+            fi
+
             # STAGING_BASIC_AUTH env var'ını güncelle
             STAGING_AUTH='${{ secrets.STAGING_BASIC_AUTH }}'
             if [ -n "$STAGING_AUTH" ]; then

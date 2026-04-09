@@ -1,33 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/AuthContext';
-import { useFeature } from '@/hooks/useFeature';
-import { FEATURES } from '@/lib/billing/features';
+import { usePartyAuth } from '@/lib/auth/PartyAuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PartyDashboardProvider } from '@/components/parti/PartyDashboardProvider';
 import { PartyDashboardShell } from '@/components/parti/PartyDashboardShell';
 
+/**
+ * /parti/* authenticated shell.
+ *
+ * Bu layout sadece /parti/giris DISINDAKI rotalar icin calisir.
+ * (/parti/giris (parti-public) route grubu altinda ve bu layout'u atlar.)
+ *
+ * Kurumsal parti hesap oturumu gerektirir (party_token cookie).
+ * Bireysel user JWT'si bu layout'u gecemez.
+ */
 export default function PartiLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
-  const { allowed } = useFeature(FEATURES.PARTY_DASHBOARD);
-  const [checking, setChecking] = useState(true);
+  const { isLoggedIn, hydrating } = usePartyAuth();
 
   useEffect(() => {
+    if (hydrating) return;
     if (!isLoggedIn) {
-      router.replace('/giris?redirect=/parti');
-      return;
+      router.replace('/parti/giris');
     }
-    if (!allowed) {
-      router.replace('/ucretler');
-      return;
-    }
-    setChecking(false);
-  }, [isLoggedIn, allowed, router]);
+  }, [hydrating, isLoggedIn, router]);
 
-  if (checking) {
+  if (hydrating || !isLoggedIn) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
