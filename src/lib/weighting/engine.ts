@@ -12,6 +12,25 @@ import { computeConfidenceScore } from './confidence';
 import { getCachedResults, setCachedResults } from './cache';
 import type { VoteWithDemographics, WeightedVote, WeightedResults, WeightingConfig, ReferenceDist, PartyResult } from './types';
 
+/**
+ * Bir WeightingConfig'in ustune partial bir override uygular.
+ * Sig nested yapiyi korur (raking.enabled, raking.dimensions vs).
+ */
+function mergeWeightingConfig(base: WeightingConfig, override?: Partial<WeightingConfig>): WeightingConfig {
+  if (!override) return base;
+  return {
+    postStratification: { ...base.postStratification, ...(override.postStratification ?? {}) },
+    raking: { ...base.raking, ...(override.raking ?? {}) },
+    turnout: { ...base.turnout, ...(override.turnout ?? {}) },
+    recency: { ...base.recency, ...(override.recency ?? {}) },
+    bayesian: { ...base.bayesian, ...(override.bayesian ?? {}) },
+    partisanBias: { ...base.partisanBias, ...(override.partisanBias ?? {}) },
+    regionalQuota: { ...base.regionalQuota, ...(override.regionalQuota ?? {}) },
+    fraudDetection: { ...base.fraudDetection, ...(override.fraudDetection ?? {}) },
+    weightCap: { ...base.weightCap, ...(override.weightCap ?? {}) },
+  };
+}
+
 async function loadWeightingConfig(roundId?: number): Promise<WeightingConfig> {
   // Load round-specific configs first, fall back to global (round_id IS NULL)
   const configs = await db
@@ -291,7 +310,12 @@ async function computeWeightMapInternal(
   return weightMap;
 }
 
-export async function computeWeightedResults(roundId?: number, cacheKey: string = 'national'): Promise<WeightedResults> {
+export async function computeWeightedResults(
+  roundId?: number,
+  cacheKey: string = 'national',
+  configOverride?: Partial<WeightingConfig>,
+  skipCache?: boolean,
+): Promise<WeightedResults> {
   // Find active round if not specified
   let activeRoundId = roundId;
   let isActiveRound = false;
@@ -319,16 +343,22 @@ export async function computeWeightedResults(roundId?: number, cacheKey: string 
     return emptyResults();
   }
 
-  // Check cache
-  const cached = await getCachedResults(activeRoundId, cacheKey);
-  if (cached) return cached;
+  // Check cache (configOverride varsa veya skipCache true ise cache'i atla)
+  const useCache = !configOverride && !skipCache;
+  if (useCache) {
+    const cached = await getCachedResults(activeRoundId, cacheKey);
+    if (cached) return cached;
+  }
 
   // Anonymous vote counts tablosundan oku (kullanıcı bağlantısı yok)
-  const [config, referenceData, allVotes] = await Promise.all([
+  const [baseConfig, referenceData, allVotes] = await Promise.all([
     loadWeightingConfig(activeRoundId),
     loadReferenceData(),
     loadFromAnonymousCounts(activeRoundId),
   ]);
+
+  // Override uygula
+  const config = mergeWeightingConfig(baseConfig, configOverride);
 
   if (allVotes.length === 0) return emptyResults();
 
@@ -496,8 +526,10 @@ export async function computeWeightedResults(roundId?: number, cacheKey: string 
     effectiveSampleSize,
   };
 
-  // Cache results
-  await setCachedResults(activeRoundId, cacheKey, results, isActiveRound);
+  // Cache results (sadece override yoksa)
+  if (useCache) {
+    await setCachedResults(activeRoundId, cacheKey, results, isActiveRound);
+  }
 
   return results;
 }

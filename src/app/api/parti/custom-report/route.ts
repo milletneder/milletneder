@@ -1,25 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, and, desc, sql, count } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { subscriptions, customReportRequests } from '@/lib/db/schema';
-import { getUserFromRequest } from '@/lib/auth/middleware';
-import { hasFeature, FEATURES } from '@/lib/billing/features';
-import type { PlanTier } from '@/lib/billing/plans';
+import { customReportRequests } from '@/lib/db/schema';
+import { getPartyContext, partyContextHasFeature } from '@/lib/auth/party-context';
+import { FEATURES } from '@/lib/billing/features';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET: Kullanicinin gecmis rapor taleplerini listele.
+ * Demo modunda bos liste + demoMode flag dondurur.
  */
 export async function GET(request: NextRequest) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
+  const ctx = await getPartyContext(request);
+  if (!ctx) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
   }
 
-  const tier = (user.subscription_tier || 'free') as PlanTier;
-  if (!hasFeature(tier, FEATURES.CUSTOM_REPORTS)) {
+  if (!partyContextHasFeature(ctx, FEATURES.CUSTOM_REPORTS)) {
     return NextResponse.json({ error: 'Bu ozellik icin yetkiniz yok' }, { status: 403 });
+  }
+
+  // Demo modunda gecmis talep listesi bos
+  if (ctx.kind === 'demo') {
+    return NextResponse.json({ requests: [], demoMode: true });
   }
 
   const requests = await db
@@ -33,7 +37,7 @@ export async function GET(request: NextRequest) {
       created_at: customReportRequests.created_at,
     })
     .from(customReportRequests)
-    .where(eq(customReportRequests.user_id, user.id))
+    .where(eq(customReportRequests.user_id, ctx.userId))
     .orderBy(desc(customReportRequests.created_at));
 
   return NextResponse.json({ requests });
@@ -41,16 +45,24 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST: Yeni rapor talebi olustur. Kullanici basina en fazla 2 bekleyen talep.
+ * Demo modunda rapor talebi olusturulamaz.
  */
 export async function POST(request: NextRequest) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
+  const ctx = await getPartyContext(request);
+  if (!ctx) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
   }
 
-  const tier = (user.subscription_tier || 'free') as PlanTier;
-  if (!hasFeature(tier, FEATURES.CUSTOM_REPORTS)) {
+  if (!partyContextHasFeature(ctx, FEATURES.CUSTOM_REPORTS)) {
     return NextResponse.json({ error: 'Bu ozellik icin yetkiniz yok' }, { status: 403 });
+  }
+
+  // Demo modunda rapor talebi olusturulamaz
+  if (ctx.kind === 'demo') {
+    return NextResponse.json(
+      { error: 'Demo modunda rapor talebi olusturulamaz. Tam hesap icin iletisim@milletneder.com' },
+      { status: 403 },
+    );
   }
 
   let body: { title?: string; description?: string };
@@ -75,7 +87,7 @@ export async function POST(request: NextRequest) {
     .from(customReportRequests)
     .where(
       and(
-        eq(customReportRequests.user_id, user.id),
+        eq(customReportRequests.user_id, ctx.userId),
         eq(customReportRequests.status, 'pending'),
       )
     );
@@ -87,18 +99,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Get party_id from subscription
-  const [sub] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.user_id, user.id))
-    .limit(1);
-
   const [newRequest] = await db
     .insert(customReportRequests)
     .values({
-      user_id: user.id,
-      party_id: sub?.party_id || null,
+      user_id: ctx.userId,
+      party_id: ctx.partyId,
       title: title.trim(),
       description: description?.trim() || null,
       status: 'pending',

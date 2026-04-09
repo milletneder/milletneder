@@ -2,46 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
-  subscriptions,
   parties,
   anonymousVoteCounts,
   rounds,
 } from '@/lib/db/schema';
-import { getUserFromRequest } from '@/lib/auth/middleware';
-import { hasFeature, FEATURES } from '@/lib/billing/features';
-import type { PlanTier } from '@/lib/billing/plans';
+import { getPartyContext, partyContextHasFeature } from '@/lib/auth/party-context';
+import { FEATURES } from '@/lib/billing/features';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  // Auth
-  const user = await getUserFromRequest(request);
-  if (!user) {
+  // Auth (JWT veya demo token)
+  const ctx = await getPartyContext(request);
+  if (!ctx) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
-  }
-
-  // Feature gate
-  const tier = (user.subscription_tier || 'free') as PlanTier;
-  if (!hasFeature(tier, FEATURES.PARTY_DASHBOARD)) {
-    return NextResponse.json({ error: 'Bu ozellik icin yetkiniz yok' }, { status: 403 });
-  }
-
-  // Get user's party from subscription
-  const [sub] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.user_id, user.id))
-    .limit(1);
-
-  if (!sub || !sub.party_id) {
-    return NextResponse.json({ error: 'Parti aboneligi bulunamadi' }, { status: 404 });
   }
 
   // Get party info
   const [party] = await db
     .select()
     .from(parties)
-    .where(eq(parties.id, sub.party_id))
+    .where(eq(parties.id, ctx.partyId))
     .limit(1);
 
   if (!party) {
@@ -173,7 +154,7 @@ export async function GET(request: NextRequest) {
   // Optional includes
   const include = request.nextUrl.searchParams.get('include');
 
-  if (include === 'lossGain' && hasFeature(tier, FEATURES.LOSS_GAIN_MATRIX)) {
+  if (include === 'lossGain' && partyContextHasFeature(ctx, FEATURES.LOSS_GAIN_MATRIX)) {
     // Loss/gain: compare current votes with previous_vote_2023
     const gainedRaw = await db
       .select({
@@ -242,7 +223,7 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  if (include === 'projection' && hasFeature(tier, FEATURES.SEAT_PROJECTION)) {
+  if (include === 'projection' && partyContextHasFeature(ctx, FEATURES.SEAT_PROJECTION)) {
     // D'Hondt seat projection
     const totalSeats = 600;
     const barajPct = 7;

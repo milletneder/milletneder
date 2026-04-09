@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
-  subscriptions,
   parties,
   anonymousVoteCounts,
   rounds,
 } from '@/lib/db/schema';
-import { getUserFromRequest } from '@/lib/auth/middleware';
-import { hasFeature, FEATURES } from '@/lib/billing/features';
-import type { PlanTier } from '@/lib/billing/plans';
+import { getPartyContext, partyContextHasFeature } from '@/lib/auth/party-context';
+import { FEATURES } from '@/lib/billing/features';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,33 +26,19 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
 };
 
 export async function GET(request: NextRequest) {
-  // Auth
-  const user = await getUserFromRequest(request);
-  if (!user) {
+  const ctx = await getPartyContext(request);
+  if (!ctx) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
   }
 
-  // Feature gate
-  const tier = (user.subscription_tier || 'free') as PlanTier;
-  if (!hasFeature(tier, FEATURES.VOTER_PROFILE)) {
+  if (!partyContextHasFeature(ctx, FEATURES.VOTER_PROFILE)) {
     return NextResponse.json({ error: 'Bu ozellik icin yetkiniz yok' }, { status: 403 });
-  }
-
-  // Get user's party
-  const [sub] = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.user_id, user.id))
-    .limit(1);
-
-  if (!sub || !sub.party_id) {
-    return NextResponse.json({ error: 'Parti aboneligi bulunamadi' }, { status: 404 });
   }
 
   const [party] = await db
     .select()
     .from(parties)
-    .where(eq(parties.id, sub.party_id))
+    .where(eq(parties.id, ctx.partyId))
     .limit(1);
 
   if (!party) {
