@@ -70,6 +70,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate user profile: city is required for anonymous vote counts
+    // Kullanıcı profilinde il boşsa oy atamaz — istatistikler bozulur
+    if (!user.city || user.city.trim() === '') {
+      return NextResponse.json(
+        { error: "Oy kullanabilmek için profilinizdeki il bilgisi gereklidir. Profilinizi güncelleyin." },
+        { status: 400 }
+      );
+    }
+
     // Get active round and verify roundId matches
     const [activeRound] = await db
       .select()
