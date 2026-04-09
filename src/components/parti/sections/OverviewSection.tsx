@@ -26,7 +26,6 @@ import {
   BarChart3,
   Users,
   Info,
-  CalendarRange,
 } from 'lucide-react';
 import { useDashboard } from '../PartyDashboardProvider';
 
@@ -57,11 +56,11 @@ const chartConfig: ChartConfig = {
   },
 };
 
-const SCOPE_OPTIONS: Array<{ value: RoundScope; label: string; description: string }> = [
-  { value: 'active', label: 'Aktif Tur', description: 'Su anda devam eden tur' },
-  { value: 'last_published', label: 'Son Yayinlanan Tur', description: 'Tamamlanmis son tur' },
-  { value: 'last_3', label: 'Son 3 Tur', description: 'Aktif + son 2 tur birlikte' },
-  { value: 'all', label: 'Tum Zamanlar', description: 'Tum yayinlanmis turlar' },
+const SCOPE_OPTIONS: Array<{ value: RoundScope; label: string }> = [
+  { value: 'active', label: 'Aktif Tur' },
+  { value: 'last_published', label: 'Son Yayinlanan Tur' },
+  { value: 'last_3', label: 'Son 3 Tur' },
+  { value: 'all', label: 'Tum Zamanlar' },
 ];
 
 export function OverviewSection() {
@@ -139,21 +138,15 @@ export function OverviewSection() {
           </p>
         </div>
 
-        {/* Date / Scope filter */}
+        {/* Donem filtresi */}
         <Select value={scope} onValueChange={(v) => setScope(v as RoundScope)}>
-          <SelectTrigger className="w-auto min-w-[200px]">
-            <div className="flex items-center gap-2">
-              <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />
-              <SelectValue placeholder="Donem" />
-            </div>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue />
           </SelectTrigger>
-          <SelectContent align="end">
+          <SelectContent>
             {SCOPE_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                <div className="flex flex-col">
-                  <span className="text-sm">{o.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{o.description}</span>
-                </div>
+                {o.label}
               </SelectItem>
             ))}
           </SelectContent>
