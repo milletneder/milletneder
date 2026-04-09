@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { usePartyAuth } from '@/lib/auth/PartyAuthContext';
 
 export default function PartiGirisPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export default function PartiGirisPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = usePartyAuth();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,12 +38,9 @@ export default function PartiGirisPage() {
         return;
       }
 
-      // Token sadece cookie'de — JS'den okunmaz.
-      // localStorage'a sadece metadata (email, party info) yaz.
-      localStorage.setItem(
-        'party_data',
-        JSON.stringify({ account: data.account, party: data.party }),
-      );
+      // Token cookie'de (httpOnly), JS'den okunmaz.
+      // PartyAuthContext state'ini guncelle ve /parti'ye yonlen.
+      login(data.account, data.party);
       router.push('/parti');
     } catch {
       setError('Bir hata olustu. Lutfen tekrar deneyin.');
