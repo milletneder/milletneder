@@ -145,7 +145,7 @@ export default function DemoLinksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Demo Linkleri</h1>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Parti dashboard demo erisimi icin link olusturun ve yonetin.
           </p>
         </div>
@@ -211,13 +211,13 @@ export default function DemoLinksPage() {
         <Card className="flex-1">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{tokens.length}</div>
-            <p className="text-xs text-neutral-500">Toplam link</p>
+            <p className="text-xs text-muted-foreground">Toplam link</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{activeCount}</div>
-            <p className="text-xs text-neutral-500">Aktif link</p>
+            <p className="text-xs text-muted-foreground">Aktif link</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
@@ -225,7 +225,7 @@ export default function DemoLinksPage() {
             <div className="text-2xl font-bold">
               {tokens.reduce((s, t) => s + t.access_count, 0)}
             </div>
-            <p className="text-xs text-neutral-500">Toplam erisim</p>
+            <p className="text-xs text-muted-foreground">Toplam erisim</p>
           </CardContent>
         </Card>
       </div>
@@ -238,8 +238,8 @@ export default function DemoLinksPage() {
         <CardContent>
           {tokens.length === 0 ? (
             <div className="flex flex-col items-center py-8">
-              <Link2 className="h-8 w-8 text-neutral-300 mb-2" />
-              <p className="text-sm text-neutral-400">Henuz demo linki olusturulmadi</p>
+              <Link2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">Henuz demo linki olusturulmadi</p>
             </div>
           ) : (
             <Table>
@@ -263,7 +263,7 @@ export default function DemoLinksPage() {
                       <TableCell className="font-medium">{t.party_name || '-'}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          <code className="text-xs bg-neutral-50 dark:bg-neutral-900 px-1.5 py-0.5 rounded">
+                          <code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded">
                             {t.token.slice(0, 12)}...
                           </code>
                           <Button
@@ -275,7 +275,7 @@ export default function DemoLinksPage() {
                             <Copy className="h-3 w-3" />
                           </Button>
                           {copiedId === t.id && (
-                            <span className="text-xs text-neutral-400">Kopyalandi</span>
+                            <span className="text-xs text-muted-foreground">Kopyalandi</span>
                           )}
                         </div>
                       </TableCell>
