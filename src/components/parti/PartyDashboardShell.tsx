@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useDashboard } from './PartyDashboardProvider';
+import { usePartyAuth } from '@/lib/auth/PartyAuthContext';
 import {
   LayoutDashboard,
   Map,
@@ -22,6 +23,7 @@ import {
   FileText,
   FileEdit,
   ExternalLink,
+  LogOut,
 } from 'lucide-react';
 
 interface NavItem {
@@ -54,7 +56,14 @@ interface ShellProps {
 
 export function PartyDashboardShell({ children }: ShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { source, partyInfo } = useDashboard();
+  const { account, logout } = usePartyAuth();
+
+  async function handleLogout() {
+    await logout();
+    router.replace('/parti/giris');
+  }
 
   // Base path: /parti veya /demo/parti
   const basePath = source.kind === 'demo' ? '/demo/parti' : '/parti';
@@ -94,12 +103,17 @@ export function PartyDashboardShell({ children }: ShellProps) {
           )}
           <div className="flex-1" />
           {source.kind === 'auth' ? (
-            <Link
-              href="/profil"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Profilim
-            </Link>
+            <div className="flex items-center gap-3">
+              {account?.email && (
+                <span className="hidden sm:inline text-xs text-muted-foreground truncate max-w-[180px]">
+                  {account.email}
+                </span>
+              )}
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="size-3.5" />
+                Cikis
+              </Button>
+            </div>
           ) : (
             <Button variant="outline" size="sm" asChild>
               <a href="mailto:iletisim@milletneder.com">

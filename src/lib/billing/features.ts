@@ -37,6 +37,9 @@ export const FEATURES = {
 } as const;
 
 // Feature → minimum gerekli tier mapping
+// NOT: Parti ozellikleri artik tier bazli degil, ayri party_accounts hesabi
+// uzerinden kontrol edilir. FEATURES sabitleri calisma zamani kullanim icin
+// korunur (parti API rotalari string olarak referans ediyor).
 export const FEATURE_MIN_TIER: Record<string, PlanTier> = {
   [FEATURES.CITY_BREAKDOWN]: 'vatandas',
   [FEATURES.INSTANT_REPORTS]: 'vatandas',
@@ -52,16 +55,8 @@ export const FEATURE_MIN_TIER: Record<string, PlanTier> = {
   [FEATURES.WEIGHTING_DETAIL]: 'arastirmaci',
   [FEATURES.WEEKLY_EMAIL]: 'arastirmaci',
 
-  [FEATURES.PARTY_DASHBOARD]: 'parti',
-  [FEATURES.COMPETITOR_PANEL]: 'parti',
-  [FEATURES.VOTER_PROFILE]: 'parti',
-  [FEATURES.LOSS_GAIN_MATRIX]: 'parti',
-  [FEATURES.GEO_PERFORMANCE]: 'parti',
-  [FEATURES.SWING_ANALYSIS]: 'parti',
-  [FEATURES.SEAT_PROJECTION]: 'parti',
-  [FEATURES.REGIONAL_ALERTS]: 'parti',
-  [FEATURES.WHITE_LABEL_PDF]: 'parti',
-  [FEATURES.CUSTOM_REPORTS]: 'parti',
+  // Parti ozellikleri (PARTY_DASHBOARD, COMPETITOR_PANEL vb) burada YOK —
+  // party_accounts hesabi veya demo_token ile erisilir, tier bazli degildir.
 };
 
 /**

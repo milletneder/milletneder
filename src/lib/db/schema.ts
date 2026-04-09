@@ -465,7 +465,6 @@ export const subscriptions = pgTable("subscriptions", {
   renews_at: timestamp("renews_at"),
   ends_at: timestamp("ends_at"),
   cancelled_at: timestamp("cancelled_at"),
-  party_id: integer("party_id").references(() => parties.id),
   custom_data: jsonb("custom_data"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
@@ -528,10 +527,28 @@ export const embedTokens = pgTable("embed_tokens", {
 
 export type EmbedToken = typeof embedTokens.$inferSelect;
 
+// ── Party Accounts (kurumsal) ───────────────────────────────────
+export const partyAccounts = pgTable("party_accounts", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password_hash: text("password_hash").notNull(),
+  party_id: integer("party_id").notNull().references(() => parties.id),
+  is_active: boolean("is_active").default(true).notNull(),
+  last_login_at: timestamp("last_login_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("party_accounts_party_id_idx").on(table.party_id),
+]);
+
+export type PartyAccount = typeof partyAccounts.$inferSelect;
+export type NewPartyAccount = typeof partyAccounts.$inferInsert;
+
 // ── Custom Report Requests ──────────────────────────────────────
 export const customReportRequests = pgTable("custom_report_requests", {
   id: serial("id").primaryKey(),
-  user_id: integer("user_id").notNull().references(() => users.id),
+  user_id: integer("user_id").references(() => users.id), // nullable — parti hesap talepleri icin
+  party_account_id: integer("party_account_id").references(() => partyAccounts.id),
   party_id: integer("party_id").references(() => parties.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
@@ -543,6 +560,7 @@ export const customReportRequests = pgTable("custom_report_requests", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
   index("custom_report_user_id_idx").on(table.user_id),
+  index("custom_report_party_account_id_idx").on(table.party_account_id),
   index("custom_report_status_idx").on(table.status),
 ]);
 

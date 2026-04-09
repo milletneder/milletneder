@@ -39,6 +39,7 @@ import {
   MoreVertical,
   CreditCard,
   Link2,
+  KeyRound,
 } from 'lucide-react';
 
 const navMain = [
@@ -51,6 +52,7 @@ const navMain = [
 
 const navData = [
   { href: '/admin/parties', label: 'Partiler', icon: Flag },
+  { href: '/admin/parti-hesaplari', label: 'Parti Hesapları', icon: KeyRound },
   { href: '/admin/reference-data', label: 'Referans Verisi', icon: Database },
   { href: '/admin/weighting', label: 'Ağırlıklandırma', icon: Scale },
 ];

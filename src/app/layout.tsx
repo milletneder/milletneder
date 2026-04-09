@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import { PartyAuthProvider } from '@/lib/auth/PartyAuthContext';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
@@ -128,9 +129,11 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-foreground notranslate" suppressHydrationWarning>
         <AuthProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
+          <PartyAuthProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </PartyAuthProvider>
         </AuthProvider>
         <Toaster />
       </body>

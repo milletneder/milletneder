@@ -123,7 +123,8 @@ export default function Header() {
   };
 
   const tierHasResearcher = subscriptionTier === 'arastirmaci' || subscriptionTier === 'ogrenci';
-  const tierHasParty = subscriptionTier === 'parti';
+  // NOT: Parti paneli kurumsal hesap uzerinden calisir (party_accounts).
+  // Bireysel user JWT'si parti paneline erisemez — link burada gosterilmez.
 
   const mainNavLinks = [
     { href: '/', label: 'Keşfet' },
@@ -131,7 +132,6 @@ export default function Header() {
     { href: '/islemler', label: 'İşlemler' },
     { href: '/ucretler', label: 'Ücretler' },
     ...(tierHasResearcher ? [{ href: '/arastirmaci', label: 'Araştırmacı' }] : []),
-    ...(tierHasParty ? [{ href: '/parti', label: 'Parti Paneli' }] : []),
   ];
 
   const moreLinks = [

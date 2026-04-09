@@ -277,7 +277,6 @@ export default function SubscriptionsPage() {
                 <SelectItem value="vatandas">Vatandaş</SelectItem>
                 <SelectItem value="ogrenci">Öğrenci</SelectItem>
                 <SelectItem value="arastirmaci">Araştırmacı</SelectItem>
-                <SelectItem value="parti">Siyasi Parti</SelectItem>
               </SelectContent>
             </Select>
 
