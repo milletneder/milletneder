@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, inArray, gt, ne } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   parties,
@@ -10,6 +10,16 @@ import { getPartyContext, partyContextHasFeature } from '@/lib/auth/party-contex
 import { FEATURES } from '@/lib/billing/features';
 
 export const dynamic = 'force-dynamic';
+
+// Kucuk orneklem esigi — altindaysa karsilastirma uyarili gelir
+const MIN_SAMPLE_THRESHOLD = 100;
+
+// Donem secenekleri (Google Analytics tarzi preset'ler)
+type RoundScope = 'active' | 'last_published' | 'last_3' | 'all';
+
+function isValidScope(s: string | null): s is RoundScope {
+  return s === 'active' || s === 'last_published' || s === 'last_3' || s === 'all';
+}
 
 export async function GET(request: NextRequest) {
   // Auth (JWT veya demo token)
@@ -29,6 +39,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Parti bulunamadi' }, { status: 404 });
   }
 
+  // Scope parametresi
+  const scopeParam = request.nextUrl.searchParams.get('roundScope');
+  const scope: RoundScope = isValidScope(scopeParam) ? scopeParam : 'active';
+
   // Get active round
   const [activeRound] = await db
     .select()
@@ -40,7 +54,61 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Aktif tur bulunamadi' }, { status: 404 });
   }
 
-  // Get current round totals per party
+  // Scope'a gore hangi turlar dahil
+  let scopeRoundIds: number[];
+  let scopeLabel: string;
+  let scopeDescription: string;
+
+  if (scope === 'active') {
+    scopeRoundIds = [activeRound.id];
+    scopeLabel = 'Aktif Tur';
+    scopeDescription = new Date(activeRound.start_date).toLocaleDateString('tr-TR', {
+      month: 'long',
+      year: 'numeric',
+    });
+  } else if (scope === 'last_published') {
+    // En son yayinlanan tur (aktif tur haric)
+    const [lastPub] = await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.is_published, true), ne(rounds.id, activeRound.id)))
+      .orderBy(desc(rounds.end_date))
+      .limit(1);
+
+    if (!lastPub) {
+      return NextResponse.json({ error: 'Yayinlanmis tur bulunamadi' }, { status: 404 });
+    }
+    scopeRoundIds = [lastPub.id];
+    scopeLabel = 'Son Yayinlanan Tur';
+    scopeDescription = new Date(lastPub.start_date).toLocaleDateString('tr-TR', {
+      month: 'long',
+      year: 'numeric',
+    });
+  } else if (scope === 'last_3') {
+    // Aktif + son 2 yayinlanan tur
+    const pubRounds = await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.is_published, true), ne(rounds.id, activeRound.id)))
+      .orderBy(desc(rounds.end_date))
+      .limit(2);
+    scopeRoundIds = [activeRound.id, ...pubRounds.map((r) => r.id)];
+    scopeLabel = 'Son 3 Tur';
+    scopeDescription = `${pubRounds.length + 1} tur agregasyonu`;
+  } else {
+    // all: aktif + tum yayinlanan turlar
+    const pubRounds = await db
+      .select()
+      .from(rounds)
+      .where(eq(rounds.is_published, true));
+    const ids = new Set<number>([activeRound.id, ...pubRounds.map((r) => r.id)]);
+    scopeRoundIds = Array.from(ids);
+    scopeLabel = 'Tum Zamanlar';
+    scopeDescription = `${scopeRoundIds.length} tur`;
+  }
+
+  // Scope turlarinda parti bazli toplam oy
+  // FIX: vote_count > 0 filtresi eklendi (hayalet sifir kayitlari haric)
   const currentResults = await db
     .select({
       party: anonymousVoteCounts.party,
@@ -49,9 +117,10 @@ export async function GET(request: NextRequest) {
     .from(anonymousVoteCounts)
     .where(
       and(
-        eq(anonymousVoteCounts.round_id, activeRound.id),
+        inArray(anonymousVoteCounts.round_id, scopeRoundIds),
         eq(anonymousVoteCounts.is_valid, true),
         eq(anonymousVoteCounts.is_dummy, false),
+        gt(anonymousVoteCounts.vote_count, 0),
       )
     )
     .groupBy(anonymousVoteCounts.party);
@@ -66,6 +135,7 @@ export async function GET(request: NextRequest) {
   const myRank = sorted.findIndex((r) => r.party === party.slug) + 1;
 
   // City count where party has votes
+  // FIX: vote_count > 0 filtresi + bos city ('' veya NULL) haric
   const cityCountResult = await db
     .select({
       count: sql<number>`COUNT(DISTINCT ${anonymousVoteCounts.city})`.as('count'),
@@ -73,25 +143,30 @@ export async function GET(request: NextRequest) {
     .from(anonymousVoteCounts)
     .where(
       and(
-        eq(anonymousVoteCounts.round_id, activeRound.id),
+        inArray(anonymousVoteCounts.round_id, scopeRoundIds),
         eq(anonymousVoteCounts.party, party.slug),
         eq(anonymousVoteCounts.is_valid, true),
         eq(anonymousVoteCounts.is_dummy, false),
+        gt(anonymousVoteCounts.vote_count, 0),
+        sql`${anonymousVoteCounts.city} IS NOT NULL AND ${anonymousVoteCounts.city} != ''`,
       )
     );
 
   const cityCount = cityCountResult[0]?.count || 0;
 
-  // Previous round for change calculation
+  // Previous round for change calculation (sadece aktif tur scope'unda anlamli)
+  // FIX: bos turlar (prevGrand=0) trendData'ya eklenmiyor
+  // FIX: kucuk orneklem uyarisi (prevGrand < MIN_SAMPLE_THRESHOLD)
   const previousRounds = await db
     .select()
     .from(rounds)
-    .where(eq(rounds.is_published, true))
+    .where(and(eq(rounds.is_published, true), ne(rounds.id, activeRound.id)))
     .orderBy(desc(rounds.end_date))
     .limit(5);
 
   let changeFromLastRound = 0;
-  const trendData: { round: string; pct: number }[] = [];
+  let comparisonSmallSample = false;
+  const trendData: { round: string; pct: number; sample: number }[] = [];
 
   for (const prevRound of previousRounds.reverse()) {
     const prevResults = await db
@@ -105,33 +180,54 @@ export async function GET(request: NextRequest) {
           eq(anonymousVoteCounts.round_id, prevRound.id),
           eq(anonymousVoteCounts.is_valid, true),
           eq(anonymousVoteCounts.is_dummy, false),
+          gt(anonymousVoteCounts.vote_count, 0),
         )
       )
       .groupBy(anonymousVoteCounts.party);
 
     const prevGrand = prevResults.reduce((sum, r) => sum + Number(r.total), 0);
+
+    // Bos turu trend grafigine dahil etme
+    if (prevGrand === 0) continue;
+
     const prevMyResult = prevResults.find((r) => r.party === party.slug);
     const prevMyVotes = prevMyResult ? Number(prevMyResult.total) : 0;
-    const prevPct = prevGrand > 0 ? (prevMyVotes / prevGrand) * 100 : 0;
+    const prevPct = (prevMyVotes / prevGrand) * 100;
 
     const roundLabel = new Date(prevRound.start_date).toLocaleDateString('tr-TR', {
       month: 'short',
       year: 'numeric',
     });
 
-    trendData.push({ round: roundLabel, pct: Number(prevPct.toFixed(1)) });
+    trendData.push({
+      round: roundLabel,
+      pct: Number(prevPct.toFixed(1)),
+      sample: prevGrand,
+    });
   }
 
-  // Add current round to trend
-  const currentLabel = new Date(activeRound.start_date).toLocaleDateString('tr-TR', {
-    month: 'short',
-    year: 'numeric',
-  });
-  trendData.push({ round: currentLabel, pct: Number(myPct.toFixed(1)) });
+  // Add current scope to trend (sadece scope=active icin)
+  if (scope === 'active') {
+    const currentLabel = new Date(activeRound.start_date).toLocaleDateString('tr-TR', {
+      month: 'short',
+      year: 'numeric',
+    });
+    trendData.push({
+      round: currentLabel,
+      pct: Number(myPct.toFixed(1)),
+      sample: grandTotal,
+    });
+  }
 
-  // Change from last published round
+  // Change from last published round (trend'in son iki elemanini karsilastir)
   if (trendData.length >= 2) {
-    changeFromLastRound = trendData[trendData.length - 1].pct - trendData[trendData.length - 2].pct;
+    const last = trendData[trendData.length - 1];
+    const prev = trendData[trendData.length - 2];
+    changeFromLastRound = last.pct - prev.pct;
+    // Herhangi biri esikin altindaysa uyari
+    if (last.sample < MIN_SAMPLE_THRESHOLD || prev.sample < MIN_SAMPLE_THRESHOLD) {
+      comparisonSmallSample = true;
+    }
   }
 
   const response: Record<string, unknown> = {
@@ -142,10 +238,17 @@ export async function GET(request: NextRequest) {
       slug: party.slug,
       color: party.color,
     },
+    scope: {
+      key: scope,
+      label: scopeLabel,
+      description: scopeDescription,
+      roundIds: scopeRoundIds,
+    },
     currentPollPct: Number(myPct.toFixed(1)),
     rank: myRank || sorted.length + 1,
     totalParties: sorted.length,
     changeFromLastRound: Number(changeFromLastRound.toFixed(1)),
+    comparisonSmallSample,
     totalVotes: myVotes,
     cityCount: Number(cityCount),
     trendData,
@@ -156,6 +259,7 @@ export async function GET(request: NextRequest) {
 
   if (include === 'lossGain' && partyContextHasFeature(ctx, FEATURES.LOSS_GAIN_MATRIX)) {
     // Loss/gain: compare current votes with previous_vote_2023
+    // FIX: vote_count > 0 filtresi (hayalet sifir kayitlari haric)
     const gainedRaw = await db
       .select({
         prevParty: anonymousVoteCounts.previous_vote_2023,
@@ -164,10 +268,11 @@ export async function GET(request: NextRequest) {
       .from(anonymousVoteCounts)
       .where(
         and(
-          eq(anonymousVoteCounts.round_id, activeRound.id),
+          inArray(anonymousVoteCounts.round_id, scopeRoundIds),
           eq(anonymousVoteCounts.party, party.slug),
           eq(anonymousVoteCounts.is_valid, true),
           eq(anonymousVoteCounts.is_dummy, false),
+          gt(anonymousVoteCounts.vote_count, 0),
           sql`${anonymousVoteCounts.previous_vote_2023} IS NOT NULL`,
           sql`${anonymousVoteCounts.previous_vote_2023} != ${party.slug}`,
         )
@@ -182,10 +287,11 @@ export async function GET(request: NextRequest) {
       .from(anonymousVoteCounts)
       .where(
         and(
-          eq(anonymousVoteCounts.round_id, activeRound.id),
+          inArray(anonymousVoteCounts.round_id, scopeRoundIds),
           eq(anonymousVoteCounts.previous_vote_2023, party.slug),
           eq(anonymousVoteCounts.is_valid, true),
           eq(anonymousVoteCounts.is_dummy, false),
+          gt(anonymousVoteCounts.vote_count, 0),
           sql`${anonymousVoteCounts.party} != ${party.slug}`,
         )
       )
