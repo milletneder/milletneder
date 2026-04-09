@@ -31,8 +31,20 @@ interface DemographicFormProps {
 
 const TOTAL_STEPS = 6;
 
+// Step sırası: 1=gender, 2=ageBracket, 3=education, 4=incomeBracket, 5=turnoutIntention, 6=previousVote2023
+function findFirstMissingStep(data?: DemographicFormProps['existingData']): number {
+  if (!data) return 1;
+  const order: Array<keyof NonNullable<DemographicFormProps['existingData']>> = [
+    'gender', 'ageBracket', 'education', 'incomeBracket', 'turnoutIntention', 'previousVote2023',
+  ];
+  for (let i = 0; i < order.length; i++) {
+    if (!data[order[i]]) return i + 1;
+  }
+  return 1;
+}
+
 export default function DemographicForm({ onSave, onSkip, loading, parties2023, existingData }: DemographicFormProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(() => findFirstMissingStep(existingData));
   const [gender, setGender] = useState<string | undefined>(existingData?.gender);
   const [ageBracket, setAgeBracket] = useState<string | undefined>(existingData?.ageBracket);
   const [education, setEducation] = useState<string | undefined>(existingData?.education);
@@ -48,6 +60,7 @@ export default function DemographicForm({ onSave, onSkip, loading, parties2023, 
       if (existingData.incomeBracket) setIncomeBracket(existingData.incomeBracket);
       if (existingData.turnoutIntention) setTurnoutIntention(existingData.turnoutIntention);
       if (existingData.previousVote2023) setPreviousVote2023(existingData.previousVote2023);
+      setStep(findFirstMissingStep(existingData));
     }
   }, [existingData]);
 
