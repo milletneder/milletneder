@@ -2,27 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
-  subscriptions,
   parties,
   anonymousVoteCounts,
   rounds,
 } from '@/lib/db/schema';
-import { getUserFromRequest } from '@/lib/auth/middleware';
-import { hasFeature, FEATURES } from '@/lib/billing/features';
-import type { PlanTier } from '@/lib/billing/plans';
+import { getPartyContext, partyContextHasFeature } from '@/lib/auth/party-context';
+import { FEATURES } from '@/lib/billing/features';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  // Auth
-  const user = await getUserFromRequest(request);
-  if (!user) {
+  const ctx = await getPartyContext(request);
+  if (!ctx) {
     return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
   }
 
-  // Feature gate
-  const tier = (user.subscription_tier || 'free') as PlanTier;
-  if (!hasFeature(tier, FEATURES.COMPETITOR_PANEL)) {
+  if (!partyContextHasFeature(ctx, FEATURES.COMPETITOR_PANEL)) {
     return NextResponse.json({ error: 'Bu ozellik icin yetkiniz yok' }, { status: 403 });
   }
 
@@ -54,22 +49,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ comparison: [] });
   }
 
-  // Include user's own party
-  const [sub] = await db
+  // Include user's own party (from party context)
+  const [myParty] = await db
     .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.user_id, user.id))
+    .from(parties)
+    .where(eq(parties.id, ctx.partyId))
     .limit(1);
 
-  let myPartySlug = '';
-  if (sub?.party_id) {
-    const [myParty] = await db
-      .select()
-      .from(parties)
-      .where(eq(parties.id, sub.party_id))
-      .limit(1);
-    if (myParty) myPartySlug = myParty.slug;
-  }
+  const myPartySlug = myParty?.slug ?? '';
 
   const allSlugs = [...new Set([myPartySlug, ...rivalSlugs].filter(Boolean))];
 

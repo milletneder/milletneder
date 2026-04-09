@@ -32,14 +32,21 @@ interface DemographicFormProps {
 const TOTAL_STEPS = 6;
 
 // Step sırası: 1=gender, 2=ageBracket, 3=education, 4=incomeBracket, 5=turnoutIntention, 6=previousVote2023
-function findFirstMissingStep(data?: DemographicFormProps['existingData']): number {
+function findFirstMissingStep(data?: {
+  gender?: string;
+  ageBracket?: string;
+  education?: string;
+  incomeBracket?: string;
+  turnoutIntention?: string;
+  previousVote2023?: string;
+}): number {
   if (!data) return 1;
-  const order: Array<keyof NonNullable<DemographicFormProps['existingData']>> = [
-    'gender', 'ageBracket', 'education', 'incomeBracket', 'turnoutIntention', 'previousVote2023',
-  ];
-  for (let i = 0; i < order.length; i++) {
-    if (!data[order[i]]) return i + 1;
-  }
+  if (!data.gender) return 1;
+  if (!data.ageBracket) return 2;
+  if (!data.education) return 3;
+  if (!data.incomeBracket) return 4;
+  if (!data.turnoutIntention) return 5;
+  if (!data.previousVote2023) return 6;
   return 1;
 }
 
