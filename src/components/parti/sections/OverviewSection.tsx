@@ -51,16 +51,16 @@ interface DashboardData {
 
 const chartConfig: ChartConfig = {
   pct: {
-    label: 'Oy Orani (%)',
+    label: 'Oy Oranı (%)',
     color: 'var(--color-neutral-900)',
   },
 };
 
 const SCOPE_OPTIONS: Array<{ value: RoundScope; label: string }> = [
   { value: 'active', label: 'Aktif Tur' },
-  { value: 'last_published', label: 'Son Yayinlanan Tur' },
+  { value: 'last_published', label: 'Son Yayınlanan Tur' },
   { value: 'last_3', label: 'Son 3 Tur' },
-  { value: 'all', label: 'Tum Zamanlar' },
+  { value: 'all', label: 'Tüm Zamanlar' },
 ];
 
 export function OverviewSection() {
@@ -108,7 +108,7 @@ export function OverviewSection() {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">{error || 'Veri bulunamadi'}</p>
+        <p className="text-muted-foreground text-sm">{error || 'Veri bulunamadı'}</p>
       </div>
     );
   }
@@ -158,10 +158,10 @@ export function OverviewSection() {
         <div className="rounded-md border border-border bg-muted/30 p-3 flex items-start gap-2.5 text-xs">
           <Info className="size-4 shrink-0 text-muted-foreground mt-0.5" />
           <div>
-            <p className="font-medium">Az orneklemli karsilastirma</p>
+            <p className="font-medium">Az örneklemli karşılaştırma</p>
             <p className="text-muted-foreground mt-0.5">
-              Karsilastirilan turlarin orneklemi 100 oydan az. Puan degisim rakamlari
-              istatistiksel olarak guvensiz olabilir.
+              Karşılaştırılan turların örneklemi 100 oydan az. Puan değişim rakamları
+              istatistiksel olarak güvensiz olabilir.
             </p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export function OverviewSection() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {scope === 'active' ? 'Anket Orani' : 'Oy Orani'}
+              {scope === 'active' ? 'Anket Oranı' : 'Oy Oranı'}
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -186,7 +186,7 @@ export function OverviewSection() {
                   {data.changeFromLastRound.toFixed(1)} puan
                 </span>
                 {data.comparisonSmallSample && (
-                  <Info className="size-3 ml-1" aria-label="Kucuk orneklem" />
+                  <Info className="size-3 ml-1" aria-label="Küçük örneklem" />
                 )}
               </div>
             )}
@@ -195,12 +195,12 @@ export function OverviewSection() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Siralama</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Sıralama</CardTitle>
             <Hash className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.rank}.</div>
-            <p className="text-xs text-muted-foreground mt-1">{data.totalParties} parti icinde</p>
+            <p className="text-xs text-muted-foreground mt-1">{data.totalParties} parti içinde</p>
           </CardContent>
         </Card>
 
@@ -217,12 +217,12 @@ export function OverviewSection() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Il Sayisi</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">İl Sayısı</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.cityCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Oy alinan il</p>
+            <p className="text-xs text-muted-foreground mt-1">Oy alınan il</p>
           </CardContent>
         </Card>
       </div>
