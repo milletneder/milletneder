@@ -50,30 +50,39 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Parti bulunamadi' }, { status: 404 });
   }
 
-  // Active round
+  // Tum turlar (published + active) — harita tum zamanlari gosterir
+  const allRounds = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(sql`${rounds.is_active} = true OR ${rounds.is_published} = true`);
+
+  if (allRounds.length === 0) {
+    return NextResponse.json({ error: 'Tur bulunamadi' }, { status: 404 });
+  }
+
+  const allRoundIds = allRounds.map((r) => r.id);
+
+  // Aktif tur (trend hesabi icin)
   const [activeRound] = await db
     .select()
     .from(rounds)
     .where(eq(rounds.is_active, true))
     .limit(1);
 
-  if (!activeRound) {
-    return NextResponse.json({ error: 'Aktif tur bulunamadi' }, { status: 404 });
-  }
-
   // Tum partiler (renk/slug icin lookup)
   const dbParties = await db.select().from(partiesTable);
   const slugToMeta = new Map(dbParties.map((p) => [p.slug, { short: p.short_name, color: p.color }]));
 
-  // Aktif tur: sehir+parti bazli agregasyon
+  // Tum turlar: sehir+parti bazli agregasyon
   const currentRows = await db.execute(sql`
     SELECT city, party, SUM(vote_count)::int AS vote_count
     FROM anonymous_vote_counts
-    WHERE round_id = ${activeRound.id}
+    WHERE round_id = ANY(${allRoundIds})
       AND is_valid = true
       AND is_dummy = false
       AND party != 'karasizim'
       AND vote_count > 0
+      AND city IS NOT NULL AND city != ''
     GROUP BY city, party
   `);
 
@@ -100,13 +109,14 @@ export async function GET(request: NextRequest) {
 
   const nationalPct = nationalTotal > 0 ? (partyNationalTotal / nationalTotal) * 100 : 0;
 
-  // Trend mod icin son yayinlanan tur (farkli bir tur)
+  // Trend mod icin: son yayinlanan tur verileriyle karsilastir
+  // (tum turlar toplami - son tur = "onceki doneme gore fark")
   const trendMap = new Map<string, number>();
   if (view === 'trend') {
     const previousRounds = await db
       .select()
       .from(rounds)
-      .where(and(eq(rounds.is_published, true), sql`${rounds.id} != ${activeRound.id}`))
+      .where(eq(rounds.is_published, true))
       .orderBy(desc(rounds.end_date))
       .limit(1);
 
