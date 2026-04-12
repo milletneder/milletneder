@@ -30,20 +30,20 @@ interface MapResponse {
 
 const VIEW_LABELS: Record<ViewMode, { title: string; description: string }> = {
   absolute: {
-    title: 'Il Liderleri',
-    description: 'Her ildeki en cok oy alan parti (standart harita)',
+    title: 'İl Liderleri',
+    description: 'Her ildeki en çok oy alan parti (standart harita)',
   },
   strength: {
-    title: 'Partinin Gucu',
-    description: 'Partinin sehirdeki yuzdesi — koyu renk yuksek oran',
+    title: 'Partinin Gücü',
+    description: 'Partinin şehirdeki yüzdesi — koyu renk yüksek oran',
   },
   weakness: {
-    title: 'Zayiflik Haritasi',
-    description: 'Ulusal ortalamadan asagida kalan sehirler — koyu renk buyuk fark',
+    title: 'Zayıflık Haritası',
+    description: 'Ulusal ortalamadan aşağıda kalan şehirler — koyu renk büyük fark',
   },
   trend: {
-    title: 'Trend (Tur Farki)',
-    description: 'Onceki turdan bu tura yuzde puan degisimi',
+    title: 'Trend (Tur Farkı)',
+    description: 'Önceki turdan bu tura yüzde puan değişimi',
   },
 };
 
@@ -89,18 +89,18 @@ export function MapSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Cografi Performans</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Coğrafi Performans</h1>
           {data && (
             <p className="text-sm text-muted-foreground mt-1">
-              {data.party.name} ({data.party.short_name}) - Ulusal ortalama:{' '}
+              {data.party.name} ({data.party.short_name}) — Ulusal ortalama:{' '}
               <strong>%{data.nationalPct.toFixed(1)}</strong>
             </p>
           )}
         </div>
         <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
           <TabsList>
-            <TabsTrigger value="strength">Guc</TabsTrigger>
-            <TabsTrigger value="weakness">Zayiflik</TabsTrigger>
+            <TabsTrigger value="strength">Güç</TabsTrigger>
+            <TabsTrigger value="weakness">Zayıflık</TabsTrigger>
             <TabsTrigger value="trend">Trend</TabsTrigger>
             <TabsTrigger value="absolute">Liderler</TabsTrigger>
           </TabsList>
@@ -162,8 +162,8 @@ export function MapSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">En Guclu 10 Il</CardTitle>
-              <CardDescription>Partinin en yuksek oy orani aldigi iller</CardDescription>
+              <CardTitle className="text-base">En Güçlü 10 İl</CardTitle>
+              <CardDescription>Partinin en yüksek oy oranı aldığı iller</CardDescription>
             </CardHeader>
             <CardContent>
               <ol className="space-y-1.5">
@@ -188,8 +188,8 @@ export function MapSection() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">En Zayif 10 Il</CardTitle>
-              <CardDescription>Partinin en dusuk oy orani aldigi iller</CardDescription>
+              <CardTitle className="text-base">En Zayıf 10 İl</CardTitle>
+              <CardDescription>Partinin en düşük oy oranı aldığı iller</CardDescription>
             </CardHeader>
             <CardContent>
               <ol className="space-y-1.5">
